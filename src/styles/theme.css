@@ -1,0 +1,80 @@
+/* Equipment photographs, wire colors and instrument screens keep their colors. */
+:root {
+  color-scheme: light;
+  --theme-bg: #f3f6f5;
+  --theme-surface: #fff;
+  --theme-raised: #f3f9f6;
+  --theme-text: #263e36;
+  --theme-muted: #607e6e;
+  --theme-border: #dce7e0;
+  --theme-accent: #147c68;
+}
+.theme-control { display: flex; align-items: center; gap: 7px; color: var(--theme-muted); font-size: 12px; flex-shrink: 0; }
+.theme-control select { font: inherit; font-size: 13px; color: var(--theme-text); background: var(--theme-surface); border: 1px solid var(--theme-border); border-radius: 7px; padding: 9px 6px; cursor: pointer; }
+select:focus-visible { outline: 3px solid #2eaa8d; outline-offset: 3px; }
+@media (max-width: 1490px) { .header-lab-tag { display: none; } }
+@media (min-width: 701px) and (max-width: 1000px) {
+  .circuit-header { gap: 16px; padding-inline: 18px; }
+  .circuit-tabs button { padding-inline: 14px; }
+  .theme-control>span { display: none; }
+}
+@media (min-width: 701px) and (max-width: 850px) {
+  .circuit-header { flex-wrap: wrap; padding-block: 18px 0; }
+  .theme-control { margin-left: auto; }
+  .circuit-tabs { order: 3; width: 100%; height: 51px; justify-content: center; }
+}
+@media (max-width: 700px) {
+  .theme-control { order: 2; margin-left: auto; }
+  .circuit-tabs { order: 3; }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-bg: #111b20;
+  --theme-surface: #19262c;
+  --theme-raised: #22343b;
+  --theme-text: #e1ece7;
+  --theme-muted: #a4beb2;
+  --theme-border: #39504f;
+  --theme-accent: #6dd7b8;
+  color: var(--theme-text);
+  background: var(--theme-bg);
+  scrollbar-color: #516d68 var(--theme-surface);
+}
+:root[data-theme="dark"] :is(.workspace-header, .photo-palette, .photo-inspector, .circuit-footer, .photo-board-shell) { background: var(--theme-surface); }
+:root[data-theme="dark"] :is(.circuit-header, .circuit-toolbar, .learning-toolbar, .photo-palette, .photo-inspector, .inspector-section, .circuit-footer, .photo-board-shell, .photo-board-toolbar, .photo-board-footer, .mission-truth-table th, .mission-truth-table td, .calibration-pin-list th, .calibration-pin-list td) { border-color: var(--theme-border); }
+:root[data-theme="dark"] :is(.photo-canvas, .learning-toolbar, .calibration-result) { background: var(--theme-bg); }
+:root[data-theme="dark"] :is(.circuit-brand strong, .workspace-heading h1, .panel-heading h2, .selected-component strong, .selected-wire strong) { color: var(--theme-text); }
+:root[data-theme="dark"] :is(.circuit-brand small, .circuit-tabs button, .header-lab-tag, .wire-color-picker>span, .reset-workspace, .panel-heading, .panel-description, .palette-category, .palette-card-text small, .palette-empty, .palette-grip, .photo-palette-card>svg, .asset-guide, .asset-guide strong, .workspace-heading>div>p, .workspace-heading>div>span, .board-edit-label, .photo-board-toolbar>span, .photo-board-toolbar b, .photo-node-caption>span, .photo-node-caption small, .canvas-stamp, .canvas-mode-note, .photo-board-footer, .photo-board-footer>span:last-child, .workspace-footnote, .inspector-empty, .inspector-empty strong, .inspector-empty p, .selected-component>span, .selected-description, .component-properties dt, .component-properties dd, .setting-field>span, .setting-field b, .selected-wire p, .mission-detail p, .mission-truth-table caption, .mission-stage-note, .system-status, .system-status>strong, .short-status, .short-status strong, .live-notice, .inspector-bottom, .calibration-result>p, .calibration-result>strong, .calibration-result>small, .calibration-pin-list, .coordinate-waiting, .circuit-footer, .circuit-footer b, .circuit-footer strong, .net-count, .learning-toolbar kbd, .preset-label, .mission-hint, .mission-bindings label, .wire-photo-tools h3) { color: var(--theme-muted); }
+:root[data-theme="dark"] :is(.main-power, .calibration-toggle, .palette-search, .photo-palette-card, .gate-picker button, .learning-toolbar button, .setting-field input[type="number"], .setting-field select, .wire-kind-label select, .mission-bindings select, .calibration-result>input, .delete-component, .fit-board, .react-flow__controls-button) { background: var(--theme-surface); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="dark"] :is(.palette-search input, .mission-detail h3) { color: var(--theme-text); }
+:root[data-theme="dark"] .palette-search input::placeholder { color: var(--theme-muted); }
+:root[data-theme="dark"] :is(.version-label, .panel-heading>span, .practice-badge, .board-indicator, .simulation-note, .mission-truth-table th, .mission-detail code, .component-control, .timer-socket-label) { background: var(--theme-raised); border-color: var(--theme-border); color: var(--theme-muted); }
+:root[data-theme="dark"] :is(.tool-separator, .photo-board-toolbar i, .circuit-footer i) { background: var(--theme-border); }
+:root[data-theme="dark"] :is(.circuit-tabs button:hover, .photo-palette-card:hover:not(:disabled), .learning-toolbar button:hover:not(:disabled), .react-flow__controls-button:hover) { background: var(--theme-raised); }
+:root[data-theme="dark"] :is(.circuit-brand strong span, .circuit-tabs button[aria-selected="true"], .mission-truth-table td:last-child, .mission-grade-score) { color: var(--theme-accent); }
+:root[data-theme="dark"] .circuit-tabs button[aria-selected="true"]::after { background: var(--theme-accent); }
+:root[data-theme="dark"] :is(.main-power.is-on, .calibration-toggle.is-active, .wire-photo-tools button[aria-pressed="true"]) { color: var(--theme-accent); border-color: #438e77; background: #1b3a32; }
+:root[data-theme="dark"] :is(.gate-picker button[aria-pressed="true"], .component-control.active) { color: #fff; background: #147c68; border-color: #3bb092; }
+:root[data-theme="dark"] .delete-component { color: #ffb4a7; border-color: #87564f; }
+:root[data-theme="dark"] .photo-fallback { background: var(--theme-raised); color: var(--theme-muted); border-color: #68867a; }
+:root[data-theme="dark"] :is(.photo-fallback strong, .photo-fallback>span, .photo-fallback small) { color: var(--theme-muted); }
+:root[data-theme="dark"] .photo-fallback small { background: var(--theme-surface); }
+:root[data-theme="dark"] .photo-node.is-board>.photo-fallback { background: #20332e; border-color: var(--theme-border); }
+:root[data-theme="dark"] :is(.canvas-stamp>span:last-child, .coordinate-waiting, .mission-hint) { border-color: var(--theme-border); }
+:root[data-theme="dark"] .calibration-banner { color: #9ce8c6; background: #1c3b30f5; border-color: #538a70; }
+:root[data-theme="dark"] .coordinate-marker code { color: #ffd389; background: #49371e; border-color: #9a7740; }
+:root[data-theme="dark"] .coordinate-percent { color: #ffd389 !important; }
+:root[data-theme="dark"] .react-flow__background-pattern { fill: #425c56; }
+:root[data-theme="dark"] .react-flow__controls-button svg { fill: currentColor; }
+:root[data-theme="dark"] .react-flow__attribution { background: #19262cd9; }
+:root[data-theme="dark"] .react-flow__attribution a { color: var(--theme-muted); }
+:root[data-theme="dark"] .photo-node[data-asset="relay-socket"] .relay-mount-target { color: #d0e7d8; background: #19382c88; }
+:root[data-theme="dark"] :is(.circuit-fault-banner, .circuit-fault-panel.has-faults) { background: #3b2426; border-color: #9b5554; color: #ffb8ac; }
+:root[data-theme="dark"] :is(.circuit-fault-panel.has-faults .panel-heading, .circuit-fault-panel.has-faults h2, .circuit-fault-list, .fault-repair-note) { color: #ffb8ac; }
+:root[data-theme="dark"] :is(.circuit-fault-banner button, .circuit-fault-list button) { background: #4b2b2d; color: #ffd3cb; border-color: #a36b65; }
+:root[data-theme="dark"] :is(.solver-warnings, .mission-grade-hints) { color: #efc083; }
+:root[data-theme="dark"] .mission-truth-table .grade-pass td { background: #1d3b2e; color: #98e8b8; }
+:root[data-theme="dark"] .mission-truth-table .grade-fail td { background: #492c2b; color: #ffb7a8; }
+:root[data-theme="dark"] .logic-symbol>g:first-child { fill: #223b30; stroke: #83d9ac; }
+:root[data-theme="dark"] .logic-symbol circle { fill: var(--theme-surface); }
+:root[data-theme="dark"] .logic-symbol>g:last-child { fill: #a3e4bd; }

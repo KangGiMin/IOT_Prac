@@ -3,10 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Resolve before the first paint; keep in sync with src/app/theme.ts.
+      (function () {
+        var preference = 'system';
+        try { preference = localStorage.getItem('circuit-lab.theme') || 'system'; } catch (_) {}
+        var theme = preference === 'light' || preference === 'dark' ? preference
+          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.style.colorScheme = theme;
+      })();
+    </script>
     <meta name="theme-color" content="#0e7665" />
     <meta
       name="description"
-      content="시퀀스 제어, 디지털 브레드보드, 이론과 계측기를 한곳에서 배우는 전자공학 실습실"
+      content="한국폴리텍대학 소프트웨어융합과 IoT 전기·전자 회로 실습: 실제 장비 PNG로 배우는 시퀀스 제어 및 디지털 회로 작업대"
     />
     <title>Circuit Lab · 전자공학 실습실</title>
   </head>
