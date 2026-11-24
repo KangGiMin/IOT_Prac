@@ -19,16 +19,16 @@ const simulation = solveCircuit({
 });
 ```
 
-| 결과 | 의미 |
-| --- | --- |
-| `nets` | 전선·버스·닫힌 접점으로 병합한 등전위 노드 |
-| `pinValues['부품ID:핀ID']` | 전압과 0 / 1 / floating / unknown 논리값 |
-| `energizedComponents` | 실제 폐회로의 DC 전류로 동작 판정한 LED·램프·릴레이와 급전된 IC |
-| `componentCurrents` | 부품별 근사 전류(A) |
-| `isShorted` | 요구한 4가지 단락/오배선 여부 |
-| `faults` | 코드·정확한 원인·단자·부품 ID·전선 ID |
-| `warnings` | 미급전 IC 등 동작을 강제 중지하지 않는 정보 |
-| `shortCircuit` | 기존 화면과 호환되는 집계 결과 |
+| 결과                       | 의미                                                            |
+| -------------------------- | --------------------------------------------------------------- |
+| `nets`                     | 전선·버스·닫힌 접점으로 병합한 등전위 노드                      |
+| `pinValues['부품ID:핀ID']` | 전압과 0 / 1 / floating / unknown 논리값                        |
+| `energizedComponents`      | 실제 폐회로의 DC 전류로 동작 판정한 LED·램프·릴레이와 급전된 IC |
+| `componentCurrents`        | 부품별 근사 전류(A)                                             |
+| `isShorted`                | 요구한 4가지 단락/오배선 여부                                   |
+| `faults`                   | 코드·정확한 원인·단자·부품 ID·전선 ID                           |
+| `warnings`                 | 미급전 IC 등 동작을 강제 중지하지 않는 정보                     |
+| `shortCircuit`             | 기존 화면과 호환되는 집계 결과                                  |
 
 오류가 있으면 `status = 'error'`, 통전 부품과 전류 출력은 비우고 모든 단자/Net의 동작 전압을 null로 차단합니다. 연결 구조와 원인은 유지합니다. 회로가 정상이고 전원 ON이면 `running`, OFF면 `ready`입니다. 전원 OFF에서도 배선 검사는 수행하지만 살아 있는 전압/전류를 표시하지 않습니다.
 
@@ -46,15 +46,15 @@ const simulation = solveCircuit({
 
 ## 보호 조건
 
-| 코드 | 감지 내용 |
-| --- | --- |
-| `POWER_SHORT` | 전원 +/−가 부하 없이 같은 Net, 또는 서로 다른 이상 전원 전위의 직접 연결 |
-| `IC_REVERSED_POWER` | 74LS00의 14번 VCC가 7번 GND보다 낮은 역전원 |
-| `LED_MISSING_RESISTOR` | 완성된 순방향 회로에서 LED 양 끝이 4.5V 이상의 구동 Net에 직접 연결됨 |
-| `OUTPUT_CONFLICT` | 서로 다른 게이트의 출력이 같은 Net 또는 확정된 출력과 반대 전원 충돌 |
-| `IC_SUPPLY_VOLTAGE` | TTL 권장 공급 전압 초과. 단락과 구분하는 해석 오류 |
-| `INVALID_WIRE` | 존재하지 않는 부품/단자 참조 |
-| `UNSTABLE_CIRCUIT` | DC·논리·릴레이 반복 해석 미수렴 |
+| 코드                   | 감지 내용                                                                |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `POWER_SHORT`          | 전원 +/−가 부하 없이 같은 Net, 또는 서로 다른 이상 전원 전위의 직접 연결 |
+| `IC_REVERSED_POWER`    | 74LS00의 14번 VCC가 7번 GND보다 낮은 역전원                              |
+| `LED_MISSING_RESISTOR` | 완성된 순방향 회로에서 LED 양 끝이 4.5V 이상의 구동 Net에 직접 연결됨    |
+| `OUTPUT_CONFLICT`      | 서로 다른 게이트의 출력이 같은 Net 또는 확정된 출력과 반대 전원 충돌     |
+| `IC_SUPPLY_VOLTAGE`    | TTL 권장 공급 전압 초과. 단락과 구분하는 해석 오류                       |
+| `INVALID_WIRE`         | 존재하지 않는 부품/단자 참조                                             |
+| `UNSTABLE_CIRCUIT`     | DC·논리·릴레이 반복 해석 미수렴                                          |
 
 첫 네 종류는 `isShorted = true`입니다. 뒤 세 종류도 모든 회로 동작을 중지하지만 단락 경고음은 울리지 않습니다. 서로 다른 출력은 현재 논리값이 같아도 연결을 허용하지 않습니다. 같은 IC 내부의 서로 다른 게이트 출력도 해당합니다.
 
@@ -82,7 +82,7 @@ const alarm = new SoundAlert();
 // pointer/keyboard 이벤트 안에서 호출. import/render 시 자동 실행하지 않습니다.
 void alarm.unlock();
 alarm.setActive(power.on && simulation.isShorted === true);
-alarm.stop();    // 예약된 펄스까지 즉시 취소
+alarm.stop(); // 예약된 펄스까지 즉시 취소
 alarm.dispose(); // 언마운트: 타이머·노드 정리와 컨텍스트 close
 ```
 
@@ -103,8 +103,6 @@ Union-Find 1만 단자, 브레드보드 구획, 4대 오류와 정상 반례, �
 
 오디오 테스트는 모의 AudioContext로 시간 예약과 수명 관리를 검증합니다. 연결된 브라우저 호스트가 없어 실제 스피커 청음과 UI 클릭·점멸 캡처는 검증하지 못했습니다.
 
-
-??? ??? ?? ??, ?? ?? ??, ????/???, AT8N On-Delay, Y?? ??? ?? ??? [??? ?? ???](SEQUENCE_MODULES.md)? ?????. ??? ?? ?? ??? `src/config/sequencePins.ts`???.
-
+판넬 레일 정렬, 릴레이 장착·분리, 모멘터리·디텐트 버튼, AT8N On-Delay와 Y단자 배선은 [시퀀스 모듈 안내](SEQUENCE_MODULES.md)를 참고하세요. 단자와 조작 영역의 좌표는 `src/config/sequencePins.ts`에서 관리합니다.
 
 Digital modules: [PNG board, six TTL models, supply and scope](DIGITAL_MODULES.md). Coordinates: `src/config/digitalPins.ts`; TTL pin maps: `src/config/ttlModels.ts`.

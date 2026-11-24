@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { ImageOff } from "lucide-react";
-import type { ComponentAsset, Size } from "../../../types/circuit";
+import { useState } from 'react';
+import { ImageOff } from 'lucide-react';
+import type { ComponentAsset, Size } from '../../../types/circuit';
 
 /** Never substitutes a drawn device: a missing photograph is an explicit placeholder. */
 export function AssetImage({
@@ -17,7 +17,7 @@ export function AssetImage({
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   if (failedSrc === asset.src)
     return (
-      <div className={`photo-fallback ${thumbnail ? "is-thumbnail" : ""}`}>
+      <div className={`photo-fallback ${thumbnail ? 'is-thumbnail' : ''}`}>
         <ImageOff
           size={thumbnail ? 20 : 26}
           strokeWidth={1.3}

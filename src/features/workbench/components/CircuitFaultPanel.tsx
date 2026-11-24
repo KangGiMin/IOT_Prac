@@ -1,5 +1,5 @@
-import { AlertTriangle, ShieldCheck } from "lucide-react";
-import { useCircuitStore } from "../../../store/usePhotoCircuitStore";
+import { AlertTriangle, ShieldCheck } from 'lucide-react';
+import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 
 export function CircuitFaultPanel() {
   const state = useCircuitStore();
@@ -7,7 +7,7 @@ export function CircuitFaultPanel() {
   const faults = simulation.faults ?? [];
   return (
     <section
-      className={`inspector-section circuit-fault-panel ${faults.length ? "has-faults" : ""}`}
+      className={`inspector-section circuit-fault-panel ${faults.length ? 'has-faults' : ''}`}
       aria-label="회로 해석 및 오류 원인"
     >
       <div className="panel-heading">
@@ -16,7 +16,7 @@ export function CircuitFaultPanel() {
         ) : (
           <ShieldCheck size={17} />
         )}
-        <h2>{faults.length ? "보호 정지 · 오류 원인" : "회로 해석 상태"}</h2>
+        <h2>{faults.length ? '보호 정지 · 오류 원인' : '회로 해석 상태'}</h2>
       </div>
       {faults.length ? (
         <>
@@ -40,13 +40,13 @@ export function CircuitFaultPanel() {
         </>
       ) : (
         <p className="panel-description">
-          {simulation.status === "running"
-            ? "DC 24V / TTL 5V 회로를 실시간으로 해석하고 있습니다."
-            : "배선을 검사했습니다. 메인 전원을 켜면 동작합니다."}
+          {simulation.status === 'running'
+            ? 'DC 24V / TTL 5V 회로를 실시간으로 해석하고 있습니다.'
+            : '배선을 검사했습니다. 메인 전원을 켜면 동작합니다.'}
         </p>
       )}
       <p className="net-count">
-        {simulation.nets?.length ?? 0} Nets ·{" "}
+        {simulation.nets?.length ?? 0} Nets ·{' '}
         {simulation.energizedComponents.length}개 부품 동작
       </p>
       {!!simulation.warnings?.length && (

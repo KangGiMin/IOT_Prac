@@ -14,7 +14,6 @@ Node.js 22.12 이상 또는 24 LTS 환경을 권장합니다.
 
 `src/`의 React·TypeScript 소스나 HTML 템플릿 `app.html`을 수정한 뒤에는 `npm run build`를 실행하고 브라우저를 새로고침하세요. 빌드가 루트의 `index.html`과 `dist/index.html`을 자동 갱신합니다. 루트 `index.html`은 생성 파일이므로 직접 수정하지 않습니다.
 
-
 ### Vite 개발 서버
 
 ```sh

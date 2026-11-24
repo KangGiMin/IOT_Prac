@@ -7,9 +7,15 @@
       // Resolve before the first paint; keep in sync with src/app/theme.ts.
       (function () {
         var preference = 'system';
-        try { preference = localStorage.getItem('circuit-lab.theme') || 'system'; } catch (_) {}
-        var theme = preference === 'light' || preference === 'dark' ? preference
-          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        try {
+          preference = localStorage.getItem('circuit-lab.theme') || 'system';
+        } catch (_) {}
+        var theme =
+          preference === 'light' || preference === 'dark'
+            ? preference
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
       })();

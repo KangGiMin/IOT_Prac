@@ -4,20 +4,20 @@
 
 ## 타입과 설정
 
-| 타입 | 역할 |
-| --- | --- |
-| `CircuitMode` | sequence / digital |
-| `ComponentAsset` | 정적 PNG 경로, 파일명, 기본 크기, 단자, 조작 영역, 시각 오버레이 |
-| `PhotoPinDefinition` | ID·라벨·역할·백분율 중심 좌표·내부 bus |
-| `ControlDefinition` | 누름 버튼, 토글, 시간/전압 다이얼, 전원 버튼의 백분율 bounds |
-| `PercentPoint` / `PercentRect` | 이미지 기준 0–100의 좌표 / 사각형 |
-| `CircuitComponent` | 배치 ID, 에셋 참조, 월드 좌표(px), 개별 조작 설정 |
-| `CircuitWire` / `PinRef` | 전선 색상과 양 끝의 부품 ID·단자 ID |
-| `PowerState` | 메인 전원 상태와 설정 전압 |
-| `ShortCircuitState` | 미검사 / 정상 / 쇼트, 관련 단자, 메시지 |
-| `SimulationState` | 전압·논리값·통전 부품·Net·부품 전류·오류와 쇼트 결과 |
-| `CalibrationSample` | 클릭한 부품과 백분율 좌표, 복사 결과 |
-| `LogicMission` | AND·OR·NOT·NAND·NOR·XOR의 학습 목표와 진리표 |
+| 타입                           | 역할                                                             |
+| ------------------------------ | ---------------------------------------------------------------- |
+| `CircuitMode`                  | sequence / digital                                               |
+| `ComponentAsset`               | 정적 PNG 경로, 파일명, 기본 크기, 단자, 조작 영역, 시각 오버레이 |
+| `PhotoPinDefinition`           | ID·라벨·역할·백분율 중심 좌표·내부 bus                           |
+| `ControlDefinition`            | 누름 버튼, 토글, 시간/전압 다이얼, 전원 버튼의 백분율 bounds     |
+| `PercentPoint` / `PercentRect` | 이미지 기준 0–100의 좌표 / 사각형                                |
+| `CircuitComponent`             | 배치 ID, 에셋 참조, 월드 좌표(px), 개별 조작 설정                |
+| `CircuitWire` / `PinRef`       | 전선 색상과 양 끝의 부품 ID·단자 ID                              |
+| `PowerState`                   | 메인 전원 상태와 설정 전압                                       |
+| `ShortCircuitState`            | 미검사 / 정상 / 쇼트, 관련 단자, 메시지                          |
+| `SimulationState`              | 전압·논리값·통전 부품·Net·부품 전류·오류와 쇼트 결과             |
+| `CalibrationSample`            | 클릭한 부품과 백분율 좌표, 복사 결과                             |
+| `LogicMission`                 | AND·OR·NOT·NAND·NOR·XOR의 학습 목표와 진리표                     |
 
 `src/config/assets.ts`가 PNG 경로와 상대 좌표의 단일 원본입니다. `componentAssets.ts`는 이전 import 경로 호환용 re-export입니다. 보존된 SVG 작업대용 `PinDefinition`은 절대 로컬 좌표 타입이므로 PNG용 `PhotoPinDefinition`과 구분합니다.
 
@@ -67,8 +67,6 @@ DC 근사·TTL 6종·릴레이 자기유지·AT8N 시간축·디지털 계측 �
 
 이번 환경에서는 연결된 브라우저 호스트가 없어 실제 화면 캡처와 클릭 검증은 수행하지 못했습니다. 로컬 브라우저에서 PNG 로드/플레이스홀더, 모드 전환, 배선과 좌표 보정을 확인할 수 있습니다.
 
-
-??? ??? ?? ??, ?? ?? ??, ????/???, AT8N On-Delay, Y?? ??? ?? ??? [??? ?? ???](SEQUENCE_MODULES.md)? ?????. ??? ?? ?? ??? `src/config/sequencePins.ts`???.
-
+판넬 레일 정렬, 릴레이 장착·분리, 모멘터리·디텐트 버튼, AT8N On-Delay와 Y단자 배선은 [시퀀스 모듈 안내](SEQUENCE_MODULES.md)를 참고하세요. 단자와 조작 영역의 좌표는 `src/config/sequencePins.ts`에서 관리합니다.
 
 Digital modules: [PNG board, six TTL models, supply and scope](DIGITAL_MODULES.md). Coordinates: `src/config/digitalPins.ts`; TTL pin maps: `src/config/ttlModels.ts`.

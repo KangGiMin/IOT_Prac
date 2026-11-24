@@ -8,9 +8,15 @@
       // Resolve before the first paint; keep in sync with src/app/theme.ts.
       (function () {
         var preference = 'system';
-        try { preference = localStorage.getItem('circuit-lab.theme') || 'system'; } catch (_) {}
-        var theme = preference === 'light' || preference === 'dark' ? preference
-          : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        try {
+          preference = localStorage.getItem('circuit-lab.theme') || 'system';
+        } catch (_) {}
+        var theme =
+          preference === 'light' || preference === 'dark'
+            ? preference
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
         document.documentElement.dataset.theme = theme;
         document.documentElement.style.colorScheme = theme;
       })();
@@ -21,8 +27,12 @@
       content="한국폴리텍대학 소프트웨어융합과 IoT 전기·전자 회로 실습: 실제 장비 PNG로 배우는 시퀀스 제어 및 디지털 회로 작업대"
     />
     <title>Circuit Lab · 전자공학 실습실</title>
-    <script type="module" crossorigin src="./dist/assets/app-CRAtRZnO.js"></script>
-    <link rel="stylesheet" crossorigin href="./dist/assets/app-32y66u-n.css">
+    <script
+      type="module"
+      crossorigin
+      src="./dist/assets/app-ClKbC2OB.js"
+    ></script>
+    <link rel="stylesheet" crossorigin href="./dist/assets/app-EPZt6K5t.css" />
   </head>
   <body>
     <div id="root"></div>

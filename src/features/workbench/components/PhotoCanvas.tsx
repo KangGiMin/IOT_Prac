@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -7,34 +7,44 @@ import {
   ReactFlow,
   ReactFlowProvider,
   useReactFlow,
-} from "@xyflow/react";
-import type { Edge } from "@xyflow/react";
+} from '@xyflow/react';
+import type { Edge } from '@xyflow/react';
 import {
   Cable,
   Crosshair,
   LockKeyhole,
   Maximize,
   MousePointer2,
-} from "lucide-react";
-import { componentAssets } from "../../../config/assets";
-import { useCircuitStore } from "../../../store/usePhotoCircuitStore";
-import type { AssetId } from "../../../types/circuit";
-import { PhotoComponentNode } from "./PhotoComponentNode";
-import type { PhotoNode } from "./PhotoComponentNode";
-import { PhotoWireEdge } from "./PhotoWireEdge";
+} from 'lucide-react';
+import { componentAssets } from '../../../config/assets';
+import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
+import type { AssetId } from '../../../types/circuit';
+import { PhotoComponentNode } from './PhotoComponentNode';
+import type { PhotoNode } from './PhotoComponentNode';
+import { PhotoWireEdge } from './PhotoWireEdge';
+import { WireInteractionClip } from './WireInteractionClip';
 
 const nodeTypes = { photo: PhotoComponentNode };
 const edgeTypes = { photoWire: PhotoWireEdge };
+const movementKeys = new Set([
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowUp',
+  'ArrowDown',
+]);
 function Canvas() {
-  const [cursor, setCursor] = useState("crosshair");
+  const interactionClipId = `wire-interactions-${useId().replace(/:/g, '')}`;
+  const keyboardMove =
+    useRef<ReturnType<typeof useCircuitStore.getState>['dragHistory']>(null);
+  const [cursor, setCursor] = useState('crosshair');
   useEffect(() => {
     let live = true;
     const image = new Image();
     image.onload = () => {
-      const canvas = document.createElement("canvas");
+      const canvas = document.createElement('canvas');
       canvas.width = 32;
       canvas.height = 96;
-      const ctx = canvas.getContext("2d");
+      const ctx = canvas.getContext('2d');
       if (!ctx) return;
       const scale = Math.min(32 / image.naturalWidth, 96 / image.naturalHeight);
       ctx.drawImage(
@@ -52,18 +62,27 @@ function Canvas() {
     };
   }, []);
   const mode = useCircuitStore((s) => s.mode);
+  const finishKeyboardMove = () => {
+    const group = keyboardMove.current;
+    keyboardMove.current = null;
+    if (group && useCircuitStore.getState().dragHistory === group)
+      useCircuitStore.getState().finishDrag(group.id, mode);
+  };
   const workspace = useCircuitStore((s) => s.workspaces[s.mode]);
   const calibration = useCircuitStore((s) => s.calibration);
   const selectedId = useCircuitStore((s) => s.selectedId);
   const selectedWireId = useCircuitStore((s) => s.selectedWireId);
   const wiringMode = useCircuitStore((s) => s.wiringMode);
   const wireColor = useCircuitStore((s) => s.wireColor);
+  const faultWireSignature = useCircuitStore(
+    (s) =>
+      s.workspaces[s.mode].simulation.faults
+        ?.flatMap((f) => f.wireIds)
+        .join('|') ?? '',
+  );
   const faultWireIds = useMemo(
-    () =>
-      new Set(
-        workspace.simulation.faults?.flatMap((fault) => fault.wireIds) ?? [],
-      ),
-    [workspace.simulation.faults],
+    () => new Set(faultWireSignature ? faultWireSignature.split('|') : []),
+    [faultWireSignature],
   );
   const { fitView, screenToFlowPosition } = useReactFlow<PhotoNode>();
   const nodes: PhotoNode[] = useMemo(
@@ -72,13 +91,14 @@ function Canvas() {
         const asset = componentAssets[component.assetId];
         return {
           id: component.id,
-          type: "photo",
+          ariaLabel: `${component.label} (${component.id})`,
+          type: 'photo',
           data: { component },
           position: component.position,
           selected: component.id === selectedId,
           draggable:
-            asset.category !== "board" && !calibration && !workspace.power.on,
-          zIndex: asset.category === "board" ? -1 : 2,
+            asset.category !== 'board' && !calibration && !workspace.power.on,
+          zIndex: asset.category === 'board' ? -1 : 2,
           style: { ...(component.displaySize ?? asset.size) },
         };
       }),
@@ -92,19 +112,19 @@ function Canvas() {
         sourceHandle: wire.from.pinId,
         target: wire.to.componentId,
         targetHandle: wire.to.pinId,
-        data: { kind: wire.kind, mode },
-        type: "photoWire",
+        data: { kind: wire.kind, mode, interactionClipId },
+        type: 'photoWire',
         selected: wire.id === selectedWireId,
         zIndex: 5,
-        className: faultWireIds.has(wire.id) ? "fault-wire" : undefined,
+        className: faultWireIds.has(wire.id) ? 'fault-wire' : undefined,
         style: {
-          stroke: faultWireIds.has(wire.id) ? "#ef4444" : wire.color,
+          stroke: faultWireIds.has(wire.id) ? '#ef4444' : wire.color,
           strokeWidth:
             faultWireIds.has(wire.id) || wire.id === selectedWireId ? 4 : 2.5,
         },
         interactionWidth: 18,
       })),
-    [workspace.wires, selectedWireId, faultWireIds, mode],
+    [workspace.wires, selectedWireId, faultWireIds, mode, interactionClipId],
   );
   useEffect(() => {
     const timeout = window.setTimeout(
@@ -117,25 +137,59 @@ function Canvas() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (
         event.target instanceof HTMLElement &&
-        (event.target.closest("input, textarea, select, button") ||
+        (event.target.closest('input, textarea, select, button') ||
           event.target.isContentEditable)
       )
         return;
-      if (event.key === "Delete" || event.key === "Backspace") {
+      if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
         useCircuitStore.getState().deleteSelection();
       }
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         useCircuitStore.getState().select(null);
       }
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
   return (
     <div
-      style={{ "--screwdriver-cursor": cursor } as React.CSSProperties}
-      className={`photo-canvas ${calibration ? "calibration-canvas" : ""} ${wiringMode && mode === "sequence" && !workspace.power.on && !calibration ? "screwdriver-cursor" : ""}`}
+      onKeyDownCapture={(event) => {
+        if (
+          !movementKeys.has(event.key) ||
+          !(event.target instanceof HTMLElement) ||
+          !event.target.matches('.react-flow__node')
+        )
+          return;
+        const s = useCircuitStore.getState();
+        const id = event.target.dataset.id;
+        const component = s.workspaces[mode].components.find(
+          (c) => c.id === id,
+        );
+        if (
+          s.mode !== mode ||
+          !component ||
+          s.selectedId !== id ||
+          componentAssets[component.assetId].category === 'board'
+        )
+          return;
+        if (!s.dragHistory) {
+          s.beginDrag(component.id);
+          keyboardMove.current = useCircuitStore.getState().dragHistory;
+        }
+      }}
+      onKeyUpCapture={(event) => {
+        if (movementKeys.has(event.key)) finishKeyboardMove();
+      }}
+      onBlurCapture={(event) => {
+        if (
+          event.target instanceof HTMLElement &&
+          event.target.matches('.react-flow__node')
+        )
+          finishKeyboardMove();
+      }}
+      style={{ '--screwdriver-cursor': cursor } as React.CSSProperties}
+      className={`photo-canvas ${calibration ? 'calibration-canvas' : ''} ${wiringMode && mode === 'sequence' && !workspace.power.on && !calibration ? 'screwdriver-cursor' : ''}`}
     >
       <ReactFlow<PhotoNode>
         nodes={nodes}
@@ -145,18 +199,21 @@ function Canvas() {
         connectionMode={ConnectionMode.Loose}
         elevateNodesOnSelect={false}
         onNodesChange={(changes) => {
+          if (useCircuitStore.getState().mode !== mode) return;
           for (const change of changes) {
-            if (change.type === "position" && change.position)
+            if (change.type === 'position' && change.position)
               useCircuitStore
                 .getState()
                 .moveComponent(change.id, change.position);
-            if (change.type === "select" && change.selected)
+            if (change.type === 'select' && change.selected)
               useCircuitStore.getState().select(change.id);
           }
         }}
-        onNodeDragStart={(_,node)=>useCircuitStore.getState().beginDrag(node.id)}
-      onNodeDragStop={(_, node) =>
-          useCircuitStore.getState().finishDrag(node.id)
+        onNodeDragStart={(_, node) =>
+          useCircuitStore.getState().beginDrag(node.id)
+        }
+        onNodeDragStop={(_, node) =>
+          useCircuitStore.getState().finishDrag(node.id, mode)
         }
         onEdgeContextMenu={(event, edge) => {
           event.preventDefault();
@@ -180,28 +237,26 @@ function Canvas() {
         }}
         onDragOver={(e) => {
           e.preventDefault();
-          e.dataTransfer.dropEffect = "copy";
+          e.dataTransfer.dropEffect = 'copy';
         }}
         onDrop={(e) => {
           e.preventDefault();
-          const assetId = e.dataTransfer.getData("application/x-circuit-asset");
+          const assetId = e.dataTransfer.getData('application/x-circuit-asset');
           if (!Object.hasOwn(componentAssets, assetId)) return;
           const asset = componentAssets[assetId as AssetId];
-          if(asset.mode!==mode || workspace.power.on || calibration)return;
-        useCircuitStore.getState().beginDrag('palette');
-        const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-          useCircuitStore
-            .getState()
-            .addComponent(
-              asset.id,
-              {
-                x: pos.x - asset.size.width / 2,
-                y: pos.y - asset.size.height / 2,
-              },
-              (e.dataTransfer.getData(
-                "application/x-ic-model",
-              ) as import("../../../config/ttlModels").IcModel) || undefined,
-            );
+          if (asset.mode !== mode || workspace.power.on || calibration) return;
+          useCircuitStore.getState().beginDrag('palette');
+          const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+          useCircuitStore.getState().addComponent(
+            asset.id,
+            {
+              x: pos.x - asset.size.width / 2,
+              y: pos.y - asset.size.height / 2,
+            },
+            (e.dataTransfer.getData(
+              'application/x-ic-model',
+            ) as import('../../../config/ttlModels').IcModel) || undefined,
+          );
           const added = useCircuitStore.getState().selectedId;
           if (added) useCircuitStore.getState().finishDrag(added);
         }}
@@ -217,8 +272,9 @@ function Canvas() {
         nodesConnectable={!workspace.power.on && !calibration && wiringMode}
         deleteKeyCode={null}
         connectionLineStyle={{ stroke: wireColor, strokeWidth: 2.5 }}
-        aria-label={`${mode === "sequence" ? "시퀀스 제어" : "디지털 회로"} 배선 작업 영역`}
+        aria-label={`${mode === 'sequence' ? '시퀀스 제어' : '디지털 회로'} 배선 작업 영역`}
       >
+        <WireInteractionClip id={interactionClipId} />
         <Background
           variant={BackgroundVariant.Dots}
           gap={20}
@@ -229,9 +285,9 @@ function Canvas() {
       </ReactFlow>
       <div className="canvas-stamp">
         <span>
-          {mode === "sequence"
-            ? "SEQUENCE CONTROL BOARD"
-            : "DIGITAL CIRCUIT BOARD"}
+          {mode === 'sequence'
+            ? 'SEQUENCE CONTROL BOARD'
+            : 'DIGITAL CIRCUIT BOARD'}
         </span>
         <span>DC {workspace.power.voltage}V</span>
       </div>
@@ -250,12 +306,12 @@ function Canvas() {
           <MousePointer2 size={14} />
         )}
         {calibration
-          ? "좌표 확인"
-          : workspace.simulation.status === "error"
-            ? "보호 정지 · 오류 배선 삭제 가능"
+          ? '좌표 확인'
+          : workspace.simulation.status === 'error'
+            ? '보호 정지 · 오류 배선 삭제 가능'
             : workspace.power.on
-              ? "전원 ON · 해석 중"
-              : "선택 및 이동"}
+              ? '전원 ON · 해석 중'
+              : '선택 및 이동'}
       </div>
       <button
         className="fit-board"
@@ -277,7 +333,7 @@ export function PhotoCanvas() {
         <div>
           <p>YOUR WORKSPACE</p>
           <h1>
-            {mode === "sequence" ? "시퀀스 제어 실습" : "디지털 회로 실습"}
+            {mode === 'sequence' ? '시퀀스 제어 실습' : '디지털 회로 실습'}
           </h1>
           <span>실제 부품을 배치하고, 나만의 회로를 연결해 보세요.</span>
         </div>
@@ -290,7 +346,7 @@ export function PhotoCanvas() {
         <div className="photo-board-toolbar">
           <div>
             <span className="board-indicator" />
-            {mode === "sequence" ? "시퀀스 실습 판넬" : "디지털 실습 보드"}
+            {mode === 'sequence' ? '시퀀스 실습 판넬' : '디지털 실습 보드'}
             <span className="board-edit-label">배치 · 배선</span>
           </div>
           <span>
@@ -304,7 +360,9 @@ export function PhotoCanvas() {
         </ReactFlowProvider>
         <div className="photo-board-footer">
           <Cable size={14} />
-          <span>단자 클릭 → 다른 단자 클릭 또는 드래그로 배선</span>
+          <span>
+            사진의 나사·단자 클릭 → 다른 나사·단자 클릭 또는 드래그로 배선
+          </span>
           <span>선택 후 Delete로 삭제</span>
         </div>
       </div>

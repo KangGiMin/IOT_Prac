@@ -3,9 +3,9 @@ import {
   icModel,
   isOpenCollector,
   gateValue,
-} from "../config/ttlModels";
-import { insertedPins } from "../config/digitalPins";
-import { componentAssets } from "../config/assets";
+} from '../config/ttlModels';
+import { connectedBreadboardPins, insertedPins } from '../config/digitalPins';
+import { componentAssets } from '../config/assets';
 import type {
   CircuitComponent,
   CircuitFault,
@@ -16,17 +16,20 @@ import type {
   CircuitWorkspace,
   LogicLevel,
   PinRef,
+  PhotoPinDefinition,
   SimulationState,
-} from "../types/circuit";
+} from '../types/circuit';
 
 export interface CircuitSolverInput extends Pick<
   CircuitWorkspace,
-  "components" | "wires" | "power"
+  'components' | 'wires' | 'power'
 > {
   nowMs?: number;
   mode: CircuitMode;
   /** Previous energized relay states permit self-holding circuits to retain state. */
   previous?: SimulationState;
+  /** Runtime mode: omit unused breadboard buses, whose voltage is floating. */
+  compactBreadboards?: boolean;
 }
 export interface CircuitSolverResult extends SimulationState {
   isShorted: boolean;
@@ -45,6 +48,9 @@ const ref = (componentId: string, pinId: string): PinRef => ({
 });
 const EPS = 1e-7;
 const unique = <T>(values: T[]) => [...new Set(values)];
+// Component IDs are file data and may be names such as "constructor" or
+// "__proto__". Dictionaries must never inherit Object.prototype properties.
+const dictionary = <T>(): Record<string, T> => Object.create(null);
 
 /** Path compression + union by rank: O((pins + wires) alpha(pins)). */
 export class UnionFind {
@@ -83,10 +89,10 @@ export class UnionFind {
  * https://www.ti.com/lit/ds/symlink/sn74ls00.pdf
  */
 export const NAND_GATES = [
-  { inputs: ["1", "2"], output: "3" },
-  { inputs: ["4", "5"], output: "6" },
-  { inputs: ["9", "10"], output: "8" },
-  { inputs: ["12", "13"], output: "11" },
+  { inputs: ['1', '2'], output: '3' },
+  { inputs: ['4', '5'], output: '6' },
+  { inputs: ['9', '10'], output: '8' },
+  { inputs: ['12', '13'], output: '11' },
 ] as const;
 export const TTL = {
   minSupply: 4.75,
@@ -95,9 +101,9 @@ export const TTL = {
   highMin: 2,
 } as const;
 export function ttlLevel(voltage: number | null): LogicLevel {
-  if (voltage === null) return "floating";
-  if (!Number.isFinite(voltage) || voltage < -0.3) return "unknown";
-  return voltage <= TTL.lowMax ? 0 : voltage >= TTL.highMin ? 1 : "unknown";
+  if (voltage === null) return 'floating';
+  if (!Number.isFinite(voltage) || voltage < -0.3) return 'unknown';
+  return voltage <= TTL.lowMax ? 0 : voltage >= TTL.highMin ? 1 : 'unknown';
 }
 
 interface Topology {
@@ -107,16 +113,41 @@ interface Topology {
   wires: CircuitWire[];
   invalid: CircuitWire[];
 }
+function topologyPins(input: CircuitSolverInput) {
+  const referenced = new Map<string, Set<string>>();
+  const add = (p: PinRef) => {
+    let pins = referenced.get(p.componentId);
+    if (!pins) referenced.set(p.componentId, (pins = new Set()));
+    pins.add(p.pinId);
+  };
+  if (input.compactBreadboards) {
+    for (const w of input.wires) {
+      add(w.from);
+      add(w.to);
+    }
+    for (const c of input.components)
+      for (const target of Object.values(insertedPins(c))) add(target);
+  }
+  return new Map(
+    input.components.map((c) => [
+      c.id,
+      input.compactBreadboards && c.assetId === 'breadboard'
+        ? connectedBreadboardPins(referenced.get(c.id) ?? [])
+        : componentAssets[c.assetId].pins,
+    ]),
+  );
+}
 function buildTopology(
   input: CircuitSolverInput,
   relays: Set<string>,
-  timerOutputs = new Set<string>(),
+  timerOutputs: Set<string>,
+  pinsByComponent: Map<string, readonly PhotoPinDefinition[]>,
 ): Topology {
   const uf = new UnionFind(),
     refs = new Map<string, PinRef>();
   for (const component of input.components) {
     const buses = new Map<string, string>(); // bus identity is LOCAL to one component
-    for (const pin of componentAssets[component.assetId].pins) {
+    for (const pin of pinsByComponent.get(component.id)!) {
       const r = ref(component.id, pin.id),
         key = pinKey(r);
       uf.add(key);
@@ -147,22 +178,22 @@ function buildTopology(
   const contact = (c: CircuitComponent, a: string, b: string) =>
     uf.union(pinKey(ref(c.id, a)), pinKey(ref(c.id, b)));
   for (const c of input.components) {
-    if (c.assetId === "pb-switch")
+    if (c.assetId === 'pb-switch')
       contact(
         c,
-        c.settings.pressed ? "no1" : "nc1",
-        c.settings.pressed ? "no2" : "nc2",
+        c.settings.pressed ? 'no1' : 'nc1',
+        c.settings.pressed ? 'no2' : 'nc2',
       );
-    if (c.assetId === "switch-3pin")
-      contact(c, "com", c.settings.switchOn ? "2" : "1");
-    if (c.assetId === "timer-at8n") {
-      contact(c, "1", timerOutputs.has(c.id) ? "3" : "4");
-      contact(c, "8", timerOutputs.has(c.id) ? "6" : "5");
+    if (c.assetId === 'switch-3pin')
+      contact(c, 'com', c.settings.switchOn ? '2' : '1');
+    if (c.assetId === 'timer-at8n') {
+      contact(c, '1', timerOutputs.has(c.id) ? '3' : '4');
+      contact(c, '8', timerOutputs.has(c.id) ? '6' : '5');
     }
     if (
-      c.assetId === "relay-socket" &&
+      c.assetId === 'relay-socket' &&
       input.components.some(
-        (b) => b.assetId === "relay-body" && b.mountedSocketId === c.id,
+        (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
       )
     ) {
       // Training unit: NC 1–4, NO 5–8, COM 9–12, coil 13(-)/14(+).
@@ -267,7 +298,11 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
     }
     const solution = linearSolve(matrix, rhs);
     if (!solution)
-      return { volts: new Map(fixed), currents: {}, converged: false };
+      return {
+        volts: new Map(fixed),
+        currents: dictionary<number>(),
+        converged: false,
+      };
     volts = new Map([
       ...fixed,
       ...unknown.map((id, i) => [id, solution[i]] as const),
@@ -278,7 +313,7 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
         .map((b) => b.id),
     );
     if (next.size === on.size && [...next].every((id) => on.has(id))) {
-      const currents: Record<string, number> = {};
+      const currents = dictionary<number>();
       for (const b of branches) {
         const delta =
           volts.has(b.a) && volts.has(b.b)
@@ -292,7 +327,7 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
     }
     on = next;
   }
-  return { volts, currents: {}, converged: false };
+  return { volts, currents: dictionary<number>(), converged: false };
 }
 
 /** Pure, synchronous solver. No DOM, timers, sound or Zustand side effects.
@@ -305,15 +340,25 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
   const components = input.components,
     faults: CircuitFault[] = [],
     warnings: string[] = [];
+  const componentsById = new Map(components.map((c) => [c.id, c]));
+  const outputPins = new Set(
+    components
+      .filter((c) => c.assetId === 'ic-dip14')
+      .flatMap((c) =>
+        TTL_MODELS[icModel(c)].gates.map((g) => pinKey(ref(c.id, g.output))),
+      ),
+  );
+  const pinsByComponent = topologyPins(input);
   let relays = new Set(
     input.power.on
       ? (input.previous?.energizedComponents.filter((id) =>
-          components.some((c) => c.id === id && c.assetId === "relay-socket"),
+          components.some((c) => c.id === id && c.assetId === 'relay-socket'),
         ) ?? [])
       : [],
   );
   const now = input.nowMs ?? Date.now();
-  const timerStates: NonNullable<SimulationState["timerStates"]> = {};
+  const timerStates =
+    dictionary<NonNullable<SimulationState['timerStates']>[string]>();
   let timerOutputs = new Set<string>(
     input.power.on
       ? Object.entries(input.previous?.timerStates ?? {})
@@ -321,17 +366,17 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           .map(([id]) => id)
       : [],
   );
-  let topology = buildTopology(input, relays, timerOutputs);
+  let topology = buildTopology(input, relays, timerOutputs, pinsByComponent);
   let finalBranches: Branch[] = [];
   let volts = new Map<string, number>(),
-    currents: Record<string, number> = {};
+    currents = dictionary<number>();
   const root = (r: PinRef) => topology.uf.find(pinKey(r));
   const fault = (
     code: CircuitFaultCode,
     message: string,
     pins: PinRef[],
     roots: string[] = [],
-    severity: "short" | "error" = "short",
+    severity: 'short' | 'error' = 'short',
   ) => {
     if (faults.some((f) => f.code === code && f.message === message)) return;
     const allPins = [
@@ -355,19 +400,19 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     });
   };
   const finish = (): CircuitSolverResult => {
-    const isShorted = faults.some((f) => f.severity === "short"),
+    const isShorted = faults.some((f) => f.severity === 'short'),
       running = input.power.on && faults.length === 0;
     const nets = [...topology.groups].map(([id, pins]) => {
       const voltage = running ? (volts.get(id) ?? null) : null;
       return { id, pins, voltage, logic: ttlLevel(voltage) };
     });
-    const pinValues: SimulationState["pinValues"] = {};
+    const pinValues = dictionary<SimulationState['pinValues'][string]>();
     for (const net of nets)
       for (const p of net.pins)
         pinValues[pinKey(p)] = { voltage: net.voltage, logic: net.logic };
     const shortPins = new Map(
       faults
-        .filter((f) => f.severity === "short")
+        .filter((f) => f.severity === 'short')
         .flatMap((f) => f.pins)
         .map((p) => [pinKey(p), p]),
     );
@@ -375,15 +420,15 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       ? components
           .filter((c) => {
             const current = Math.abs(currents[c.id] ?? 0);
-            if (c.assetId === "relay-socket") return relays.has(c.id);
-            if (c.assetId === "led-red") return current > 0.0001;
-            if (c.assetId === "pilot-lamp") return current * 480 >= 21.6;
-            if (c.assetId === "relay-body")
+            if (c.assetId === 'relay-socket') return relays.has(c.id);
+            if (c.assetId === 'led-red') return current > 0.0001;
+            if (c.assetId === 'pilot-lamp') return current * 480 >= 21.6;
+            if (c.assetId === 'relay-body')
               return !!c.mountedSocketId && relays.has(c.mountedSocketId);
-            if (c.assetId === "timer-at8n") return !!timerStates[c.id];
-            if (c.assetId === "ic-dip14") {
-              const vcc = volts.get(root(ref(c.id, "14"))),
-                gnd = volts.get(root(ref(c.id, "7")));
+            if (c.assetId === 'timer-at8n') return !!timerStates[c.id];
+            if (c.assetId === 'ic-dip14') {
+              const vcc = volts.get(root(ref(c.id, '14'))),
+                gnd = volts.get(root(ref(c.id, '7')));
               return (
                 vcc !== undefined &&
                 gnd !== undefined &&
@@ -395,17 +440,17 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           })
           .map((c) => c.id)
       : [];
-    const sourceCurrents: Record<string, number> = {};
+    const sourceCurrents = dictionary<number>();
     if (running)
-      for (const c of components.filter((c) => c.assetId === "power-supply"))
-        for (const pin of ["plus", "ch2-plus", "5v-plus"]) {
+      for (const c of components.filter((c) => c.assetId === 'power-supply'))
+        for (const pin of ['plus', 'ch2-plus', '5v-plus']) {
           const source = root(ref(c.id, pin));
           let gateCurrent = 0;
           for (const chip of components.filter(
             (chip) =>
-              chip.assetId === "ic-dip14" &&
+              chip.assetId === 'ic-dip14' &&
               !isOpenCollector(chip) &&
-              root(ref(chip.id, "14")) === source,
+              root(ref(chip.id, '14')) === source,
           )) {
             for (const gate of TTL_MODELS[icModel(chip)].gates) {
               const output = root(ref(chip.id, gate.output));
@@ -430,7 +475,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
               );
             }
           }
-          sourceCurrents[c.id + ":" + pin] =
+          sourceCurrents[c.id + ':' + pin] =
             gateCurrent +
             Math.max(
               0,
@@ -448,34 +493,37 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         }
     return {
       sourceCurrents,
-      status: faults.length ? "error" : running ? "running" : "ready",
+      status: faults.length ? 'error' : running ? 'running' : 'ready',
       isShorted,
       faults,
       nets,
       pinValues,
       energizedComponents,
-      timerStates: running ? timerStates : {},
-      componentCurrents: running ? currents : {},
+      timerStates: running
+        ? timerStates
+        : dictionary<NonNullable<SimulationState['timerStates']>[string]>(),
+      componentCurrents: running ? currents : dictionary<number>(),
       warnings: unique(warnings),
       shortCircuit: {
-        status: isShorted ? "short" : "clear",
+        status: isShorted ? 'short' : 'clear',
         involvedPins: [...shortPins.values()],
-        message: faults.length ? faults.map((f) => f.message).join("\n") : null,
+        message: faults.length ? faults.map((f) => f.message).join('\n') : null,
       },
     };
   };
 
   const outerLimit = Math.max(32, components.length * 4);
   for (let pass = 0; pass < outerLimit; pass++) {
-    topology = buildTopology(input, relays, timerOutputs);
+    if (pass > 0)
+      topology = buildTopology(input, relays, timerOutputs, pinsByComponent);
     if (topology.invalid.length) {
       for (const w of topology.invalid) {
         fault(
-          "INVALID_WIRE",
+          'INVALID_WIRE',
           `전선 ${w.id}: 존재하지 않는 부품/단자를 참조합니다.`,
           [w.from, w.to],
           [],
-          "error",
+          'error',
         );
         faults.at(-1)!.wireIds.push(w.id);
       }
@@ -485,19 +533,19 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       sourcePins = new Map<string, PinRef[]>();
     for (const c of components) {
       if (
-        c.assetId !== "power-supply" &&
-        !(c.assetId === "panel-board" && input.mode === "sequence")
+        c.assetId !== 'power-supply' &&
+        !(c.assetId === 'panel-board' && input.mode === 'sequence')
       )
         continue;
-      if (c.assetId === "power-supply" && c.settings.outputEnabled === false)
+      if (c.assetId === 'power-supply' && c.settings.outputEnabled === false)
         continue;
       const channels =
-        c.assetId === "panel-board"
-          ? [["plus", "minus", 24] as const]
+        c.assetId === 'panel-board'
+          ? [['plus', 'minus', 24] as const]
           : [
-              ["plus", "minus", c.settings.voltage] as const,
-              ["ch2-plus", "ch2-minus", 5] as const,
-              ["5v-plus", "5v-minus", 5] as const,
+              ['plus', 'minus', c.settings.voltage] as const,
+              ['ch2-plus', 'ch2-minus', 5] as const,
+              ['5v-plus', '5v-minus', 5] as const,
             ];
       for (const [pp, np, voltage] of channels) {
         const plus = ref(c.id, pp),
@@ -506,15 +554,15 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           b = root(minus);
         if (a === b)
           fault(
-            "POWER_SHORT",
+            'POWER_SHORT',
             c.label +
-              " [" +
+              ' [' +
               c.id +
-              "] " +
+              '] ' +
               pp +
-              "/" +
+              '/' +
               np +
-              ": 부하 없이 직접 단락되었습니다.",
+              ': 부하 없이 직접 단락되었습니다.',
             [plus, minus],
             [a],
           );
@@ -524,8 +572,8 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         ] as const) {
           if (fixed.has(id) && Math.abs(fixed.get(id)! - value) > EPS)
             fault(
-              "POWER_SHORT",
-              "서로 다른 전원 전위가 같은 Net에 직접 연결되었습니다.",
+              'POWER_SHORT',
+              '서로 다른 전원 전위가 같은 Net에 직접 연결되었습니다.',
               [...(sourcePins.get(id) ?? []), p],
               [id],
             );
@@ -535,24 +583,16 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       }
     }
     for (const [id, pins] of topology.groups) {
-      const outputs = pins.filter(
-        (p) =>
-          components.some(
-            (c) => c.id === p.componentId && c.assetId === "ic-dip14",
-          ) &&
-          TTL_MODELS[
-            icModel(components.find((c) => c.id === p.componentId)!)
-          ].gates.some((g) => g.output === p.pinId),
-      );
+      const outputs = pins.filter((p) => outputPins.has(pinKey(p)));
       if (
         outputs.length > 1 &&
         !outputs.every((p) =>
-          isOpenCollector(components.find((c) => c.id === p.componentId)!),
+          isOpenCollector(componentsById.get(p.componentId)!),
         )
       )
         fault(
-          "OUTPUT_CONFLICT",
-          `논리 게이트 출력 충돌: ${outputs.map((p) => `${p.componentId}의 ${p.pinId}번`).join(", ")}이 같은 Net에 연결되었습니다.`,
+          'OUTPUT_CONFLICT',
+          `논리 게이트 출력 충돌: ${outputs.map((p) => `${p.componentId}의 ${p.pinId}번`).join(', ')}이 같은 Net에 연결되었습니다.`,
           outputs,
           [id],
         );
@@ -569,18 +609,18 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           ohms,
           diode,
         });
-      if (c.assetId === "resistor-330") add("1", "2", 330);
+      if (c.assetId === 'resistor-330') add('1', '2', 330);
       // Nominal teaching approximations, not measured hardware specifications.
-      if (c.assetId === "pilot-lamp") add("plus", "minus", 480);
+      if (c.assetId === 'pilot-lamp') add('plus', 'minus', 480);
       if (
-        c.assetId === "relay-socket" &&
+        c.assetId === 'relay-socket' &&
         components.some(
-          (b) => b.assetId === "relay-body" && b.mountedSocketId === c.id,
+          (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
         )
       )
-        add("14", "13", 1200);
-      if (c.assetId === "timer-at8n") add("7", "2", 1200);
-      if (c.assetId === "led-red") add("anode", "cathode", 20, true);
+        add('14', '13', 1200);
+      if (c.assetId === 'timer-at8n') add('7', '2', 1200);
+      if (c.assetId === 'led-red') add('anode', 'cathode', 20, true);
     }
     finalBranches = branches;
     let drivers = new Map<string, number>(),
@@ -596,10 +636,10 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       if (!dc.converged) break;
       const next = new Map<string, number>();
       for (const c of components.filter(
-        (item) => item.assetId === "ic-dip14",
+        (item) => item.assetId === 'ic-dip14',
       )) {
-        const vcc = volts.get(root(ref(c.id, "14"))),
-          gnd = volts.get(root(ref(c.id, "7")));
+        const vcc = volts.get(root(ref(c.id, '14'))),
+          gnd = volts.get(root(ref(c.id, '7')));
         if (
           vcc === undefined ||
           gnd === undefined ||
@@ -613,14 +653,14 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             return ttlLevel(value === undefined ? null : value - gnd);
           });
           const output: LogicLevel = gateValue(icModel(c), values);
-          if (output === "unknown" || (isOpenCollector(c) && output === 1))
+          if (output === 'unknown' || (isOpenCollector(c) && output === 1))
             continue;
           const pin = ref(c.id, gate.output),
             id = root(pin),
             value = output === 1 ? vcc : gnd;
           if (fixed.has(id) && Math.abs(fixed.get(id)! - value) > EPS)
             fault(
-              "OUTPUT_CONFLICT",
+              'OUTPUT_CONFLICT',
               `${c.label} [${c.id}]의 ${gate.output}번 출력이 반대 전원의 Net과 충돌합니다.`,
               [pin],
               [id],
@@ -643,18 +683,18 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     }
     if (!settled) {
       fault(
-        "UNSTABLE_CIRCUIT",
-        "회로가 안정된 상태로 수렴하지 않습니다. 논리 피드백 또는 부하 연결을 확인하세요.",
+        'UNSTABLE_CIRCUIT',
+        '회로가 안정된 상태로 수렴하지 않습니다. 논리 피드백 또는 부하 연결을 확인하세요.',
         [],
         [],
-        "error",
+        'error',
       );
       return finish();
     }
 
-    for (const c of components.filter((item) => item.assetId === "ic-dip14")) {
-      const vp = ref(c.id, "14"),
-        gp = ref(c.id, "7"),
+    for (const c of components.filter((item) => item.assetId === 'ic-dip14')) {
+      const vp = ref(c.id, '14'),
+        gp = ref(c.id, '7'),
         a = root(vp),
         b = root(gp);
       const vcc = volts.get(a),
@@ -663,18 +703,18 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         const delta = vcc - gnd;
         if (delta < -0.5)
           fault(
-            "IC_REVERSED_POWER",
+            'IC_REVERSED_POWER',
             `${c.label} [${c.id}]: 14번 VCC와 7번 GND가 역연결되었습니다 (${delta.toFixed(2)} V).`,
             [vp, gp],
             [a, b],
           );
         else if (delta > TTL.maxSupply)
           fault(
-            "IC_SUPPLY_VOLTAGE",
+            'IC_SUPPLY_VOLTAGE',
             `${c.label} [${c.id}] 전원 ${delta.toFixed(2)} V: ${icModel(c)} TTL 권장 범위는 4.75–5.25 V입니다.`,
             [vp, gp],
             [a, b],
-            "error",
+            'error',
           );
         else if (input.power.on && delta < TTL.minSupply)
           warnings.push(`${c.id}: IC 전원 전압이 부족합니다.`);
@@ -682,9 +722,9 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         warnings.push(`${c.id}: 14번 VCC와 7번 GND의 전원을 연결하세요.`);
     }
     const allDriven = new Map([...fixed, ...drivers]);
-    for (const c of components.filter((item) => item.assetId === "led-red")) {
-      const anode = ref(c.id, "anode"),
-        cathode = ref(c.id, "cathode"),
+    for (const c of components.filter((item) => item.assetId === 'led-red')) {
+      const anode = ref(c.id, 'anode'),
+        cathode = ref(c.id, 'cathode'),
         a = root(anode),
         b = root(cathode);
       // A series 330-ohm resistor on EITHER leg separates that LED pin from the
@@ -694,7 +734,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         low = allDriven.get(b);
       if (high !== undefined && low !== undefined && high - low >= 4.5)
         fault(
-          "LED_MISSING_RESISTOR",
+          'LED_MISSING_RESISTOR',
           `${c.label} [${c.id}]에 ${(high - low).toFixed(2)} V가 330Ω 직렬 전류 제한 저항 없이 직접 인가되었습니다.`,
           [anode, cathode],
           [a, b],
@@ -706,10 +746,10 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         ? components
             .filter(
               (c) =>
-                c.assetId === "relay-socket" &&
+                c.assetId === 'relay-socket' &&
                 components.some(
                   (b) =>
-                    b.assetId === "relay-body" && b.mountedSocketId === c.id,
+                    b.assetId === 'relay-body' && b.mountedSocketId === c.id,
                 ) &&
                 Math.abs(currents[c.id] ?? 0) * 1200 >= 18,
             )
@@ -717,15 +757,17 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         : [],
     );
     const nextTimers = new Set<string>();
-    for (const c of components.filter((c) => c.assetId === "timer-at8n")) {
+    for (const c of components.filter((c) => c.assetId === 'timer-at8n')) {
       const delta =
-        (volts.get(root(ref(c.id, "7"))) ?? 0) -
-        (volts.get(root(ref(c.id, "2"))) ?? 0);
+        (volts.get(root(ref(c.id, '7'))) ?? 0) -
+        (volts.get(root(ref(c.id, '2'))) ?? 0);
       if (input.power.on && delta >= 18) {
-        const since =
-          input.previous?.timerStates?.[c.id]?.since ??
-          timerStates[c.id]?.since ??
-          now;
+        const previousTimers = input.previous?.timerStates;
+        const previousTimer =
+          previousTimers && Object.hasOwn(previousTimers, c.id)
+            ? previousTimers[c.id]
+            : undefined;
+        const since = previousTimer?.since ?? timerStates[c.id]?.since ?? now;
         const elapsed = Math.max(0, (now - since) / 1000);
         timerStates[c.id] = {
           since,
@@ -748,11 +790,11 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     relays = nextRelays;
   }
   fault(
-    "UNSTABLE_CIRCUIT",
-    "릴레이 접점이 반복 전환되어 안정 상태를 찾지 못했습니다. 자기 차단 배선을 확인하세요.",
+    'UNSTABLE_CIRCUIT',
+    '릴레이 접점이 반복 전환되어 안정 상태를 찾지 못했습니다. 자기 차단 배선을 확인하세요.',
     [],
     [],
-    "error",
+    'error',
   );
   return finish();
 }

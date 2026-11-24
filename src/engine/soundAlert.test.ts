@@ -1,13 +1,13 @@
-﻿import { afterEach, describe, expect, it, vi } from "vitest";
-import { ALERT_PATTERN, SoundAlert } from "./soundAlert";
+﻿import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ALERT_PATTERN, SoundAlert } from './soundAlert';
 
-function fakeAudio(state: AudioContextState = "running") {
+function fakeAudio(state: AudioContextState = 'running') {
   const param = () => ({
     setValueAtTime: vi.fn(),
     cancelScheduledValues: vi.fn(),
   });
   const oscillator = {
-    type: "",
+    type: '',
     frequency: param(),
     connect: vi.fn(),
     disconnect: vi.fn(),
@@ -20,10 +20,10 @@ function fakeAudio(state: AudioContextState = "running") {
     currentTime: 10,
     destination: {},
     resume: vi.fn(async () => {
-      context.state = "running";
+      context.state = 'running';
     }),
     close: vi.fn(async () => {
-      context.state = "closed";
+      context.state = 'closed';
     }),
     createOscillator: vi.fn(() => oscillator),
     createGain: vi.fn(() => gain),
@@ -38,12 +38,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe("Web Audio short alarm", () => {
-  it("plays a 1200Hz square wave with 0.2s ON / 0.15s OFF on the audio clock", () => {
+describe('Web Audio short alarm', () => {
+  it('plays a 1200Hz square wave with 0.2s ON / 0.15s OFF on the audio clock', () => {
     vi.useFakeTimers();
     const { alarm, oscillator, gain } = fakeAudio();
     alarm.start();
-    expect(oscillator.type).toBe("square");
+    expect(oscillator.type).toBe('square');
     expect(oscillator.frequency.setValueAtTime).toHaveBeenCalledWith(1200, 10);
     const calls = gain.gain.setValueAtTime.mock.calls;
     expect(calls).toContainEqual([ALERT_PATTERN.volume, 10]);
@@ -55,7 +55,7 @@ describe("Web Audio short alarm", () => {
     expect(oscillator.start).toHaveBeenCalledOnce();
     alarm.dispose();
   });
-  it("does not overlap duplicate start requests and synchronously silences queued pulses", () => {
+  it('does not overlap duplicate start requests and synchronously silences queued pulses', () => {
     vi.useFakeTimers();
     const { alarm, context, oscillator, gain } = fakeAudio();
     alarm.start();
@@ -72,15 +72,15 @@ describe("Web Audio short alarm", () => {
     expect(vi.getTimerCount()).toBe(0);
     alarm.dispose();
   });
-  it("cannot restart from an old resume promise after power-off", async () => {
+  it('cannot restart from an old resume promise after power-off', async () => {
     vi.useFakeTimers();
-    const { alarm, context } = fakeAudio("suspended");
+    const { alarm, context } = fakeAudio('suspended');
     let resume!: () => void;
     context.resume.mockImplementation(
       () =>
         new Promise<void>((resolve) => {
           resume = () => {
-            context.state = "running";
+            context.state = 'running';
             resolve();
           };
         }),
@@ -93,10 +93,10 @@ describe("Web Audio short alarm", () => {
     expect(alarm.isRequested).toBe(false);
     alarm.dispose();
   });
-  it("retries a denied autoplay request from the next user gesture", async () => {
+  it('retries a denied autoplay request from the next user gesture', async () => {
     vi.useFakeTimers();
-    const { alarm, context } = fakeAudio("suspended");
-    context.resume.mockRejectedValueOnce(new Error("autoplay denied"));
+    const { alarm, context } = fakeAudio('suspended');
+    context.resume.mockRejectedValueOnce(new Error('autoplay denied'));
     alarm.start();
     await Promise.resolve();
     expect(alarm.isPlaying).toBe(false);
@@ -104,7 +104,7 @@ describe("Web Audio short alarm", () => {
     expect(alarm.isPlaying).toBe(true);
     alarm.dispose();
   });
-  it("handles unsupported audio, repeated disposal and context recreation", async () => {
+  it('handles unsupported audio, repeated disposal and context recreation', async () => {
     const unsupported = new SoundAlert({ createContext: () => null });
     unsupported.start();
     expect(await unsupported.unlock()).toBe(false);

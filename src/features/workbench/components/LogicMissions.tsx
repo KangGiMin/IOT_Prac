@@ -1,13 +1,14 @@
-﻿import { useState } from "react";
-import { ListChecks } from "lucide-react";
-import { useCircuitStore } from "../../../store/usePhotoCircuitStore";
-import { logicMissions } from "../data/logicMissions";
+﻿import { memo, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
+import { ListChecks } from 'lucide-react';
+import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
+import { logicMissions } from '../data/logicMissions';
 import {
   gradeLogicMission,
   type MissionGrade,
-} from "../../../engine/missionGrader";
-import { LogicSymbol } from "./LogicSymbol";
-export function LogicMissions() {
+} from '../../../engine/missionGrader';
+import { LogicSymbol } from './LogicSymbol';
+export const LogicMissions = memo(function LogicMissions() {
   const [selected, setSelected] = useState(logicMissions[0].id);
   const [a, setA] = useState<string | null>(null),
     [b, setB] = useState<string | null>(null),
@@ -16,15 +17,21 @@ export function LogicMissions() {
     signature: string;
     result: MissionGrade;
   } | null>(null);
-  const state = useCircuitStore(),
-    w = state.workspaces.digital;
+  const state = useCircuitStore(
+      useShallow((s) => ({
+        mode: s.mode,
+        setMode: s.setMode,
+        workspace: s.workspaces.digital,
+      })),
+    ),
+    w = state.workspace;
   const mission = logicMissions.find((item) => item.id === selected)!;
-  const switches = w.components.filter((c) => c.assetId === "switch-3pin"),
-    leds = w.components.filter((c) => c.assetId === "led-red");
+  const switches = w.components.filter((c) => c.assetId === 'switch-3pin'),
+    leds = w.components.filter((c) => c.assetId === 'led-red');
   const bindings = {
-    a: a ?? switches[0]?.id ?? "",
-    b: b ?? switches.find((c) => c.id !== (a ?? switches[0]?.id))?.id ?? "",
-    led: led ?? leds[0]?.id ?? "",
+    a: a ?? switches[0]?.id ?? '',
+    b: b ?? switches.find((c) => c.id !== (a ?? switches[0]?.id))?.id ?? '',
+    led: led ?? leds[0]?.id ?? '',
   };
   const signature = JSON.stringify({
     mission: selected,
@@ -73,7 +80,7 @@ export function LogicMissions() {
           연결하세요.
         </p>
       </details>
-      {state.mode === "digital" ? (
+      {state.mode === 'digital' ? (
         <>
           <div className="mission-bindings">
             <label>
@@ -137,16 +144,16 @@ export function LogicMissions() {
           </button>
           <p className="mission-stage-note">
             복사한 회로에 테스트 전원을 공급합니다. 현재 전원·스위치 상태는
-            유지합니다.{" "}
+            유지합니다.{' '}
             {mission.inputs === 1
-              ? "NOT는 입력 0과 1, 두 행을 검사합니다."
-              : "00·01·10·11 네 행을 검사합니다."}
+              ? 'NOT는 입력 0과 1, 두 행을 검사합니다.'
+              : '00·01·10·11 네 행을 검사합니다.'}
           </p>
         </>
       ) : (
         <button
           className="component-control"
-          onClick={() => state.setMode("digital")}
+          onClick={() => state.setMode('digital')}
         >
           디지털 회로에서 실습하기
         </button>
@@ -167,17 +174,17 @@ export function LogicMissions() {
             const grade = result?.rows[index];
             return (
               <tr
-                key={`${row.a}-${row.b ?? ""}`}
+                key={`${row.a}-${row.b ?? ''}`}
                 className={
-                  grade ? (grade.passed ? "grade-pass" : "grade-fail") : ""
+                  grade ? (grade.passed ? 'grade-pass' : 'grade-fail') : ''
                 }
               >
                 <td>{row.a}</td>
                 {mission.inputs === 2 && <td>{row.b}</td>}
                 <td>{row.output}</td>
-                <td>{grade?.actual ?? "—"}</td>
-                <td title={grade?.hints.join(" ")}>
-                  {grade ? (grade.passed ? "성공" : "실패") : "대기"}
+                <td>{grade?.actual ?? '—'}</td>
+                <td title={grade?.hints.join(' ')}>
+                  {grade ? (grade.passed ? '성공' : '실패') : '대기'}
                 </td>
               </tr>
             );
@@ -188,8 +195,8 @@ export function LogicMissions() {
         {result ? (
           <>
             <p className="mission-grade-score">
-              {result.score}점 ·{" "}
-              {result.passed ? "모든 입력 조합 성공" : "배선을 확인하세요"}
+              {result.score}점 ·{' '}
+              {result.passed ? '모든 입력 조합 성공' : '배선을 확인하세요'}
             </p>
             {result.hints.length > 0 && (
               <ul className="mission-grade-hints">
@@ -209,4 +216,4 @@ export function LogicMissions() {
       </div>
     </section>
   );
-}
+});

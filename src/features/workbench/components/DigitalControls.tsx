@@ -1,6 +1,6 @@
-import { IC_MODELS, TTL_MODELS, icModel } from "../../../config/ttlModels";
-import type { CircuitComponent } from "../../../types/circuit";
-import { useCircuitStore } from "../../../store/usePhotoCircuitStore";
+import { IC_MODELS, TTL_MODELS, icModel } from '../../../config/ttlModels';
+import type { CircuitComponent } from '../../../types/circuit';
+import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 export function DigitalControls({
   component: c,
 }: {
@@ -8,12 +8,13 @@ export function DigitalControls({
 }) {
   const s = useCircuitStore(),
     locked = s.calibration || s.workspaces[s.mode].power.on;
-  if (c.assetId === "ic-dip14")
+  if (c.assetId === 'ic-dip14')
     return (
       <>
         <label className="setting-field">
-          TTL IC 모델
+          <span id="ttl-model-label">TTL IC 모델</span>
           <select
+            aria-labelledby="ttl-model-label"
             disabled={locked}
             value={icModel(c)}
             onChange={(e) =>
@@ -29,7 +30,7 @@ export function DigitalControls({
             ))}
           </select>
         </label>
-        {icModel(c) === "7406" && (
+        {icModel(c) === '7406' && (
           <label className="setting-field">
             <input
               type="checkbox"
@@ -38,16 +39,16 @@ export function DigitalControls({
               onChange={(e) =>
                 s.updateSettings(c.id, { openCollector: e.target.checked })
               }
-            />{" "}
+            />{' '}
             오픈컬렉터 모드
           </label>
         )}
         <p className="panel-description">
           {c.insertion
             ? `브레드보드 ${c.insertion.bank + 1}구역 · ${c.insertion.column}열 장착`
-            : "중앙 홈으로 드래그해 장착하세요."}
+            : '중앙 홈으로 드래그해 장착하세요.'}
         </p>
-        {icModel(c) === "7406" && (
+        {icModel(c) === '7406' && (
           <p className="panel-description">
             기본 NOT는 학습용 능동 HIGH 출력입니다. 실제 오픈컬렉터 모드에서는
             HIGH를 만들 외부 풀업 저항이 필요합니다.
@@ -55,7 +56,7 @@ export function DigitalControls({
         )}
       </>
     );
-  if (c.assetId === "oscilloscope")
+  if (c.assetId === 'oscilloscope')
     return (
       <button
         className="component-control"
@@ -66,10 +67,10 @@ export function DigitalControls({
           })
         }
       >
-        {c.settings.scopeRunning === false ? "RUN" : "STOP"}
+        {c.settings.scopeRunning === false ? 'RUN' : 'STOP'}
       </button>
     );
-  if (c.assetId === "power-supply")
+  if (c.assetId === 'power-supply')
     return (
       <button
         className="component-control"
@@ -81,7 +82,7 @@ export function DigitalControls({
           })
         }
       >
-        OUTPUT {c.settings.outputEnabled === false ? "OFF" : "ON"}
+        OUTPUT {c.settings.outputEnabled === false ? 'OFF' : 'ON'}
       </button>
     );
   return null;

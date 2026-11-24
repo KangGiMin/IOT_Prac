@@ -42,7 +42,7 @@ export class SoundAlert {
   }
 
   private getContext() {
-    if (!this.context || this.context.state === "closed") {
+    if (!this.context || this.context.state === 'closed') {
       try {
         this.context = this.createContext();
       } catch {
@@ -60,8 +60,8 @@ export class SoundAlert {
     try {
       // resume() must be invoked synchronously inside the gesture handler,
       // before awaiting it. stop() invalidates pending resume continuations.
-      if (context.state !== "running") await context.resume();
-      if (this.context !== context || context.state !== "running") return false;
+      if (context.state !== 'running') await context.resume();
+      if (this.context !== context || context.state !== 'running') return false;
       if (generation === this.generation && this.wanted) this.beginTone();
       return true;
     } catch {
@@ -71,11 +71,11 @@ export class SoundAlert {
 
   click() {
     const context = this.context;
-    if (!context || context.state !== "running") return;
+    if (!context || context.state !== 'running') return;
     const oscillator = context.createOscillator(),
       gain = context.createGain(),
       now = context.currentTime;
-    oscillator.type = "triangle";
+    oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(1800, now);
     gain.gain.setValueAtTime(0.055, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
@@ -105,7 +105,7 @@ export class SoundAlert {
     const context = this.context;
     if (
       !context ||
-      context.state !== "running" ||
+      context.state !== 'running' ||
       !this.wanted ||
       this.oscillator
     )
@@ -115,7 +115,7 @@ export class SoundAlert {
     try {
       oscillator = context.createOscillator();
       gain = context.createGain();
-      oscillator.type = "square";
+      oscillator.type = 'square';
       oscillator.frequency.setValueAtTime(
         ALERT_PATTERN.frequency,
         context.currentTime,
@@ -194,7 +194,7 @@ export class SoundAlert {
     this.clicks.clear();
     const context = this.context;
     this.context = null;
-    if (context && context.state !== "closed")
+    if (context && context.state !== 'closed')
       void context.close().catch(() => {});
   }
 }
