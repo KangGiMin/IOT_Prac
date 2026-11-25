@@ -1,6 +1,7 @@
 import { makeComponent } from './photoCircuits';
 import { solveCircuit } from '../../../engine/circuitSolver';
 import { placeDigital } from '../utils/digitalPlacement';
+import { alignMountedRelays } from '../utils/relayMount';
 import type {
   CircuitComponent,
   CircuitMode,
@@ -69,6 +70,7 @@ export function createPreset(id: PresetId): {
     add('pb-switch', 'start', 280, 210).label = 'START · NO';
     add('relay-socket', 'relay', 490, 210);
     add('relay-body', 'body', 599.6, 236.5).mountedSocketId = 'relay';
+    components = alignMountedRelays(components);
     add('pilot-lamp', 'lamp', 800, 210);
     connect('board', 'plus', 'stop', 'nc1');
     connect('stop', 'nc2', 'start', 'no1');

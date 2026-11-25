@@ -1,6 +1,7 @@
 import { componentAssets } from '../../../config/assets';
 import { sequenceGeometry } from '../../../config/sequencePins';
 import type { CircuitComponent } from '../../../types/circuit';
+import { relayMountLayout } from './relayMount';
 export function placeSequence(
   components: CircuitComponent[],
   id: string,
@@ -8,18 +9,19 @@ export function placeSequence(
   const item = components.find((c) => c.id === id);
   if (!item) return components;
   if (item.assetId === 'relay-body') {
-    const center = { x: item.position.x + 50, y: item.position.y + 67.5 };
-    const socket = components.find(
-      (c) =>
-        c.assetId === 'relay-socket' &&
-        !components.some((b) => b.id !== id && b.mountedSocketId === c.id) &&
-        Math.abs(
-          center.x - (c.position.x + (210 * sequenceGeometry.mount.x) / 100),
-        ) < 85 &&
-        Math.abs(
-          center.y - (c.position.y + (200 * sequenceGeometry.mount.y) / 100),
-        ) < 90,
-    );
+    const size = item.displaySize ?? componentAssets['relay-body'].size;
+    const center = {
+      x: item.position.x + size.width / 2,
+      y: item.position.y + size.height / 2,
+    };
+    const socket = components.find((c) => {
+      if (c.assetId !== 'relay-socket' ||
+          components.some((b) => b.id !== id && b.mountedSocketId === c.id)) return false;
+      const { slot } = relayMountLayout(c);
+      return Math.abs(center.x - (slot.x + slot.width / 2)) < 85 &&
+        Math.abs(center.y - (slot.y + slot.height / 2)) < 90;
+    });
+    const layout = socket && relayMountLayout(socket);
     return components.map((c) =>
       c.id !== id
         ? c
@@ -27,18 +29,18 @@ export function placeSequence(
           ? {
               ...c,
               mountedSocketId: socket.id,
-              position: {
-                x:
-                  socket.position.x +
-                  (210 * sequenceGeometry.mount.x) / 100 -
-                  50,
-                y:
-                  socket.position.y +
-                  (200 * sequenceGeometry.mount.y) / 100 -
-                  67.5,
-              },
+              position: layout!.position,
+              displaySize: layout!.displaySize,
             }
-          : { ...c, mountedSocketId: undefined },
+          : {
+              ...c,
+              mountedSocketId: undefined,
+              displaySize: undefined,
+              position: {
+                x: center.x - componentAssets['relay-body'].size.width / 2,
+                y: center.y - componentAssets['relay-body'].size.height / 2,
+              },
+            },
     );
   }
   const board = components.find(

@@ -29,6 +29,7 @@ describe('rail placement and installation', () => {
       other = makeComponent('relay-body', 'other', 430, 237);
     const first = placeSequence([socket, body, other], 'body');
     expect(first[1].mountedSocketId).toBe('socket');
+    expect(first[1].displaySize!.width).toBeLessThan(50);
     expect(placeSequence(first, 'other')[2].mountedSocketId).toBeUndefined();
     useCircuitStore.setState((s) => ({
       workspaces: {
@@ -45,5 +46,6 @@ describe('rail placement and installation', () => {
       useCircuitStore.getState().workspaces.sequence.components[1]
         .mountedSocketId,
     ).toBeUndefined();
+    expect(useCircuitStore.getState().workspaces.sequence.components[1].displaySize).toBeUndefined();
   });
 });

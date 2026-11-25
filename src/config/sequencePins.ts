@@ -16,7 +16,16 @@ export const sequenceGeometry = {
   railYs: [18, 36, 54, 72, 90],
   left: 5,
   right: 95,
-  mount: { x: 76, y: 47, width: 28, height: 52 },
+  // Slot between the upper NO and lower coil screws, on relay-socket.png.
+  mount: { x: 78.3, y: 42.2, width: 19.2, height: 21.8 },
+  relayImages: {
+    socket: { width: 1122, height: 1402 },
+    body: {
+      width: 1254, height: 1254,
+      // Visible housing inside the transparent PNG canvas (percent).
+      housing: { x: 14.3, y: 4.4, width: 71.1, height: 91.2 },
+    },
+  },
   dialCenter: { x: 50, y: 50 },
 };
 // PB, lamp and relay centers follow the supplied 1134×1400 PNGs, including

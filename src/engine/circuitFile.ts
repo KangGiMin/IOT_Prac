@@ -2,6 +2,7 @@ import { digitalGeometry } from '../config/digitalPins';
 import { componentAssets } from '../config/assets';
 import { IC_MODELS } from '../config/ttlModels';
 import { solveCircuit } from './circuitSolver';
+import { alignMountedRelays } from '../features/workbench/utils/relayMount';
 import type {
   CircuitComponent,
   CircuitMode,
@@ -300,7 +301,8 @@ export function importCircuitFile(source: string): {
 } {
   const data = parseCircuitFile(source);
   const hydrate = (mode: CircuitMode): CircuitWorkspace => {
-    const w = data.workspaces[mode];
+    const saved = data.workspaces[mode];
+    const w = mode === 'sequence' ? { ...saved, components: alignMountedRelays(saved.components) } : saved;
     return {
       ...w,
       simulation: solveCircuit({ ...w, mode, compactBreadboards: true }),

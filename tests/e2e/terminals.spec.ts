@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { test, downloadCircuit, uploadCircuit } from './support';
+import { test, downloadCircuit, uploadCircuit, selfHoldPreset } from './support';
 
 const terminal = (page: Page, component: string, pin: string) =>
   page.locator(
@@ -8,6 +8,32 @@ const terminal = (page: Page, component: string, pin: string) =>
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+});
+
+test('fits the mounted relay inside the slot and leaves all fourteen screws clickable after zooming', async ({ page }, testInfo) => {
+  await selfHoldPreset(page);
+  const body = page.locator('[data-id="body"] .photo-node');
+  await expect(body.locator('.asset-photo')).toBeVisible();
+  await expect(body).toHaveCSS('transform', 'none');
+  const pins = page.locator('[data-id="relay"] .photo-pin');
+  await expect(pins).toHaveCount(14);
+  for (let zoom = 0; zoom < 2; zoom++) {
+    if (zoom) await page.getByRole('button', { name: 'Zoom In', exact: true }).click();
+    for (const pin of await pins.all()) {
+      await pin.scrollIntoViewIfNeeded();
+      const hit = await pin.evaluate(el => {
+        const rect = el.getBoundingClientRect();
+        const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+        return el === target || el.contains(target);
+      });
+      expect(hit, await pin.getAttribute('aria-label') ?? 'relay screw').toBe(true);
+      const screw = (await pin.boundingBox())!;
+      const mounted = (await body.boundingBox())!;
+      const x = screw.x + screw.width / 2, y = screw.y + screw.height / 2;
+      expect(x > mounted.x && x < mounted.x + mounted.width && y > mounted.y && y < mounted.y + mounted.height).toBe(false);
+    }
+  }
+  await page.locator('.photo-board-shell').screenshot({ path: testInfo.outputPath('relay-screws-visible.png') });
 });
 
 test('seats bare jumper tips at real breadboard holes in both directions and after zooming', async ({

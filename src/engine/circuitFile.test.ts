@@ -23,6 +23,18 @@ function invalid(change: (data: ReturnType<typeof JSON.parse>) => void) {
 }
 
 describe('versioned circuit JSON', () => {
+  it('refits the large mounted relay frame in older JSON while preserving its wiring', () => {
+    const before = workspaces();
+    const body = before.sequence.components.find(c => c.id === 'body')!;
+    delete body.displaySize;
+    body.position = { x: 599.6, y: 236.5 };
+    const result = importCircuitFile(exportCircuitFile('sequence', before));
+    const loaded = result.workspaces.sequence.components.find(c => c.id === 'body')!;
+    expect(loaded.mountedSocketId).toBe('relay');
+    expect(loaded.displaySize!.width).toBeLessThan(50);
+    expect(loaded.position).not.toEqual(body.position);
+    expect(result.workspaces.sequence.wires).toEqual(before.sequence.wires);
+  });
   it('round-trips an IC inserted in the fourth bank of the supplied breadboard', () => {
     const w = workspaces();
     w.digital.components = w.digital.components.map((c) =>
