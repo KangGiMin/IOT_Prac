@@ -29,7 +29,7 @@ export const exercises:Exercise[]=[
  {id:15,title:'3단 순차 기동·연쇄 해제',category:sequence,rungs:[r('R1',all(hold('PB1','R1'),'!PB4')),r('R2',all(hold('PB2','R2'),'R1')),r('R3',all(hold('PB3','R3'),'R2')),...lamps(3)]},
  {id:16,title:'1초·3초 순차 지연 점등',category:timer,rungs:[r('R1',all(hold('PB1','R1'),'!PB2')),{load:'T2',kind:'timer',when:'R1',seconds:1},l('PL1','T2'),{load:'T1',kind:'timer',when:'T2',seconds:3},l('PL2','T1')]},
  {id:17,title:'3초 후 자동 해제',category:timer,rungs:[r('R1',all(hold('PB1','R1'),'!T1')),l('LAMP1',hold('PB1','R1')),{load:'T1',kind:'timer',when:'R1',seconds:3}],note:'PB1을 놓으면 약 3초 뒤 해제됩니다. PB1을 계속 누르면 타이머 재설정과 재기동이 반복될 수 있습니다.'},
- {id:18,title:'3지점 기동·0.3초 부저',category:timer,rungs:[r('R1',all(any('PB1','PB2','PB3','R1'),'!PB4')),l('LAMP1','R1'),{load:'T1',kind:'timer',when:'R1',seconds:.3},{load:'BZ',kind:'buzzer',when:all('R1','!T1')}]},
+ {id:18,title:'3지점 기동·0.3초 부저',category:timer,rungs:[r('R1',all(any('PB1','PB2','PB3','R1'),'!PB4')),l('LAMP1',any('PB1','PB2','PB3','R1')),{load:'T1',kind:'timer',when:'R1',seconds:.3},{load:'BZ',kind:'buzzer',when:all('R1','!T1')}]},
  {id:19,title:'후입력 우선 표시 회로',category:priority,rungs:[...pair(false,false),...lamps()]},
  {id:20,title:'공통 정지·후입력 우선 표시',category:priority,rungs:[...pair(false),...lamps()]},
  {id:21,title:'3입력 후입력 우선',category:priority,rungs:[...triple(),...lamps(3)]},
@@ -37,25 +37,25 @@ export const exercises:Exercise[]=[
  {id:23,title:'자기유지 운전과 전환 표시',category:sequence,rungs:[r('R',all(hold('PB1','R'),'!PB2')),l('L1','!R'),l('L2','R')],motor:['R','OFF'],note:'원본은 R-a로 모터를 급전하고 R-c로 L1/L2를 절환합니다. 모터 권선·단자 내부도가 없어 CW/CCW를 확정하지 않고 운전/정지로 표시합니다.'},
  {id:24,title:'비유지 인터록 H 브리지',category:direction,rungs:[r('R1',all('PB1','!R2')),r('R2',all('PB2','!R1'))],motor:['R1','R2'],note:'교차된 a접점으로 극성을 반전합니다. 동시 입력은 물리적 접점 지연에 따라 경합할 수 있어 보장된 우선순위로 채점하지 않습니다.'},
 ];
-export interface Part {id:string;label:string;kind:Rung['kind']|'contact'|'motor';owner?:string;nc?:boolean;seconds?:number}
+export interface Part {id:string;label:string;kind:Rung['kind']|'contact'|'motor';owner?:string;nc?:boolean;seconds?:number;purpose?:string;pole?:number}
 export type Lead=[string,string];
 export interface ExerciseCircuit {parts:Part[];leads:Lead[];ports:string[]}
 /** Explicit netlist: contacts conduct, loads never merge their two terminals. */
 export function buildExercise(e:Exercise,corrected=false):ExerciseCircuit {
- const parts:Part[]=[],leads:Lead[]=[];let serial=0;
+ const parts:Part[]=[],leads:Lead[]=[];let serial=0,purpose='',pole:number|undefined;
  const wire=(a:string,b:string)=>{leads.push([a,b]);};
- const path=(expr:Expression,a:string,b:string)=>{if(typeof expr==='string'){const nc=expr.startsWith('!'),owner=nc?expr.slice(1):expr,id='C'+(++serial);parts.push({id,label:`${owner} ${nc?'b (NC)':'a (NO)'}`,kind:'contact',owner,nc});wire(a,id+':1');wire(id+':2',b);}else if('or'in expr)expr.or.forEach(x=>path(x,a,b));else expr.and.forEach((x,i)=>path(x,i===0?a:`J${serial}-${i}`,i===expr.and.length-1?b:`J${serial}-${i+1}`));};
+ const path=(expr:Expression,a:string,b:string)=>{if(typeof expr==='string'){const nc=expr.startsWith('!'),owner=nc?expr.slice(1):expr,id='C'+(++serial);parts.push({id,label:`${owner} ${nc?'b (NC)':'a (NO)'}`,kind:'contact',owner,nc,purpose,pole});wire(a,id+':1');wire(id+':2',b);}else if('or'in expr)expr.or.forEach(x=>path(x,a,b));else expr.and.forEach((x,i)=>path(x,i===0?a:`J${serial}-${i}`,i===expr.and.length-1?b:`J${serial}-${i+1}`));};
  // Give each series junction a stable unique name independent of recursion.
  const connect=(expr:Expression,a:string,b:string)=>{if(typeof expr==='string'||'or'in expr){if(typeof expr!=='string')expr.or.forEach(x=>connect(x,a,b));else path(expr,a,b);}else{const nodes=[a,...expr.and.slice(1).map(()=>`J${++serial}`),b];expr.and.forEach((x,i)=>connect(x,nodes[i],nodes[i+1]));}};
- for(const rung of corrected&&e.correction?e.correction:e.rungs){parts.push({id:rung.load,label:rung.load,kind:rung.kind,seconds:rung.seconds});connect(rung.when,'24V',rung.load+':1');wire(rung.load+':2','0V');}
- if(e.motor){parts.push({id:'M',label:'모터 (교육용 2단자 등가 모델)',kind:'motor'});
+ for(const rung of corrected&&e.correction?e.correction:e.rungs){purpose=rung.load;parts.push({id:rung.load,label:rung.load,kind:rung.kind,seconds:rung.seconds});connect(rung.when,'24V',rung.load+':1');wire(rung.load+':2','0V');}
+ if(e.motor){purpose='M';parts.push({id:'M',label:'모터 (교육용 2단자 등가 모델)',kind:'motor'});
   const invert=(x:Expression):Expression=>typeof x==='string'?(x.startsWith('!')?x.slice(1):'!'+x):'or'in x?all(...x.or.map(invert)):any(...x.and.map(invert));
-  if(e.id===24){connect('R1','24V','M:1');connect('R2','0V','M:1');connect('R2','24V','M:2');connect('R1','0V','M:2');}
-  else e.motor.forEach((signal,i)=>{const terminal=`M:${i+1}`;if(signal==='OFF'){wire(terminal,'0V');return;}const expr:Expression=signal==='ANY'?any(...e.rungs.filter(r=>r.kind==='relay').map(r=>r.load)):signal;
+  if(e.id===24){pole=0;connect('R1','24V','M:1');connect('R2','0V','M:1');pole=1;connect('R2','24V','M:2');connect('R1','0V','M:2');}
+  else e.motor.forEach((signal,i)=>{pole=i;const terminal=`M:${i+1}`;if(signal==='OFF'){wire(terminal,'0V');return;}const expr:Expression=signal==='ANY'?any(...e.rungs.filter(r=>r.kind==='relay').map(r=>r.load)):signal;
    const source=e.id===5?'M-enable':e.id===10?'M-enable':'24V';
    connect(expr,source,terminal);if(e.id!==22&&e.id!==23)connect(invert(expr),'0V',terminal);
   });
-  if(e.id===5||e.id===10)connect(e.id===5?'R1':'R3','24V','M-enable');
+  pole=undefined;if(e.id===5||e.id===10)connect(e.id===5?'R1':'R3','24V','M-enable');
  }
  const ports=[...new Set(['24V','0V',...parts.flatMap(p=>[p.id+':1',p.id+':2']),...leads.flat()])];
  return {parts,leads,ports};

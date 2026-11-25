@@ -18,7 +18,7 @@ test('includes every source image, classifies all 24 exercises and tests referen
   await expect(page.getByRole('status').filter({hasText:'단계 일치'})).toContainText('원본 해석과 일치');
  }
  await page.getByRole('button',{name:'배선 초기화',exact:true}).click();await page.getByRole('button',{name:'배선 동작 자동 테스트',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'단계 일치'})).toContainText('배선과 접점 종류');
- await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox').check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');
+ await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox',{name:/수정안과 비교/}).check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');
  await page.screenshot({path:testInfo.outputPath('exercise-page.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.body.scrollWidth)).toBeLessThanOrEqual(392);
 });
