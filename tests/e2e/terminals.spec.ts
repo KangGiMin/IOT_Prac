@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import { test, downloadCircuit, uploadCircuit, selfHoldPreset } from './support';
+import { test, downloadCircuit, uploadCircuit, selfHoldPreset, loadPopulatedWorkspace } from './support';
 
 const terminal = (page: Page, component: string, pin: string) =>
   page.locator(
@@ -32,6 +32,7 @@ const photographedRims: [string, string, number, number, number, number][] = [
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+  await loadPopulatedWorkspace(page);
 });
 
 test('sizes both Y terminals to each screw and joins cables at their crimps before and after zooming', async ({ page }, testInfo) => {

@@ -7,10 +7,12 @@ import {
   selfHoldPreset,
   openWiring,
   selectCircuitNode,
+  loadPopulatedWorkspace,
 } from './support';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+  await loadPopulatedWorkspace(page);
   await expect(
     page.getByRole('link', { name: '키보드 배선으로 이동', exact: true }),
   ).toBeAttached();
@@ -19,7 +21,8 @@ test.beforeEach(async ({ page }) => {
 test('connects and undoes/redoes a wire using only the keyboard', async ({
   page,
 }) => {
-  await page.keyboard.press('Tab');
+  // Loading the explicit test circuit leaves focus in the file toolbar.
+  await page.getByRole('link', { name: '실습 영역으로 이동', exact: true }).focus();
   await expect(
     page.getByRole('link', { name: '실습 영역으로 이동', exact: true }),
   ).toBeFocused();

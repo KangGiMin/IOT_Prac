@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useCircuitStore } from './usePhotoCircuitStore';
-import { createPhotoWorkspace } from '../features/workbench/data/photoCircuits';
+import { createPopulatedWorkspace as createPhotoWorkspace } from '../test/populatedWorkspace';
 import { exportCircuitFile } from '../engine/circuitFile';
 import { insertedPins } from '../config/digitalPins';
 

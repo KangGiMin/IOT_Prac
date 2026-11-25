@@ -1,4 +1,11 @@
 import { expect, test as base, type Page } from '@playwright/test';
+export async function loadPopulatedWorkspace(page:Page){
+ const make=(assetId:string,id:string,x:number,y:number)=>({assetId,id,label:id,position:{x,y},settings:{pressed:false,switchOn:false,timerSeconds:3,voltage:5}});
+ const saved=await downloadCircuit(page);
+ saved.workspaces.sequence.components=[make('panel-board','seq-board',0,0),make('pb-switch','seq-pb',95,210),make('relay-socket','seq-relay',320,210),make('pilot-lamp','seq-lamp',595,210),make('timer-at8n','seq-timer',825,210)];
+ saved.workspaces.digital.components=[make('breadboard','dig-board',0,110),make('power-supply','dig-power',735,80),make('oscilloscope','dig-scope',735,335),make('ic-dip14','dig-ic',240,295),make('led-red','dig-led',100,270),make('resistor-330','dig-resistor',440,310)];
+ await uploadCircuit(page,saved);
+}
 
 export const test = base.extend<{ runtimeErrors: string[] }>({
   runtimeErrors: [

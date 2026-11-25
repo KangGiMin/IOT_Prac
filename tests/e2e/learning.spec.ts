@@ -1,8 +1,9 @@
 import { expect, type Page } from '@playwright/test';
-import { test, downloadCircuit, uploadCircuit, nandPreset } from './support';
+import { test, downloadCircuit, uploadCircuit, nandPreset, loadPopulatedWorkspace } from './support';
 
 async function center(page:Page) {
   await page.goto('/');
+  await loadPopulatedWorkspace(page);
   await page.getByRole('link',{name:'계측·논리 학습 센터',exact:true}).click();
   await expect(page.getByRole('heading',{name:'계측·논리 학습 센터',exact:true})).toBeVisible();
 }

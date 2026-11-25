@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from './App';
 import { useCircuitStore } from '../store/usePhotoCircuitStore';
-import { createPhotoWorkspace } from '../features/workbench/data/photoCircuits';
+import { createPopulatedWorkspace as createPhotoWorkspace } from '../test/populatedWorkspace';
 
 // Static markup has no subscriptions. Read the configured test workspace instead
 // of Zustand's immutable server-initial snapshot; production hooks stay intact.

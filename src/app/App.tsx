@@ -21,6 +21,7 @@ import { PhotoPalette } from '../features/workbench/components/PhotoPalette';
 import { SoundAlert } from '../engine/soundAlert';
 import { ScopeAcquisition } from '../features/scope/ScopeAcquisition';
 const LearningCenter = lazy(() => import('../features/learning/LearningCenter').then(module => ({ default: module.LearningCenter })));
+const ExercisesPage = lazy(() => import('../features/exercises/ExercisesPage').then(module => ({ default: module.ExercisesPage })));
 
 const modes = [
   { id: 'sequence', label: '시퀀스 제어', Icon: CircuitBoard },
@@ -29,6 +30,8 @@ const modes = [
 
 /** Full-width workbench first; library and inspector follow in page flow. */
 export function App() {
+  const [exercisePage,setExercisePage]=useState(typeof window!=='undefined'&&window.location.hash==='#exercises');
+  useEffect(()=>{const sync=()=>setExercisePage(window.location.hash==='#exercises');window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);},[]);
   const state = useCircuitStore(
     useShallow(({ workspaces: _workspaces, ...state }) => state),
   );
@@ -96,6 +99,7 @@ export function App() {
       alarm.dispose();
     };
   }, [alarm]);
+  if(exercisePage)return <Suspense fallback={<p>연습문제를 불러오는 중입니다.</p>}><ExercisesPage/></Suspense>;
   return (
     <div
       className="circuit-app"

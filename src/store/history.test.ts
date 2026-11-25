@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useCircuitStore } from './usePhotoCircuitStore';
-import { createPhotoWorkspace } from '../features/workbench/data/photoCircuits';
+import { createPopulatedWorkspace as createPhotoWorkspace } from '../test/populatedWorkspace';
 import { exportCircuitFile } from '../engine/circuitFile';
 import { solveCircuit } from '../engine/circuitSolver';
 const a = { componentId: 'seq-pb', pinId: 'no1' },

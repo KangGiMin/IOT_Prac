@@ -643,7 +643,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
           selectedId: null,
           selectedWireId: null,
           sample: null,
-          notice: '현재 실습을 기본 배치로 초기화했습니다.',
+          notice: '현재 실습의 부품과 배선을 지우고 빈 보드로 초기화했습니다.',
         };
       });
     },

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createPhotoWorkspace } from '../features/workbench/data/photoCircuits';
+import { createPopulatedWorkspace as createPhotoWorkspace } from '../test/populatedWorkspace';
 import { useCircuitStore } from './usePhotoCircuitStore';
 
 beforeEach(() =>
@@ -121,12 +121,12 @@ describe('photo circuit editing', () => {
     store.reset();
     expect(
       useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(6);
+    ).toHaveLength(1);
     expect(useCircuitStore.getState().workspaces.sequence).toBe(sequence);
     store.addComponent('pilot-lamp');
     expect(
       useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(6);
+    ).toHaveLength(1);
   });
   it('halts live outputs on a real short, allows repair while tripped, and recovers immediately', () => {
     const store = useCircuitStore.getState();
