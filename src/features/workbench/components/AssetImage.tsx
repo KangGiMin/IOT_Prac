@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import { ImageOff } from 'lucide-react';
 import type { ComponentAsset, Size } from '../../../types/circuit';
 
@@ -6,11 +7,13 @@ import type { ComponentAsset, Size } from '../../../types/circuit';
 export function AssetImage({
   asset,
   thumbnail = false,
+  style,
   onLoad,
   onFallback,
 }: {
   asset: ComponentAsset;
   thumbnail?: boolean;
+  style?: CSSProperties;
   onLoad?: (natural: Size) => void;
   onFallback?: () => void;
 }) {
@@ -38,6 +41,7 @@ export function AssetImage({
       src={asset.src}
       alt={asset.label}
       draggable={false}
+      style={style}
       onError={() => {
         setFailedSrc(asset.src);
         onFallback?.();

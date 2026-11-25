@@ -10,9 +10,11 @@ export function scopeTimeWindow(s:ScopeSettings,capture:{start:number;dt:number;
   const anchor=capture.triggerTime??capture.start+capture.dt*(capture.ch1.length-1)*.3;
   return {start:anchor-position*span,span};
 }
-export function ScopeDisplay({ id, expanded = false }: { id: string; expanded?: boolean }) {
+export function ScopeDisplay({ id, expanded = false, interactive = false }: { id: string; expanded?: boolean; interactive?: boolean }) {
   const canvas=useRef<HTMLCanvasElement>(null);
   const raw=useCircuitStore(s=>s.workspaces.digital.components.find(c=>c.id===id)?.settings.scope);
+  const powered=useCircuitStore(s=>s.workspaces.digital.components.find(c=>c.id===id)?.settings.scopePowered!==false);
+  const calibrating=useCircuitStore(s=>s.calibration);
   const s=useMemo(()=>getScopeSettings(raw),[raw]);
   const record=useScopeRuntime(state=>state.records[id]);
   const reference=useScopeRuntime(state=>state.references[id]);
@@ -21,6 +23,7 @@ export function ScopeDisplay({ id, expanded = false }: { id: string; expanded?: 
   useEffect(()=>{
     const ctx=canvas.current?.getContext('2d');if(!ctx)return;
     const width=1000,height=600,left=58,right=980,top=42,bottom=548,w=right-left,h=bottom-top;
+    if(!powered){ctx.fillStyle='#0a1118';ctx.fillRect(0,0,width,height);return;}
     ctx.fillStyle='#081c2c';ctx.fillRect(0,0,width,height);
     ctx.lineWidth=1;ctx.strokeStyle='#294656';
     for(let i=0;i<=10;i++){const x=left+w*i/10;ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();}
@@ -76,13 +79,13 @@ export function ScopeDisplay({ id, expanded = false }: { id: string; expanded?: 
     ctx.font='18px monospace';
     for(const [id,color,x] of [['ch1','#ffe04a',320],['ch2','#38aaff',650]] as const){ctx.fillStyle=color;ctx.fillText(`${id.toUpperCase()} ${engineering(s.channels[id].voltsDiv,'V')}/div ${s.channels[id].coupling}`,x,height-10);}
     ctx.fillStyle='#91aebb';ctx.font='16px monospace';ctx.fillText(`${engineering(1/capture.dt,'Sa/s')} · ${n} points`,left,bottom+18);
-  },[capture,record?.status,s,drag,reference]);
+  },[capture,record?.status,s,drag,reference,powered]);
   const position=(event:React.PointerEvent<HTMLCanvasElement>)=>{
     const rect=event.currentTarget.getBoundingClientRect();return Math.max(0,Math.min(1,((event.clientX-rect.left)/rect.width*1000-58)/922));
   };
   return <canvas ref={canvas} width={1000} height={600} className={`scope-canvas ${expanded?'scope-canvas-expanded':''}`}
-    data-scope-display={id} data-reference={s.reference&&reference?reference.channel:''} role="img" aria-label="CH1 노란색, CH2 파란색 실시간 계측 파형" title="프로브·내장 발생기 파형. 커서를 켜면 수직 커서를 마우스로 이동할 수 있습니다."
-    onPointerDown={event=>{if(!expanded||!s.cursors.enabled||s.display!=='yt')return;const value=position(event);const key=Math.abs(value-s.cursors.x1)<Math.abs(value-s.cursors.x2)?'x1':'x2';event.currentTarget.setPointerCapture(event.pointerId);setDrag({key,value});}}
+    data-scope-display={id} data-powered={powered} data-reference={s.reference&&reference?reference.channel:''} role="img" aria-label="CH1 노란색, CH2 파란색 실시간 계측 파형" title="프로브·내장 발생기 파형. 커서를 켜면 수직 커서를 마우스로 이동할 수 있습니다."
+    onPointerDown={event=>{if((!expanded&&!interactive)||!powered||calibrating||!s.cursors.enabled||s.display!=='yt')return;const value=position(event);const key=Math.abs(value-s.cursors.x1)<Math.abs(value-s.cursors.x2)?'x1':'x2';event.currentTarget.setPointerCapture(event.pointerId);setDrag({key,value});}}
     onPointerMove={event=>{if(drag&&event.currentTarget.hasPointerCapture(event.pointerId))setDrag({...drag,value:position(event)});}}
     onPointerUp={event=>{if(!drag)return;useCircuitStore.getState().updateScope(id,{...s,cursors:{...s.cursors,[drag.key]:position(event)}});setDrag(null);}}
     onPointerCancel={()=>setDrag(null)} />;

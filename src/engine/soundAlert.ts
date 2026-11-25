@@ -9,6 +9,7 @@ export const ALERT_PATTERN = {
   volume: 0.12,
 } as const;
 export interface SoundAlertOptions {
+  continuous?: boolean;
   /** Dependency injection for tests/embedded hosts; not needed by the application. */
   createContext?: () => AudioContext | null;
 }
@@ -29,9 +30,11 @@ export class SoundAlert {
   private wanted = false;
   private generation = 0;
   private nextPulse = 0;
+  private readonly continuous: boolean;
   private readonly createContext: () => AudioContext | null;
 
   constructor(options: SoundAlertOptions = {}) {
+    this.continuous = options.continuous ?? false;
     this.createContext = options.createContext ?? browserContext;
   }
   get isPlaying() {
@@ -120,17 +123,20 @@ export class SoundAlert {
         ALERT_PATTERN.frequency,
         context.currentTime,
       );
-      gain.gain.setValueAtTime(0, context.currentTime);
+      gain.gain.setValueAtTime(this.continuous ? ALERT_PATTERN.volume : 0, context.currentTime);
       oscillator.connect(gain);
       gain.connect(context.destination);
       this.oscillator = oscillator;
       this.gain = gain;
-      this.nextPulse = context.currentTime;
-      this.schedule();
+      if (!this.continuous) {
+        this.nextPulse = context.currentTime;
+        this.schedule();
+      }
       oscillator.start();
-      // Audio-clock scheduling, not JS timeouts for individual ON/OFF edges.
-      // The lookahead also tolerates normal background-tab timer throttling.
-      this.interval = setInterval(() => this.schedule(), 100);
+      if (!this.continuous) {
+        // Audio-clock scheduling also tolerates background-tab timer throttling.
+        this.interval = setInterval(() => this.schedule(), 100);
+      }
     } catch {
       oscillator?.disconnect();
       gain?.disconnect();

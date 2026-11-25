@@ -1,8 +1,11 @@
-import { digitalGeometry } from '../config/digitalPins';
+import { breadboardRows, digitalGeometry, insertedPins, plugInPart } from '../config/digitalPins';
 import { componentAssets } from '../config/assets';
+import { wireColors } from '../config/wireColors';
 import { IC_MODELS } from '../config/ttlModels';
+import { parseSupplySettings } from '../config/supplySettings';
 import { solveCircuit } from './circuitSolver';
 import { alignMountedRelays } from '../features/workbench/utils/relayMount';
+import { alignPlugInParts } from '../features/workbench/utils/digitalPlacement';
 import { parseScopeSettings } from '../features/scope/model';
 import type {
   CircuitComponent,
@@ -165,10 +168,12 @@ function parseCircuitFile(source: string): {
         if (assetId !== 'oscilloscope') fail('계측 설정은 오실로스코프에서만 사용할 수 있습니다.');
         settings.scope = parseScopeSettings(s.scope);
       }
+      if (s.supply !== undefined) settings.supply = parseSupplySettings(s.supply);
       for (const k of [
         'openCollector',
         'outputEnabled',
         'scopeRunning',
+        'scopePowered',
       ] as const)
         if (s[k] !== undefined) settings[k] = boolean(s[k]);
       if (s.icModel !== undefined) {
@@ -194,16 +199,22 @@ function parseCircuitFile(source: string): {
         result.mountedSocketId = id(c.mountedSocketId);
       if (c.insertion !== undefined) {
         const ins = object(c.insertion);
+        const part = plugInPart(assetId);
         result.insertion = {
           boardId: id(ins.boardId),
           bank: number(ins.bank, 0, digitalGeometry.banks.length - 1),
-          column: number(ins.column, 1, digitalGeometry.columns - 6),
+          column: number(ins.column, 1, digitalGeometry.columns - (part?.offsets.at(-1) ?? 6)),
         };
+        if (part) {
+          const row = text(ins.row, 1);
+          if (!breadboardRows.includes(row)) fail('브레드보드 삽입 행이 올바르지 않습니다.');
+          result.insertion.row = row;
+        }
         if (
           !Number.isInteger(result.insertion.bank) ||
           !Number.isInteger(result.insertion.column)
         )
-          fail('IC 삽입 위치는 정수여야 합니다.');
+          fail('브레드보드 삽입 위치는 정수여야 합니다.');
       }
       if (c.displaySize !== undefined) {
         const size = object(c.displaySize);
@@ -231,15 +242,15 @@ function parseCircuitFile(source: string): {
       if (c.insertion) {
         const ins = c.insertion;
         if (
-          c.assetId !== 'ic-dip14' ||
+          (c.assetId !== 'ic-dip14' && !plugInPart(c.assetId)) ||
           !components.some(
             (b) => b.id === ins.boardId && b.assetId === 'breadboard',
           )
         )
-          fail('IC 삽입 대상이 올바르지 않습니다.');
-        for (let col = ins.column; col < ins.column + 7; col++) {
-          const key = `${ins.boardId}:${ins.bank}:${col}`;
-          if (occupied.has(key)) fail('IC 삽입 위치가 겹칩니다.');
+          fail('브레드보드 삽입 대상이 올바르지 않습니다.');
+        for (const { pinId } of Object.values(insertedPins(c))) {
+          const key = `${ins.boardId}:${pinId}`;
+          if (occupied.has(key)) fail('브레드보드 삽입 위치가 겹칩니다.');
           occupied.add(key);
         }
       }
@@ -271,19 +282,15 @@ function parseCircuitFile(source: string): {
       if (a === b || connections.has(key))
         fail('자기 연결 또는 중복 전선이 있습니다.');
       connections.add(key);
-      if (
-        !['#dc4c4c', '#303b48', '#3780d5', '#159477', '#e3ac32'].includes(
-          String(w.color),
-        )
-      )
-        fail('전선 색상이 올바르지 않습니다.');
+      const color = wireColors.find(({ value }) => value === w.color)?.value
+        ?? fail('전선 색상이 올바르지 않습니다.');
       if (w.kind !== undefined && w.kind !== 'clip' && w.kind !== 'jumper')
         fail('전선 종류가 올바르지 않습니다.');
       return {
         id: wid,
         from,
         to,
-        color: w.color as CircuitWire['color'],
+        color,
         ...(w.kind ? { kind: w.kind as CircuitWire['kind'] } : {}),
       };
     });
@@ -307,7 +314,7 @@ export function importCircuitFile(source: string): {
   const data = parseCircuitFile(source);
   const hydrate = (mode: CircuitMode): CircuitWorkspace => {
     const saved = data.workspaces[mode];
-    const w = mode === 'sequence' ? { ...saved, components: alignMountedRelays(saved.components) } : saved;
+    const w = { ...saved, components: mode === 'sequence' ? alignMountedRelays(saved.components) : alignPlugInParts(saved.components) };
     return {
       ...w,
       simulation: solveCircuit({ ...w, mode, compactBreadboards: true }),

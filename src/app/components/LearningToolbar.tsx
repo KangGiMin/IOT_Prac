@@ -74,7 +74,6 @@ export function LearningToolbar() {
       >
         다시 실행 <kbd>Ctrl+Y</kbd>
       </button>
-      <span className="tool-separator" />
       <button onClick={save}>회로 JSON 저장</button>
       <button onClick={() => fileInput.current?.click()}>
         회로 JSON 불러오기
@@ -103,17 +102,6 @@ export function LearningToolbar() {
           }
         }}
       />
-      <span className="tool-separator" />
-      <span className="preset-label">예제 회로</span>
-      <button onClick={() => state.loadPreset('self-hold')}>
-        시퀀스 · 자기유지
-      </button>
-      <button onClick={() => state.loadPreset('nand')}>
-        디지털 · 7400 NAND
-      </button>
-      <button onClick={() => state.loadPreset('nor')}>
-        디지털 · 7402 NOR
-      </button>
     </div>
   );
 }

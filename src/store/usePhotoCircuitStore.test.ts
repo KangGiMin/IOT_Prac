@@ -33,7 +33,7 @@ describe('photo circuit editing', () => {
     expect(useCircuitStore.getState().calibration).toBe(false);
     expect(useCircuitStore.getState().sample).toBeNull();
   });
-  it('clamps dial settings, rejects nonfinite values and locks voltage while powered', () => {
+  it('clamps dial settings, rejects nonfinite values and adjusts the instrument while powered', () => {
     const store = useCircuitStore.getState();
     store.updateSettings('seq-timer', { timerSeconds: 500 });
     expect(
@@ -45,14 +45,12 @@ describe('photo circuit editing', () => {
     store.setMode('digital');
     store.updateSettings('dig-power', { voltage: 50 });
     store.updateSettings('dig-power', { voltage: NaN });
-    expect(useCircuitStore.getState().workspaces.digital.power.voltage).toBe(
-      30,
-    );
+    expect(useCircuitStore.getState().workspaces.digital.power.voltage).toBe(30);
     store.togglePower();
     store.updateSettings('dig-power', { voltage: 3 });
-    expect(useCircuitStore.getState().workspaces.digital.power.voltage).toBe(
-      30,
-    );
+    const digital = useCircuitStore.getState().workspaces.digital;
+    expect(digital.power.voltage).toBe(3);
+    expect(digital.simulation.pinValues['dig-power:plus'].voltage).toBe(3);
   });
   it('connects real pins with the chosen color and rejects duplicate/reversed wires', () => {
     const store = useCircuitStore.getState();

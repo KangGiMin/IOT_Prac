@@ -269,7 +269,7 @@ export function PhotoInspector() {
                   max="30"
                   step="0.1"
                   value={component.settings.voltage}
-                  disabled={workspace.power.on || state.calibration}
+                  disabled={state.calibration}
                   onChange={(e) => {
                     const voltage = e.target.valueAsNumber;
                     if (Number.isFinite(voltage))

@@ -1,4 +1,5 @@
 import { expect, test as base, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 export async function loadPopulatedWorkspace(page:Page){
  const make=(assetId:string,id:string,x:number,y:number)=>({assetId,id,label:id,position:{x,y},settings:{pressed:false,switchOn:false,timerSeconds:3,voltage:5}});
  const saved=await downloadCircuit(page);
@@ -31,7 +32,7 @@ export interface SavedComponent {
     voltage: number;
     icModel?: string;
   };
-  insertion?: { boardId: string; bank: number; column: number };
+  insertion?: { boardId: string; bank: number; column: number; row?: string };
   displaySize?: { width: number; height: number };
 }
 export interface SavedCircuit {
@@ -72,18 +73,21 @@ export async function uploadCircuit(page: Page, data: SavedCircuit) {
     buffer: Buffer.from(JSON.stringify(data), 'utf8'),
   });
 }
-export async function nandPreset(page: Page) {
-  await page
-    .getByRole('button', { name: '디지털 · 7400 NAND', exact: true })
-    .click();
-  await expect(page.locator('.photo-board-toolbar')).toContainText('16 배선');
+type TestCircuitId = 'self-hold' | 'nand' | 'nor';
+const testCircuits = JSON.parse(readFileSync(new URL('./fixtures/circuits.json', import.meta.url), 'utf8')) as Record<
+  TestCircuitId, { mode: SavedCircuit['activeMode']; workspace: SavedCircuit['workspaces']['digital'] }
+>;
+
+export async function loadTestCircuit(page: Page, id: TestCircuitId) {
+  const { mode, workspace } = testCircuits[id];
+  const saved = await downloadCircuit(page);
+  saved.activeMode = mode;
+  saved.workspaces[mode] = workspace;
+  await uploadCircuit(page, saved);
+  await expect(page.locator('.photo-board-toolbar')).toContainText(`${workspace.wires.length} 배선`);
 }
-export async function selfHoldPreset(page: Page) {
-  await page
-    .getByRole('button', { name: '시퀀스 · 자기유지', exact: true })
-    .click();
-  await expect(page.locator('.photo-board-toolbar')).toContainText('8 배선');
-}
+export const nandPreset = (page: Page) => loadTestCircuit(page, 'nand');
+export const selfHoldPreset = (page: Page) => loadTestCircuit(page, 'self-hold');
 export async function openWiring(page: Page) {
   const summary = page.getByText('단자 선택으로 배선', { exact: true });
   await summary.click();

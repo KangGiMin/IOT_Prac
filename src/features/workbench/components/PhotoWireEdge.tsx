@@ -1,4 +1,5 @@
 import { BaseEdge, getBezierPath, Position, useReactFlow } from '@xyflow/react';
+import { Fragment } from 'react';
 import type { EdgeProps } from '@xyflow/react';
 import type { CircuitComponent } from '../../../types/circuit';
 import { sequenceScrewRadii, sequenceWireExit } from '../utils/sequenceTerminal';
@@ -11,7 +12,10 @@ interface Termination {
   radius: number;
   radiusY: number;
   exit: 'top' | 'bottom';
+  seated: boolean;
 }
+const jumperSocketDepth = 7;
+const exposedJumperTip = 3;
 
 /** The open center exposes the photograph's screw head; only the fork surrounds it. */
 function ForkTerminal({ end, side, color }: {
@@ -50,6 +54,7 @@ export function PhotoWireEdge(props: EdgeProps) {
   const { id, style } = props;
   const { getInternalNode } = useReactFlow();
   const digital = props.data?.mode === 'digital';
+  const highlighted = props.selected;
   const jumper = digital && props.data?.kind !== 'clip';
   const terminal = (nodeId: string, pinId: string | null | undefined, x: number, y: number): Termination => {
     const node = getInternalNode(nodeId);
@@ -65,13 +70,14 @@ export function PhotoWireEdge(props: EdgeProps) {
       radius: radii.x,
       radiusY: radii.y,
       exit: !digital && component ? sequenceWireExit(component, pinId) : 'top',
+      seated: jumper && component?.assetId === 'breadboard' && !!pinId && !pinId.startsWith('post-'),
     };
   };
   const source = terminal(props.source, props.sourceHandleId, props.sourceX, props.sourceY);
   const target = terminal(props.target, props.targetHandleId, props.targetX, props.targetY);
   const anchor = (end: Termination) => ({
     x: end.x,
-    y: end.y + (digital ? 0 : (end.radiusY + Math.min(end.radius, end.radiusY) * FORK_THICKNESS_RATIO / 2) * 3.1 * (end.exit === 'top' ? -1 : 1)),
+    y: end.y + (end.seated ? -jumperSocketDepth : digital ? 0 : (end.radiusY + Math.min(end.radius, end.radiusY) * FORK_THICKNESS_RATIO / 2) * 3.1 * (end.exit === 'top' ? -1 : 1)),
   });
   const start = anchor(source), finish = anchor(target);
   const [path] = getBezierPath({
@@ -83,11 +89,43 @@ export function PhotoWireEdge(props: EdgeProps) {
   });
   const color = String(style?.stroke ?? '#dc4c4c');
   return <>
+    {highlighted && <path
+      className="wire-highlight"
+      d={path}
+      fill="none"
+      strokeWidth={8}
+      strokeLinecap="round"
+      vectorEffect="non-scaling-stroke"
+      pointerEvents="none"
+    />}
     <BaseEdge id={id} path={path} style={{ ...style, strokeLinecap: 'round', pointerEvents: 'none' }} interactionWidth={0} />
+    {[source, target].map((end, index) => end.seated && (
+      <Fragment key={index}>
+        <path d={`M ${end.x} ${end.y - jumperSocketDepth} V ${end.y - exposedJumperTip}`} fill="none"
+          stroke={color} strokeWidth={3.2} strokeLinecap="round" pointerEvents="none" />
+        <path className="jumper-inserted-tip" data-end={index === 0 ? 'source' : 'target'}
+          d={`M ${end.x} ${end.y - exposedJumperTip} V ${end.y}`} fill="none"
+          stroke="#aebac5" strokeWidth={1.2} strokeLinecap="butt" pointerEvents="none" />
+      </Fragment>
+    ))}
     {!digital && <>
       <ForkTerminal end={source} side="source" color={color} />
       <ForkTerminal end={target} side="target" color={color} />
     </>}
+    {highlighted && [source, target].map((end, i) => (
+      <ellipse
+        key={i}
+        className="wire-highlight wire-terminal-highlight"
+        cx={end.x}
+        cy={end.y}
+        rx={end.radius * 1.3}
+        ry={end.radiusY * 1.3}
+        fill="none"
+        strokeWidth={2.5}
+        vectorEffect="non-scaling-stroke"
+        pointerEvents="none"
+      />
+    ))}
     {digital && !jumper && [source, target].map((p, i) => <g key={i}
       transform={`translate(${p.x},${p.y})`} pointerEvents="none">
       <g transform="rotate(25)">

@@ -1,0 +1,244 @@
+.completed-workbench {
+  width: min(96vw, 1480px);
+  max-height: 94dvh;
+  margin: auto;
+  color: var(--theme-text);
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  overscroll-behavior: contain;
+}
+.completed-workbench::backdrop {
+  background: #081514b3;
+}
+.completed-workbench-header {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+}
+.completed-workbench .completed-workbench-header h2,
+.completed-workbench .wiring-log-heading h3 {
+  margin: 0;
+}
+.completed-workbench .completed-workbench-header p {
+  margin: 3px 0 0;
+  color: var(--theme-muted);
+  font-size: 14px;
+}
+.completed-workbench .completed-workbench-header button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  margin: 0;
+}
+.completed-workbench-content {
+  padding: 14px 20px;
+}
+.completed-workbench-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.completed-workbench .completed-workbench-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  gap: 6px;
+  margin: 0;
+  font-weight: 650;
+  touch-action: none;
+}
+.completed-workbench button[aria-checked='true'],
+.completed-workbench-controls button[aria-pressed='true'] {
+  border-color: var(--theme-accent);
+  color: var(--theme-accent);
+}
+.completed-workbench-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 8px 0 12px;
+  color: var(--theme-muted);
+  font-size: 14px;
+}
+.completed-workbench-status strong {
+  color: var(--theme-accent);
+}
+.completed-workbench-layout {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--theme-border);
+  border-radius: 9px;
+}
+.completed-workbench-canvas {
+  height: clamp(360px, 60dvh, 690px);
+  min-width: 0;
+  background: var(--theme-bg);
+}
+.completed-workbench .react-flow__controls-button {
+  margin: 0;
+  padding: 0;
+  max-width: none;
+  border-radius: 0;
+}
+.completed-workbench .wiring-log-heading {
+  padding-bottom: 12px;
+}
+.completed-workbench .wiring-log-heading h3 {
+  font-size: 16px;
+}
+.completed-workbench .wiring-log-list button {
+  margin: 0;
+  max-width: none;
+  font-size: 14px;
+}
+.completed-workbench .wiring-log-list button[aria-pressed='true'] {
+  outline: 0;
+  border-color: var(--theme-accent);
+}
+.completed-workbench .completed-workbench-note {
+  margin: 8px 0;
+  font-size: 14px;
+  color: var(--theme-muted);
+}
+.completed-device {
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  box-shadow: 0 3px 10px #142c2426;
+}
+.completed-device[data-active='true'] {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 2px var(--theme-accent);
+}
+.completed-device-heading {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  min-height: 98px;
+  padding: 7px;
+}
+.completed-device-photo {
+  position: relative;
+  display: grid;
+  height: 82px;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--theme-raised);
+  color: var(--theme-muted);
+}
+.completed-device[data-active='true'] .completed-device-photo {
+  color: var(--theme-accent);
+}
+.completed-device-photo .completed-lamp-glow {
+  position: absolute;
+  top: 49%;
+  left: 50%;
+  width: 33px;
+  height: 33px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8c2, #ffdf35aa 44%, transparent 72%);
+  pointer-events: none;
+}
+.completed-device[data-active='true'] .completed-motor {
+  animation: completed-motor-turn 1.4s linear infinite;
+}
+.completed-device[data-active='true'] .completed-motor.is-reversed {
+  animation-direction: reverse;
+}
+@keyframes completed-motor-turn {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .completed-device[data-active='true'] .completed-motor {
+    animation: none;
+  }
+}
+.completed-device-heading strong {
+  font-size: 18px;
+  font-weight: 700;
+}
+.completed-device-heading span {
+  display: block;
+  font-size: 14px;
+}
+.completed-device-heading .completed-device-state {
+  color: var(--theme-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.completed-device[data-active='true'] .completed-device-state {
+  color: var(--theme-accent);
+  font-weight: 700;
+}
+.completed-device-terminals {
+  padding: 0 7px 7px;
+}
+.completed-terminal-row {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  align-items: center;
+  min-height: 43px;
+  gap: 4px;
+  border-top: 1px solid var(--theme-border);
+  font-size: 14px;
+  line-height: 1.25;
+}
+.completed-terminal-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.completed-terminal {
+  position: relative;
+  flex: 1;
+  padding-bottom: 8px;
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 650;
+}
+.completed-terminal .react-flow__handle {
+  width: 8px;
+  height: 8px;
+  bottom: 0;
+  background: var(--theme-muted);
+  border: 1px solid var(--theme-surface);
+}
+.completed-terminal .react-flow__handle.is-highlighted {
+  background: #00a4d6;
+  outline: 2px solid #00a4d6;
+}
+@media (min-width: 1000px) {
+  .completed-workbench-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+  .completed-workbench-wiring {
+    contain: size;
+    border-top: 0;
+    border-left: 1px solid var(--theme-border);
+  }
+  .completed-workbench-wiring .wiring-log-list {
+    max-height: none;
+  }
+}
+@media (max-width: 600px) {
+  .completed-workbench-header,
+  .completed-workbench-content {
+    padding-inline: 12px;
+  }
+  .completed-workbench-canvas {
+    height: clamp(420px, 58dvh, 510px);
+  }
+}

@@ -5,6 +5,7 @@ export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string
  if(!power)return stopped();
  let on={...previous.on},elapsed={...previous.elapsed};
  const visited=new Set<string>();
+ const timersReset=new Set<string>();
  for(let iteration=0;iteration<32;iteration++){
   const parent=new Map(c.ports.map(p=>[p,p]));
   const root=(p:string):string=>{if(!parent.has(p))parent.set(p,p);const a=parent.get(p)!;if(a===p)return p;const r=root(a);parent.set(p,r);return r;};
@@ -16,7 +17,13 @@ export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string
   for(const p of c.parts.filter(p=>p.kind!=='contact')){
    const powered=(root(p.id+':1')===root('24V')&&root(p.id+':2')===root('0V'));
    if(p.kind==='motor'){const reverse=root(p.id+':2')===root('24V')&&root(p.id+':1')===root('0V');motor=powered?'CW':reverse?'CCW':root(p.id+':1')===root(p.id+':2')?'정지 / 제동':'정지 / 개방';next[p.id]=powered||reverse;}
-   else if(p.kind==='timer'){timing[p.id]=powered;nextElapsed[p.id]=powered?(previous.timing[p.id]?(previous.elapsed[p.id]??0)+dt:0):0;next[p.id]=powered&&nextElapsed[p.id]>=p.seconds!;}else next[p.id]=powered;
+   else if(p.kind==='timer'){
+    timing[p.id]=powered;
+    // A break in the coil feed resets its timing even if a held input restarts it during settling.
+    if(!powered)timersReset.add(p.id);
+    nextElapsed[p.id]=powered&&!timersReset.has(p.id)&&previous.timing[p.id]?(previous.elapsed[p.id]??0)+dt:0;
+    next[p.id]=powered&&nextElapsed[p.id]>=p.seconds!;
+   }else next[p.id]=powered;
   }
   const key=JSON.stringify(next);if(key===JSON.stringify(on))return {on:next,elapsed:nextElapsed,timing,short:false,unstable:false,motor};
   if(visited.has(key))return {on:next,elapsed:nextElapsed,timing,short:false,unstable:true,motor:'경합'};
@@ -26,6 +33,7 @@ export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string
 }
 export function motorState(e:Exercise,state:RunState) {
  if(state.short||state.unstable)return '보호 정지';if(!e.motor)return '모터 없음';
+ if(e.motor[1]==='OFF')return state.on.M?'운전':'정지';
  return state.motor;
 }
 export interface TestRow {action:string;pass:boolean;expected:string;actual:string}

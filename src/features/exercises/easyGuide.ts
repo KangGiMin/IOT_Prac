@@ -24,7 +24,6 @@ export function locateParts(id:number,c:ExerciseCircuit):Record<string,PartLocat
   if((id===10||id===11)&&p.owner==='R3')candidates=[marks[p.purpose==='R3'?1:3]];
   if(p.purpose==='M'&&p.pole!==undefined&&motorPoles[id]){const m=marks[motorPoles[id][p.pole]];candidates=m.owner===p.owner&&(m.kind===role||m.kind==='changeover')?[m]:[];}
   if(id===24&&p.purpose==='M'){const m=marks[p.pole===0?(p.owner==='R1'?4:5):(p.owner==='R2'?6:7)];candidates=[m];}
-  if(id===22&&/^(L|PL)/.test(p.purpose??''))candidates=[]; // lamps are in parallel with coils in the source
   if(id===5&&p.owner==='R1'&&p.purpose==='R2')candidates=[]; // equivalent enabling contact, not the printed holding contact
   if(!candidates.length)continue;
   const key=`${p.owner}:${role}:${p.purpose==='M'?'motor':/^(L|PL)/.test(p.purpose??'')?'lamp':'control'}`;

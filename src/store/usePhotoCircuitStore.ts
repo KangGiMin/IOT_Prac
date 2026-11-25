@@ -13,6 +13,7 @@ import type { IcModel } from '../config/ttlModels';
 import { placeSequence } from '../features/workbench/utils/sequencePlacement';
 import { create } from 'zustand';
 import { componentAssets } from '../config/assets';
+import { parseSupplySettings } from '../config/supplySettings';
 import {
   createPhotoWorkspace,
   makeComponent,
@@ -69,7 +70,7 @@ interface CircuitState {
   setWireKind: (kind: 'jumper' | 'clip') => void;
   wiringMode: boolean;
   setWiringMode: (value: boolean) => void;
-  finishDrag: (id: string, mode?: CircuitMode) => void;
+  finishDrag: (id: string, mode?: CircuitMode, dropPoint?: Point) => void;
   tick: (nowMs: number) => void;
   calibration: boolean;
   sample: CalibrationSample | null;
@@ -145,7 +146,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
     }
     rawSet({ ...patch, histories });
   };
-  const completeDrag = (id?: string) => {
+  const completeDrag = (id?: string, dropPoint?: Point) => {
     const s = get(),
       group = s.dragHistory;
     if (!group) return;
@@ -159,7 +160,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
               components:
                 group.mode === 'sequence'
                   ? placeSequence(w.components, id ?? group.id)
-                  : placeDigital(w.components, id ?? group.id),
+                  : placeDigital(w.components, id ?? group.id, w.wires, dropPoint),
             },
             group.mode,
           );
@@ -343,14 +344,14 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
           },
         };
       }),
-    finishDrag: (id, mode = get().mode) => {
+    finishDrag: (id, mode = get().mode, dropPoint) => {
       const group = get().dragHistory;
       // Ignore late pointer/key events from a canvas that has been replaced.
       if (mode !== get().mode) return;
       if (group) {
         if (group.mode !== mode || (group.id !== id && group.id !== 'palette'))
           return;
-        completeDrag(id);
+        completeDrag(id, dropPoint);
         return;
       }
       set((s) => {
@@ -365,7 +366,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
                 components:
                   s.mode === 'sequence'
                     ? placeSequence(w.components, id)
-                    : placeDigital(w.components, id),
+                    : placeDigital(w.components, id, w.wires, dropPoint),
               },
               s.mode,
             ),
@@ -443,11 +444,17 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
           };
         const id = crypto.randomUUID();
         const count = w.components.length;
+        const instrumentPosition = asset.category === 'instrument' ? {
+          x: Math.max(0, ...w.components.filter((c) => c.assetId === 'breadboard')
+            .map((c) => c.position.x + (c.displaySize ?? componentAssets.breadboard.size).width)) + 48,
+          y: Math.max(-28, ...w.components.filter((c) => componentAssets[c.assetId].category === 'instrument')
+            .map((c) => c.position.y + (c.displaySize ?? componentAssets[c.assetId].size).height)) + 48,
+        } : undefined;
         const component = makeComponent(
           assetId,
           id,
-          position?.x ?? 110 + (count % 4) * 220,
-          position?.y ?? 70 + (count % 3) * 170,
+          position?.x ?? instrumentPosition?.x ?? 110 + (count % 4) * 220,
+          position?.y ?? instrumentPosition?.y ?? 70 + (count % 3) * 170,
         );
         if (model) component.settings.icModel = model;
         return {
@@ -507,12 +514,13 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
       set((s) => {
         const w = s.workspaces[s.mode];
         if (s.calibration) return s;
-        if (
-          !w.components.some((c) => c.id === id) ||
-          (w.power.on && settings.voltage !== undefined)
-        )
-          return s;
+        const component = w.components.find((c) => c.id === id);
+        if (!component || (w.power.on && settings.voltage !== undefined && component.assetId !== 'power-supply')) return s;
         const safe = { ...settings };
+        if (safe.supply !== undefined) {
+          if (component.assetId !== 'power-supply') return s;
+          try { safe.supply = parseSupplySettings(safe.supply); } catch { return s; }
+        }
         if (safe.voltage !== undefined) {
           if (!Number.isFinite(safe.voltage)) return s;
           safe.voltage = Math.max(0, Math.min(30, safe.voltage));

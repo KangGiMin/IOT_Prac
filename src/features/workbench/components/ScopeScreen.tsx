@@ -27,5 +27,5 @@ export function scopeLevel(voltage: number | null) {
 }
 /** Real sampled node levels. Floating/undefined signals are gaps, never fabricated waves. */
 export function ScopeScreen({ id }: { id: string }) {
-  return <ScopeDisplay id={id} />;
+  return <ScopeDisplay id={id} interactive />;
 }

@@ -115,6 +115,107 @@ test('uses photographed scope buttons and a keyboard-operated timebase dial',asy
   await expect(page.getByRole('checkbox',{name:'커서 표시',exact:true})).toBeChecked();
 });
 
+test('operates newly placed instruments from the photo controls using the mouse', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: '디지털 회로', exact: true }).click();
+  await page.getByRole('button', { name: 'DC 파워서플라이 추가', exact: true }).click();
+  await page.getByRole('button', { name: '오실로스코프 추가', exact: true }).click();
+  const supply = page.locator('[data-asset="power-supply"]');
+  const scope = page.locator('[data-asset="oscilloscope"]');
+  const wheelUp = async (selector: ReturnType<typeof page.locator>) => {
+    await selector.hover();
+    await page.mouse.wheel(0, -120);
+  };
+  const mainPower = page.getByRole('switch', { name: '메인 전원', exact: true });
+  await supply.getByRole('button', {name: '파워서플라이 전원', exact: true}).click();
+  await expect(mainPower).toBeChecked();
+  const voltage = supply.getByRole('slider', { name: 'CH1 전압', exact: true });
+  await wheelUp(voltage);
+  await expect(voltage).toHaveAttribute('aria-valuetext', '5.1 V');
+  await expect(supply.locator('[data-channel="CH1"] strong')).toContainText('5.1');
+  await wheelUp(supply.getByRole('slider', { name: 'CH2 전압', exact: true }));
+  await expect(supply.locator('[data-channel="CH2"] strong')).toContainText('5.1');
+  for (const label of ['CH1 전류 제한', 'CH2 전류 제한']) {
+    const limit = supply.getByRole('slider', { name: label, exact: true });
+    await limit.hover();
+    await page.mouse.wheel(0, 120);
+    await expect(limit).toHaveAttribute('aria-valuetext', '2.99 A');
+  }
+  await supply.getByRole('slider', { name: 'CH3 전압 선택' }).click({ position: { x: 1, y: 2 } });
+  await expect(supply.locator('.supply-readout')).toContainText('CH3 2.5V');
+  await supply.getByRole('button', { name: 'TRACKING 직렬' }).click();
+  await expect(supply.locator('.supply-readout')).toContainText('SERIES');
+  await supply.getByRole('button', { name: 'TRACKING 병렬' }).click();
+  await expect(supply.locator('.supply-readout')).toContainText('PARALLEL');
+  await supply.getByRole('button', { name: 'OUTPUT ON/OFF', exact: true }).click();
+  await expect(supply.locator('.supply-readout')).toContainText('OUTPUT OFF');
+  await expect(mainPower).toBeChecked();
+
+  const scopePower = scope.getByRole('button', { name: '오실로스코프 전원' });
+  await scopePower.click();
+  await expect(scope.locator('canvas')).toHaveAttribute('data-powered', 'false');
+  await expect(scope.getByRole('button', { name: 'RUN/STOP' })).toBeDisabled();
+  await scopePower.click();
+  const time = scope.getByRole('slider', { name: '시간축 다이얼', exact: true });
+  await wheelUp(time);
+  await expect(time).toHaveAttribute('aria-valuetext', '2 ms/div');
+  const offset = scope.getByRole('slider', { name: '수평 위치 다이얼' });
+  const rect = (await offset.boundingBox())!;
+  const x = rect.x + rect.width / 2, y = rect.y + rect.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 18, y, { steps: 4 });
+  await page.mouse.up();
+  await expect(offset).toHaveAttribute('aria-valuenow', '0.3');
+
+  await scope.getByRole('button', { name: 'CH2 채널 설정', exact: true }).click();
+  const menu = page.locator('.scope-photo-menu');
+  await expect(menu).toBeVisible();
+  await scope.getByRole('button', { name: '화면 소프트키 1 · 결합 DC', exact: true }).click();
+  await expect(menu).toContainText('결합 AC');
+  const scale = scope.getByRole('slider', { name: '선택 채널 전압축 다이얼' });
+  await wheelUp(scale);
+  await expect(scale).toHaveAttribute('aria-valuetext', '5 V/div');
+  await scope.getByRole('button', { name: 'OFF 채널 표시 해제' }).click();
+  await expect(menu).toHaveCount(0);
+  await expect(page.getByRole('checkbox', { name: 'CH2 표시', exact: true })).not.toBeChecked();
+  await expect(page.getByLabel('CH1 VOLTS/DIV', { exact: true })).toHaveValue('2');
+  await scope.getByRole('button', { name: 'TRIGGER 트리거 설정' }).click();
+  await menu.getByRole('button', { name: /NORMAL/ }).click();
+  await expect(menu).toContainText('NORMAL');
+  await scope.getByRole('button', { name: 'FORCE 강제 트리거' }).click();
+  await expect.poll(async () => (await page.locator('.scope-live-status').getAttribute('data-capture-time'))?.length ?? 0).toBeGreaterThan(0);
+  await scope.getByRole('button', { name: '트리거 50% 레벨' }).click();
+  await expect(scope.getByRole('slider', { name: '트리거 레벨 다이얼' })).toHaveAttribute('aria-valuenow', '0');
+
+  await scope.getByRole('button', { name: 'CH1 채널 설정', exact: true }).click();
+  await scope.getByRole('button', { name: '화면 소프트키 4 · 입력 프로브' }).click();
+  await scope.getByRole('button', { name: 'AUTO 자동 설정' }).click();
+  await scope.getByRole('button', { name: 'MEASURE 측정 메뉴' }).click();
+  await scope.getByRole('button', { name: '화면 소프트키 3 · 주파수' }).click();
+  await expect(menu.locator('output')).toContainText('100 Hz');
+  await scope.getByRole('button', { name: 'ACQUIRE 취득 모드' }).click();
+  await menu.getByRole('button', { name: /PEAK/ }).click();
+  await expect(page.getByLabel('취득 모드', { exact: true })).toHaveValue('peak');
+  await scope.getByRole('button', { name: 'DISPLAY 표시 형식' }).click();
+  await menu.getByRole('button', { name: /FFT/ }).click();
+  await expect(page.getByLabel('파형 표시 형식')).toHaveValue('fft');
+  await scope.getByRole('button', { name: '수평 시간축 MENU' }).click();
+  await menu.getByRole('button', { name: /수평 위치 초기화/ }).click();
+  await expect(offset).toHaveAttribute('aria-valuenow', '0');
+  await scope.getByRole('button', { name: 'MATH 연산 전환' }).click();
+  await expect(page.getByRole('combobox', { name: 'MATH 연산', exact: true })).toHaveValue('add');
+  await scope.getByRole('button', { name: 'REF 기준 파형 저장', exact: true }).click();
+  await expect(scope.locator('canvas')).toHaveAttribute('data-reference', 'ch1');
+  await scope.getByRole('button', { name: 'STORAGE 저장 메뉴' }).click();
+  const download = page.waitForEvent('download');
+  await menu.getByRole('button', { name: /측정 CSV 저장/ }).click();
+  expect((await download).suggestedFilename()).toBe('scope-capture.csv');
+  await scope.getByRole('button', { name: 'UTILITY 계측 설정' }).click();
+  await menu.getByRole('button', { name: /계측 설정 초기화/ }).click();
+  await expect(time).toHaveAttribute('aria-valuetext', '1 ms/div');
+});
+
 test('groups four wrapping corners and compares a minimum SOP answer',async({page})=>{
   await center(page);await page.getByRole('tab',{name:'카르노 맵',exact:true}).click();
   await page.getByLabel('카르노 예제',{exact:true}).selectOption('corners');

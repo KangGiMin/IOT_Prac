@@ -121,7 +121,7 @@ export function PhotoPalette() {
             </span>
             <span className="palette-card-text">
               <strong>점퍼 케이블</strong>
-              <small>단자를 클릭해 배선</small>
+              <small>단자 사이를 드래그해 배선</small>
             </span>
           </button>
         </section>

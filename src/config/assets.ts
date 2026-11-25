@@ -131,7 +131,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'digital',
     label: '오실로스코프',
     model: 'RIGOL DS5152C',
-    description: '회로 프로브와 내장 아날로그 발생기 입력을 측정합니다. 전압축·시간축·트리거·커서·자동 측정은 확장 계측 패널에서 조작하세요.',
+    description: '회로 프로브와 내장 아날로그 발생기 입력을 측정합니다. 사진의 다이얼에 커서를 놓고 휠을 돌리거나 드래그해 값을 바꾸세요.',
     ...image('oscilloscope.png'),
     size: { width: 330, height: 247.5 },
     category: 'instrument',
@@ -183,10 +183,4 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     ...digitalPins['switch-3pin'],
   },
 };
-export const wireColors = [
-  { value: '#dc4c4c', label: '빨강' },
-  { value: '#303b48', label: '검정' },
-  { value: '#3780d5', label: '파랑' },
-  { value: '#159477', label: '초록' },
-  { value: '#e3ac32', label: '노랑' },
-] as const;
+export { wireColors } from './wireColors';

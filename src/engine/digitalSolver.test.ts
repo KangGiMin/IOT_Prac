@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { IC_MODELS, TTL_MODELS, type IcModel } from '../config/ttlModels';
-import { digitalPins, insertedPins } from '../config/digitalPins';
+import { breadboardPinById, digitalPins, insertedPins } from '../config/digitalPins';
+import { componentAssets } from '../config/assets';
+import { getSupplySettings } from '../config/supplySettings';
 import { makeComponent } from '../features/workbench/data/photoCircuits';
 import { solveCircuit, type CircuitSolverInput } from './circuitSolver';
-import { placeDigital } from '../features/workbench/utils/digitalPlacement';
+import { breadboardPoint, placeDigital } from '../features/workbench/utils/digitalPlacement';
 import { scopeLevel } from '../features/workbench/components/ScopeScreen';
 import type { CircuitWire } from '../types/circuit';
 const make = (asset: Parameters<typeof makeComponent>[0], id: string) =>
@@ -36,6 +38,62 @@ const expected = (model: IcModel, v: number[]) =>
         : model === '7486'
           ? v.reduce((a, b) => a + b, 0) % 2
           : Number(v.every(Boolean));
+
+describe('plug-in parts and front-panel supply settings', () => {
+  it('uses the mounted leads as real electrical connections', () => {
+    const ps = make('power-supply', 'ps');
+    const board = make('breadboard', 'board');
+    const resistor = make('resistor-330', 'r');
+    const switchPart = make('switch-3pin', 's');
+    const dropAt = (part: typeof resistor, pin: string) => {
+      const hole = breadboardPoint(board, breadboardPinById.get(pin)!.position);
+      const frame = componentAssets[part.assetId].size;
+      return { ...part, position: { x: hole.x - frame.width / 2, y: hole.y - frame.height / 2 } };
+    };
+    let components = placeDigital([ps, board, dropAt(resistor, 'a13'), dropAt(switchPart, 'd12')], 'r');
+    components = placeDigital(components, 's');
+    expect(insertedPins(components[2])).toMatchObject({
+      '1': { pinId: 'a11' }, '2': { pinId: 'a15' },
+    });
+    expect(insertedPins(components[3])).toMatchObject({
+      '1': { pinId: 'd11' }, com: { pinId: 'd12' }, '2': { pinId: 'd13' },
+    });
+    const request: CircuitSolverInput = {
+      ...input('7400'), components, compactBreadboards: true,
+      wires: [wire('ps', 'plus', 'board', 'c12'), wire('ps', 'minus', 'board', 'b15')],
+    };
+    expect(solveCircuit(request).componentCurrents?.r).toBeCloseTo(5 / 330);
+    components[3].settings.switchOn = true;
+    expect(solveCircuit(request).componentCurrents?.r).toBeCloseTo(0);
+  });
+
+  it('regulates channel current, follows the auxiliary selector and tracks series/parallel channels', () => {
+    const supply = make('power-supply', 'ps');
+    const resistor = make('resistor-330', 'r');
+    supply.settings.supply = { ...getSupplySettings(), ch2Voltage: 8, ch2Limit: .01, auxiliaryVoltage: 3.3 };
+    const request: CircuitSolverInput = {
+      ...input('7400'), components: [supply, resistor],
+      wires: [wire('ps', 'ch2-plus', 'r', '1'), wire('ps', 'ch2-minus', 'r', '2')],
+    };
+    const limited = solveCircuit(request);
+    expect(limited.pinValues['ps:ch2-plus'].voltage).toBeCloseTo(3.3);
+    expect(limited.sourceCurrents?.['ps:ch2-plus']).toBeCloseTo(.01, 5);
+    expect(limited.limitedOutputs).toContain('ps:ch2-plus');
+    expect(limited.pinValues['ps:5v-plus'].voltage).toBe(3.3);
+    supply.settings.supply = { ...supply.settings.supply, ch2Limit: 3, tracking: 'series' };
+    request.wires[0] = wire('ps', 'plus', 'r', '1');
+    const series = solveCircuit(request);
+    expect(series.pinValues['ps:plus'].voltage).toBe(10);
+    expect(series.pinValues['ps:minus'].voltage).toBe(5);
+    expect(series.sourceCurrents?.['ps:ch2-plus']).toBeCloseTo(10 / 330);
+    supply.settings.supply.tracking = 'parallel';
+    const parallel = solveCircuit(request);
+    expect(parallel.pinValues['ps:ch2-plus'].voltage).toBe(5);
+    expect(parallel.sourceCurrents?.['ps:plus']).toBeCloseTo(5 / 660);
+    expect(parallel.sourceCurrents?.['ps:ch2-plus']).toBeCloseTo(5 / 660);
+  });
+});
+
 describe('six exact TTL pin maps and gate behavior', () => {
   const required = {
     '7400': ['1,2>3', '4,5>6', '9,10>8', '12,13>11'],

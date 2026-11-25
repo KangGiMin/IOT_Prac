@@ -1,4 +1,5 @@
 import { IC_MODELS, TTL_MODELS, icModel } from '../../../config/ttlModels';
+import { breadboardPinById, insertedPins } from '../../../config/digitalPins';
 import type { CircuitComponent } from '../../../types/circuit';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 import { useLearningCenter } from '../../learning/useLearningCenter';
@@ -57,12 +58,16 @@ export function DigitalControls({
         )}
       </>
     );
+  if (c.insertion?.row) {
+    const holes = Object.values(insertedPins(c)).map(({ pinId }) => breadboardPinById.get(pinId)?.label ?? pinId);
+    return <p className="panel-description">브레드보드 장착 · {holes.join(' · ')}</p>;
+  }
   if (c.assetId === 'oscilloscope')
     return (
       <>
       <button
         className="component-control"
-        disabled={s.calibration}
+        disabled={s.calibration || c.settings.scopePowered === false}
         onClick={() =>
           s.updateSettings(c.id, {
             scopeRunning: c.settings.scopeRunning === false,

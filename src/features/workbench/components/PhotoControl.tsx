@@ -1,5 +1,7 @@
 import { sequenceGeometry } from '../../../config/sequencePins';
 import { ScopePhotoControl } from '../../scope/ScopePhotoControl';
+import { InstrumentDial } from './InstrumentDial';
+import { SupplyPhotoControl } from './SupplyPhotoControl';
 import type {
   CircuitComponent,
   ControlDefinition,
@@ -28,8 +30,10 @@ export function PhotoControl({
   const pressed = (value: boolean) =>
     useCircuitStore.getState().updateSettings(component.id, { pressed: value });
 
-  if (control.kind === 'scope-action' || control.kind === 'scope-dial')
+  if (control.kind === 'scope-action' || control.kind === 'scope-dial' || control.kind === 'scope-key')
     return <ScopePhotoControl component={component} control={control} calibration={calibration}/>;
+  if (control.kind === 'supply-control')
+    return <SupplyPhotoControl component={component} control={control} calibration={calibration} />;
 
   if (control.kind === 'dial' && control.setting === 'timerSeconds') {
     const update = (event: React.PointerEvent<HTMLElement>) => {
@@ -100,33 +104,12 @@ export function PhotoControl({
   }
   if (control.kind === 'dial') {
     const value = component.settings[control.setting];
-    return (
-      <label
-        className="device-control device-dial nodrag nopan"
-        style={style}
-        title={`${control.label}: ${value} ${control.unit}`}
-        onClick={select}
-      >
-        <input
-          type="range"
-          aria-label={control.label}
-          aria-valuetext={`${value} ${control.unit}`}
-          min={control.min}
-          max={control.max}
-          step={control.step}
-          value={value}
-          disabled={calibration || (control.setting === 'voltage' && powered)}
-          onChange={(event) =>
-            useCircuitStore.getState().updateSettings(component.id, {
-              [control.setting]: event.target.valueAsNumber,
-            })
-          }
-        />
-        <span>
-          {value.toFixed(1)} {control.unit}
-        </span>
-      </label>
-    );
+    return <InstrumentDial style={style} label={control.label} disabled={calibration}
+      min={control.min} max={control.max} step={control.step} value={value}
+      valueText={`${value.toFixed(1)} ${control.unit}`} onChange={(next) => {
+        select();
+        useCircuitStore.getState().updateSettings(component.id, { [control.setting]: next });
+      }} />;
   }
   if (control.kind === 'momentary') {
     return (
@@ -184,9 +167,10 @@ export function PhotoControl({
       </button>
     );
   }
+  const supplyOutput = component.assetId === 'power-supply' && control.id === 'output';
   const active =
     control.kind === 'power'
-      ? component.assetId === 'power-supply'
+      ? supplyOutput
         ? component.settings.outputEnabled !== false
         : powered
       : (component.settings[control.setting] ??
@@ -195,14 +179,14 @@ export function PhotoControl({
     <button
       className={`device-control nodrag nopan ${active ? 'is-pressed' : ''}`}
       style={style}
-      disabled={calibration}
+      disabled={calibration || (control.kind === 'toggle' && control.setting === 'scopeRunning' && component.settings.scopePowered === false)}
       aria-label={control.label}
       aria-pressed={active}
       title={`${control.label}: ${active ? 'ON' : 'OFF'}`}
       onClick={() => {
         select();
         const state = useCircuitStore.getState();
-        if (control.kind === 'power' && component.assetId === 'power-supply')
+        if (control.kind === 'power' && supplyOutput)
           state.updateSettings(component.id, { outputEnabled: !active });
         else if (control.kind === 'power') state.togglePower();
         else state.updateSettings(component.id, { [control.setting]: !active });

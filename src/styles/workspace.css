@@ -237,6 +237,7 @@ p {
   white-space: nowrap;
 }
 .wire-color-picker button {
+  flex-shrink: 0;
   width: 24px;
   height: 24px;
   background: var(--swatch);
@@ -623,6 +624,23 @@ p {
 .asset-interactions {
   position: absolute;
 }
+.plugged-part-photo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.photo-node[data-plugged='true'] .photo-pin {
+  width: 6px;
+  height: 6px;
+  min-width: 6px;
+  min-height: 6px;
+}
+.photo-node[data-plugged='true'] .switch-state-overlay {
+  height: auto;
+  font-size: 8px;
+  line-height: 1;
+}
 .photo-node .photo-pin {
   width: 12px;
   height: 12px;
@@ -753,6 +771,96 @@ p {
   opacity: 0;
   cursor: ew-resize;
   margin: 0;
+}
+.instrument-key {
+  border-radius: 4px;
+}
+.instrument-dial {
+  cursor: ns-resize;
+}
+.instrument-dial::before {
+  content: '';
+  position: absolute;
+  inset: 14%;
+  transform: rotate(var(--dial-angle));
+  background: linear-gradient(#334b59, #334b59) top center / 2px 18% no-repeat;
+  pointer-events: none;
+}
+.instrument-selector {
+  border-radius: 4px;
+  cursor: ew-resize;
+}
+.instrument-selector::before {
+  inset: 8% 0;
+  left: var(--dial-position);
+  right: auto;
+  transform: translateX(-50%);
+  width: 18%;
+  border-radius: 2px;
+  background: #147c68;
+}
+.instrument-dial[aria-disabled='true'] {
+  cursor: default;
+}
+.scope-photo-menu {
+  position: absolute;
+  z-index: 20;
+  top: 46px;
+  left: 16px;
+  width: min(320px, calc(100% - 32px));
+  max-height: calc(100% - 105px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 9px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  box-shadow: 0 10px 26px #0e2e3b33;
+}
+.scope-photo-menu header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.scope-photo-menu output,
+.scope-photo-menu p {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--theme-accent);
+  font-size: 13px;
+}
+.scope-photo-menu li + li {
+  margin-top: 4px;
+}
+.scope-photo-menu li button {
+  width: 100%;
+  padding: 6px 9px;
+  border: 1px solid var(--theme-border);
+  border-radius: 5px;
+  background: var(--theme-raised);
+  font-size: 13px;
+  text-align: left;
+}
+.scope-photo-menu li span {
+  margin-right: 8px;
+  color: var(--theme-accent);
+  font-family: monospace;
+}
+.scope-soft-key-label {
+  position: absolute;
+  right: 53%;
+  display: grid;
+  place-items: center;
+  padding: 0 3px;
+  border-radius: 2px;
+  background: #2b6583;
+  color: white;
+  font: 700 7px monospace;
+  pointer-events: none;
 }
 .coordinate-marker {
   position: absolute;
@@ -1399,6 +1507,7 @@ p {
     display: none;
   }
   .wire-color-picker {
+    flex-wrap: wrap;
     gap: 7px;
   }
   .wire-color-picker button {
@@ -1786,7 +1895,8 @@ p {
 .learning-toolbar {
   display: flex;
   align-items: center;
-  gap: 9px;
+  justify-content: center;
+  gap: 8px 12px;
   flex-wrap: wrap;
   padding: 10px 28px;
   border-bottom: 1px solid #dfe7e2;
@@ -1807,10 +1917,6 @@ p {
   font: 10px monospace;
   color: #869d8e;
   margin-left: 4px;
-}
-.preset-label {
-  font-size: 12px;
-  color: #718f7c;
 }
 .logic-symbol {
   width: 100%;
@@ -1876,7 +1982,7 @@ p {
 @media (max-width: 700px) {
   .learning-toolbar {
     padding: 10px 17px;
-    gap: 7px;
+    gap: 8px;
   }
   .learning-toolbar kbd {
     display: none;
@@ -1921,6 +2027,110 @@ p {
   flex: none;
   height: clamp(620px, 78dvh, 1100px);
   min-height: 0;
+}
+.wiring-log {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}
+.wiring-log-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 15px 16px 0;
+  color: var(--theme-accent);
+}
+.wiring-log-heading h2 {
+  color: var(--theme-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+.wiring-log-heading > span {
+  margin-left: auto;
+  color: var(--theme-muted);
+  font-size: 12px;
+}
+.wiring-log > p {
+  margin: 8px 16px 14px;
+  color: var(--theme-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wiring-log-list {
+  min-height: 0;
+  max-height: 17rem;
+  overflow-y: auto;
+  padding: 2px 12px 12px;
+}
+.wiring-log-list li + li {
+  margin-top: 6px;
+}
+.wiring-log-list button {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--theme-border);
+  border-radius: 7px;
+  background: var(--theme-surface);
+  text-align: left;
+  font-size: 13px;
+}
+.wiring-log-list button:hover,
+.wiring-log-list button[aria-pressed='true'] {
+  background: var(--theme-raised);
+  border-color: var(--theme-accent);
+}
+.wiring-log-row-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+.wiring-log-swatch {
+  width: 14px;
+  height: 4px;
+  border-radius: 2px;
+}
+.wiring-log-kind {
+  color: var(--theme-muted);
+  font-size: 12px;
+}
+.wiring-log-fault {
+  margin-left: auto;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.wiring-log-endpoint {
+  display: grid;
+  grid-template-columns: 2em minmax(0, 1fr);
+  gap: 5px;
+  overflow-wrap: anywhere;
+}
+.wiring-log-endpoint > span:first-child {
+  color: var(--theme-muted);
+}
+.wire-highlight {
+  stroke: #00a4d6;
+}
+@media (min-width: 1100px) {
+  .photo-board-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+  }
+  .wiring-log {
+    contain: size;
+    border-top: 0;
+    border-left: 1px solid var(--theme-border);
+  }
+  .wiring-log-list {
+    max-height: none;
+  }
 }
 .photo-support-panels {
   display: grid;

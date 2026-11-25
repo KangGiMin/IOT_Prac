@@ -22,7 +22,9 @@ import type { AssetId } from '../../../types/circuit';
 import { PhotoComponentNode } from './PhotoComponentNode';
 import type { PhotoNode } from './PhotoComponentNode';
 import { PhotoWireEdge } from './PhotoWireEdge';
+import { WiringLog } from './WiringLog';
 import { WireInteractionClip } from './WireInteractionClip';
+import { ScopePhotoMenu } from '../../scope/ScopePhotoMenu';
 
 const nodeTypes = { photo: PhotoComponentNode };
 const edgeTypes = { photoWire: PhotoWireEdge };
@@ -115,7 +117,7 @@ function Canvas() {
         data: { kind: wire.kind, mode, interactionClipId },
         type: 'photoWire',
         selected: wire.id === selectedWireId,
-        zIndex: 5,
+        zIndex: wire.id === selectedWireId ? 6 : 5,
         className: faultWireIds.has(wire.id) ? 'fault-wire' : undefined,
         style: {
           stroke: faultWireIds.has(wire.id) ? '#ef4444' : wire.color,
@@ -212,9 +214,13 @@ function Canvas() {
         onNodeDragStart={(_, node) =>
           useCircuitStore.getState().beginDrag(node.id)
         }
-        onNodeDragStop={(_, node) =>
-          useCircuitStore.getState().finishDrag(node.id, mode)
-        }
+        onNodeDragStop={(event, node) => {
+          const pointer = 'changedTouches' in event ? event.changedTouches[0] : event;
+          const dropPoint = node.data.component.assetId === 'resistor-330' && pointer
+            ? screenToFlowPosition({ x: pointer.clientX, y: pointer.clientY }, { snapToGrid: false })
+            : undefined;
+          useCircuitStore.getState().finishDrag(node.id, mode, dropPoint);
+        }}
         onEdgeContextMenu={(event, edge) => {
           event.preventDefault();
           const s = useCircuitStore.getState();
@@ -245,8 +251,10 @@ function Canvas() {
           if (!Object.hasOwn(componentAssets, assetId)) return;
           const asset = componentAssets[assetId as AssetId];
           if (asset.mode !== mode || workspace.power.on || calibration) return;
-          useCircuitStore.getState().beginDrag('palette');
-          const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+          const before = useCircuitStore.getState();
+          const count = before.workspaces[mode].components.length;
+          before.beginDrag('palette');
+          const pos = screenToFlowPosition({ x: e.clientX, y: e.clientY }, { snapToGrid: false });
           useCircuitStore.getState().addComponent(
             asset.id,
             {
@@ -257,8 +265,9 @@ function Canvas() {
               'application/x-ic-model',
             ) as import('../../../config/ttlModels').IcModel) || undefined,
           );
-          const added = useCircuitStore.getState().selectedId;
-          if (added) useCircuitStore.getState().finishDrag(added);
+          const after = useCircuitStore.getState();
+          const added = after.workspaces[mode].components.length > count ? after.selectedId : null;
+          after.finishDrag(added ?? 'palette');
         }}
         fitView
         fitViewOptions={{ padding: 0.12 }}
@@ -283,6 +292,7 @@ function Canvas() {
         />
         <Controls showInteractive={false} aria-label="작업대 확대·축소" />
       </ReactFlow>
+      {mode === 'digital' && <ScopePhotoMenu />}
       <div className="canvas-stamp">
         <span>
           {mode === 'sequence'
@@ -355,9 +365,12 @@ export function PhotoCanvas() {
             <b>{workspace.wires.length}</b> 배선
           </span>
         </div>
-        <ReactFlowProvider key={mode}>
-          <Canvas />
-        </ReactFlowProvider>
+        <div className="photo-board-content" key={mode}>
+          <ReactFlowProvider>
+            <Canvas />
+          </ReactFlowProvider>
+          <WiringLog mode={mode} />
+        </div>
         <div className="photo-board-footer">
           <Cable size={14} />
           <span>

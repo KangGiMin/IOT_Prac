@@ -1,3 +1,5 @@
+import type { wireColors } from '../config/wireColors';
+
 /** Framework-independent circuit model. Canvas positions are CSS px at 100% zoom. */
 export type CircuitMode = 'sequence' | 'digital';
 export type AssetId =
@@ -71,6 +73,8 @@ export type OverlayDefinition =
 export type ControlDefinition =
   | { id:string; label:string; kind:'scope-action'; bounds:PercentRect; action:import('../features/scope/scopeActions').ScopePhotoAction }
   | { id:string; label:string; kind:'scope-dial'; bounds:PercentRect; field:'timeDiv'|'voltsDiv'|'offset'|'triggerLevel'|'delayDiv' }
+  | { id:string; label:string; kind:'scope-key'; bounds:PercentRect; index:number }
+  | { id:string; label:string; kind:'supply-control'; bounds:PercentRect; field:'ch2Voltage'|'ch1Limit'|'ch2Limit'|'series'|'parallel'|'auxiliaryVoltage' }
   | {
       id: string;
       label: string;
@@ -119,6 +123,8 @@ export interface ComponentAsset {
 }
 export interface ComponentSettings {
   scope?: import('../features/scope/model').ScopeSettings;
+  scopePowered?: boolean;
+  supply?: import('../config/supplySettings').SupplySettings;
   icModel?: import('../config/ttlModels').IcModel;
   openCollector?: boolean;
   outputEnabled?: boolean;
@@ -137,6 +143,7 @@ export interface CircuitComponent {
     boardId: string;
     bank: number;
     column: number;
+    row?: string;
   };
   displaySize?: Size;
   mountedSocketId?: string;
@@ -147,8 +154,7 @@ export interface PinRef {
   componentId: string;
   pinId: string;
 }
-export type WireColor =
-  '#dc4c4c' | '#303b48' | '#3780d5' | '#159477' | '#e3ac32';
+export type WireColor = (typeof wireColors)[number]['value'];
 export interface CircuitWire {
   id: string;
   from: PinRef;
@@ -200,6 +206,7 @@ export interface SimulationState {
   componentCurrents?: Record<string, number>;
   warnings?: string[];
   sourceCurrents?: Record<string, number>;
+  limitedOutputs?: string[];
   timerStates?: Record<
     string,
     {

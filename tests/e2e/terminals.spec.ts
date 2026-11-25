@@ -1,5 +1,5 @@
-import { expect, type Page } from '@playwright/test';
-import { test, downloadCircuit, uploadCircuit, selfHoldPreset, loadPopulatedWorkspace } from './support';
+import { expect, type Locator, type Page } from '@playwright/test';
+import { test, downloadCircuit, uploadCircuit, selfHoldPreset, loadPopulatedWorkspace, selectCircuitNode } from './support';
 
 const terminal = (page: Page, component: string, pin: string) =>
   page.locator(
@@ -186,15 +186,21 @@ test('seats bare jumper tips at real breadboard holes in both directions and aft
         });
       });
       for (const [index, pin] of [wire.from, wire.to].entries()) {
+        const tip = page.locator(`.react-flow__edge[data-id="${wire.id}"] .jumper-inserted-tip[data-end="${index === 0 ? 'source' : 'target'}"]`);
+        const end = pin.componentId === 'dig-board' ? await tip.evaluate((element) => {
+          const path = element as SVGPathElement;
+          const point = path.getPointAtLength(path.getTotalLength()).matrixTransform(path.getScreenCTM()!);
+          return { x: point.x, y: point.y };
+        }) : ends[index];
         const rect = (await terminal(
           page,
           pin.componentId,
           pin.pinId,
         ).boundingBox())!;
-        expect(Math.abs(ends[index].x - rect.x - rect.width / 2)).toBeLessThan(
+        expect(Math.abs(end.x - rect.x - rect.width / 2)).toBeLessThan(
           0.75,
         );
-        expect(Math.abs(ends[index].y - rect.y - rect.height / 2)).toBeLessThan(
+        expect(Math.abs(end.y - rect.y - rect.height / 2)).toBeLessThan(
           0.75,
         );
       }
@@ -225,6 +231,144 @@ test('seats bare jumper tips at real breadboard holes in both directions and aft
   await page
     .locator('.photo-board-shell')
     .screenshot({ path: testInfo.outputPath('inserted-jumpers.png') });
+});
+
+async function expectPluggedTips(
+  part: Locator,
+  board: Locator,
+  reference: { holes: number[]; y: number; photoSize: number[]; tips: number[][] },
+) {
+  const photo = part.locator('.plugged-part-photo > img');
+  const image = (await board.boundingBox())!;
+  const positions = await photo.evaluate((element, { tips, photoSize }) => {
+    const box = element.parentElement!.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    const width = parseFloat(style.width), height = parseFloat(style.height);
+    const matrix = new DOMMatrix(style.transform);
+    return tips.map(([x, y]) => {
+      const point = new DOMPoint(x / photoSize[0] * width, y / photoSize[1] * height).matrixTransform(matrix);
+      return { x: box.left + point.x * box.width / width, y: box.top + point.y * box.width / width };
+    });
+  }, reference);
+  positions.forEach((tip, index) => {
+    expect(Math.abs(tip.x - image.x - image.width * reference.holes[index] / 1448)).toBeLessThan(0.8);
+    expect(Math.abs(tip.y - image.y - image.height * reference.y / 1086)).toBeLessThan(0.8);
+  });
+}
+
+test('plugs a dragged resistor, 3-pin slide switch and LED into exact signal holes', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 2000 });
+  const saved = await downloadCircuit(page);
+  saved.activeMode = 'digital';
+  const supply = saved.workspaces.digital.components.find((component) => component.assetId === 'power-supply')!;
+  saved.workspaces.digital.components = saved.workspaces.digital.components.filter((component) => component.assetId === 'breadboard');
+  await uploadCircuit(page, saved);
+  const board = page.locator('[data-id="dig-board"] .asset-interactions');
+  const layout = [
+    { asset: 'resistor-330', name: '저항 330Ω 추가', group: 0, row: 'e', column: 11, holes: [589, 640.5], y: 170, photoSize: [1122, 1402], tips: [[99, 1278], [1027, 1178]] },
+    { asset: 'switch-3pin', name: '슬라이드 스위치 추가', group: 1, row: 'g', column: 23, holes: [745, 757, 770], y: 455, photoSize: [1122, 1402], tips: [[414, 1244], [576, 1244], [738, 1244]] },
+    { asset: 'led-red', name: '적색 LED 추가', group: 2, row: 'd', column: 31, holes: [848, 861], y: 621, photoSize: [1086, 1448], tips: [[419, 1330], [658, 1299]] },
+  ];
+  for (const placement of layout) {
+    const { name, holes, y, asset } = placement;
+    await page.getByRole('textbox', { name: '부품 검색', exact: true }).fill(name.replace(' 추가', ''));
+    const image = (await board.boundingBox())!;
+    await page.getByRole('button', { name, exact: true }).dragTo(board, { targetPosition: {
+      x: image.width * (holes[0] + holes.at(-1)!) / (2 * 1448),
+      y: image.height * y / 1086,
+    } });
+    await expect(page.locator(`[data-asset="${asset}"]`)).toHaveAttribute('data-plugged', 'true');
+  }
+  const result = await downloadCircuit(page);
+  for (const placement of layout) {
+    const { asset, group, row, column } = placement;
+    const component = result.workspaces.digital.components.find((c) => c.assetId === asset)!;
+    expect(component.insertion).toEqual({ boardId: 'dig-board', bank: group, column, row });
+    await expectPluggedTips(page.locator(`[data-asset="${asset}"]`), board, placement);
+  }
+  const digital = result.workspaces.digital;
+  digital.components.push(supply);
+  const jumper = (id: string, fromPin: string, toPin: string) => ({
+    id,
+    from: { componentId: fromPin === 'plus' || fromPin === 'minus' ? 'dig-power' : 'dig-board', pinId: fromPin },
+    to: { componentId: 'dig-board', pinId: toPin },
+    color: '#dc4c4c',
+  });
+  digital.wires = [jumper('led-supply', 'plus', 'a11'), jumper('led-series', 'a15', 'bank3-a31'), jumper('led-ground', 'minus', 'bank3-a32')];
+  await uploadCircuit(page, result);
+  await expect(page.locator('[data-plugged="true"]')).toHaveCount(3);
+  const toggle = page.locator('[data-asset="switch-3pin"]').getByRole('button', { name: '슬라이드 스위치', exact: true });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+
+  const glow = page.locator('[data-asset="led-red"] .light-overlay.led');
+  const power = page.getByRole('switch', { name: '메인 전원', exact: true });
+  await expect(glow).toHaveCSS('opacity', '0');
+  await power.click();
+  await expect(glow).toHaveCSS('opacity', '0.9');
+
+  digital.wires = [jumper('led-supply', 'plus', 'a11'), jumper('led-series', 'a15', 'bank3-a32'), jumper('led-ground', 'minus', 'bank3-a31')];
+  await uploadCircuit(page, result);
+  await expect(power).toHaveAttribute('aria-checked', 'false');
+  await power.click();
+  await expect(glow).toHaveCSS('opacity', '0');
+});
+
+test('seats both resistor leads when dragging its body onto the last row and across a board gap', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 2000 });
+  const saved = await downloadCircuit(page);
+  const digital = saved.workspaces.digital;
+  saved.activeMode = 'digital';
+  digital.components = digital.components.filter(({ id }) => id === 'dig-board' || id === 'dig-resistor');
+  const resistor = digital.components.find(({ id }) => id === 'dig-resistor')!;
+  resistor.position = { x: 155, y: 215 };
+  await uploadCircuit(page, saved);
+
+  const board = page.locator('[data-id="dig-board"] .asset-interactions');
+  const part = page.locator('[data-asset="resistor-330"]');
+  await page.locator('.react-flow__controls-fitview').click();
+  await expect(part).toHaveAttribute('data-plugged', 'false');
+
+  const dragBodyTo = async (y: number) => {
+    const body = (await part.boundingBox())!;
+    const image = (await board.boundingBox())!;
+    await page.mouse.move(body.x + body.width * 0.44, body.y + body.height * 0.14);
+    await page.mouse.down();
+    await page.mouse.move(image.x + image.width * 731 / 1448, image.y + image.height * y / 1086, { steps: 15 });
+    await page.mouse.up();
+  };
+  const verify = async (bank: number, y: number, holes: number[]) => {
+    await expect(part).toHaveAttribute('data-plugged', 'true');
+    const actual = (await downloadCircuit(page)).workspaces.digital.components.find(({ id }) => id === resistor.id)!;
+    expect(actual.insertion).toEqual({ boardId: 'dig-board', bank, column: 20, row: 'j' });
+    await expectPluggedTips(part, board, { holes, y, photoSize: [1122, 1402], tips: [[99, 1278], [1027, 1178]] });
+  };
+
+  await dragBodyTo(954.5);
+  await verify(3, 954.5, [705, 756.5]);
+  await dragBodyTo(534);
+  await verify(1, 493, [706, 757]);
+});
+
+test('drags a jumper between two breadboard holes and seats both tips', async ({ page }) => {
+  await page.getByRole('tab', { name: '디지털 회로', exact: true }).click();
+  await selectCircuitNode(page, 'dig-board');
+  const from = terminal(page, 'dig-board', 'a10');
+  const to = terminal(page, 'dig-board', 'd19');
+  await from.dragTo(to);
+  await expect(page.locator('.jumper-inserted-tip')).toHaveCount(2);
+  const { wires } = (await downloadCircuit(page)).workspaces.digital;
+  expect(wires).toMatchObject([{ from: { componentId: 'dig-board', pinId: 'a10' }, to: { componentId: 'dig-board', pinId: 'd19' }, kind: 'jumper' }]);
+  for (const [direction, hole] of [['source', from], ['target', to]] as const) {
+    const rect = (await hole.boundingBox())!;
+    const endpoint = await page.locator(`.jumper-inserted-tip[data-end="${direction}"]`).evaluate((element) => {
+      const path = element as SVGPathElement;
+      const p = path.getPointAtLength(path.getTotalLength()).matrixTransform(path.getScreenCTM()!);
+      return { x: p.x, y: p.y };
+    });
+    expect(Math.abs(endpoint.x - rect.x - rect.width / 2)).toBeLessThan(0.75);
+    expect(Math.abs(endpoint.y - rect.y - rect.height / 2)).toBeLessThan(0.75);
+  }
 });
 
 test('keeps terminal targets transparent in both modes, including hover and an active connection', async ({
@@ -345,6 +489,45 @@ test('keeps virtual supply and rear timer socket usable without green pin circle
   await expect(terminal(page, 'seq-timer', '7')).not.toHaveClass(
     /connectionindicator/,
   );
+});
+
+test('lists each sequence lead and flags the wires involved in a PB-triggered short', async ({ page }) => {
+  const log = page.getByRole('region', { name: '배선 로그', exact: true });
+  await terminal(page, 'seq-board', 'plus').click();
+  await terminal(page, 'seq-pb', 'no1').click();
+  await expect(log.getByRole('listitem')).toHaveCount(1);
+  await terminal(page, 'seq-pb', 'no2').click();
+  await terminal(page, 'seq-board', 'minus').click();
+  await expect(log.getByRole('listitem')).toHaveCount(2);
+
+  const latest = log.getByRole('button', { name: /2번 배선/ });
+  await expect(log.getByRole('button').first()).toBeVisible();
+  await expect(log.getByRole('button').first()).toHaveText(/2번 배선/);
+  await expect(latest).toContainText('seq-pb · NO 2');
+  await expect(latest).toContainText('seq-board · 0V (실습 전원)');
+  await latest.click();
+  await expect(latest).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.react-flow__edge.selected .wire-terminal-highlight')).toHaveCount(2);
+
+  const power = page.getByRole('switch', { name: '메인 전원', exact: true });
+  await power.click();
+  await expect(log.getByText('오류 관련', { exact: true })).toHaveCount(0);
+  const pb = page.locator('[data-id="seq-pb"] .momentary-control');
+  await pb.focus();
+  await page.keyboard.down('Space');
+  await expect(log.getByText('오류 관련', { exact: true })).toHaveCount(2);
+  await page.keyboard.up('Space');
+  await expect(log.getByText('오류 관련', { exact: true })).toHaveCount(0);
+  await expect(log.getByText('최근 오류 관련', { exact: true })).toHaveCount(2);
+  await expect(log.getByRole('listitem')).toHaveCount(2);
+  await latest.click();
+  await expect(page.locator('.react-flow__edge.selected .wire-terminal-highlight')).toHaveCount(2);
+
+  await power.click();
+  await page.getByRole('button', { name: '배선 삭제', exact: true }).click();
+  await expect(log.getByRole('listitem')).toHaveCount(1);
+  await expect(log.getByRole('button').first()).toHaveText(/1번 배선/);
+  await expect(log.getByText('최근 오류 관련', { exact: true })).toHaveCount(0);
 });
 
 test('allows component controls beneath a crossing wire and still selects/deletes the wire away from controls', async ({

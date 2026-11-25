@@ -32,6 +32,13 @@ export function ScopeAcquisition() {
       const state=useCircuitStore.getState();
       for(const c of state.workspaces.digital.components.filter(c=>c.assetId==='oscilloscope')){
         const instrument=instruments.get(c.id)!;
+        if(c.settings.scopePowered===false){
+          instrument.running=false;
+          instrument.capture=null;
+          instrument.averages=[];
+          if(useScopeRuntime.getState().records[c.id]?.status!=='OFF')useScopeRuntime.getState().publish(c.id,{capture:null,status:'OFF'});
+          continue;
+        }
         const settings=getScopeSettings(c.settings.scope),running=c.settings.scopeRunning!==false;
         const signature=JSON.stringify(settings);
         if(signature!==instrument.signature){instrument.signature=signature;instrument.averages=[];}

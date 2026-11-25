@@ -6,6 +6,7 @@ import {
 } from '../config/ttlModels';
 import { connectedBreadboardPins, insertedPins } from '../config/digitalPins';
 import { componentAssets } from '../config/assets';
+import { getSupplySettings } from '../config/supplySettings';
 import type {
   CircuitComponent,
   CircuitFault,
@@ -178,6 +179,14 @@ function buildTopology(
   const contact = (c: CircuitComponent, a: string, b: string) =>
     uf.union(pinKey(ref(c.id, a)), pinKey(ref(c.id, b)));
   for (const c of input.components) {
+    if (c.assetId === 'power-supply') {
+      const tracking = getSupplySettings(c.settings.supply).tracking;
+      if (tracking === 'series') contact(c, 'minus', 'ch2-plus');
+      if (tracking === 'parallel') {
+        contact(c, 'plus', 'ch2-plus');
+        contact(c, 'minus', 'ch2-minus');
+      }
+    }
     if (c.assetId === 'pb-switch')
       contact(
         c,
@@ -330,6 +339,58 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
   return { volts, currents: dictionary<number>(), converged: false };
 }
 
+interface CurrentRegulator {
+  rails: Map<string, number>;
+  sense: string[][];
+  limit: number;
+  outputs: string[];
+}
+
+function outgoingCurrent(net: string, branches: Branch[], currents: Record<string, number>) {
+  return branches.reduce((total, branch) => {
+    const current = currents[branch.id] ?? 0;
+    return total + (branch.a === net ? current : 0) - (branch.b === net ? current : 0);
+  }, 0);
+}
+
+/** Reduce a source's voltage until its measured DC load is within the limit. */
+function solveRegulatedDc(
+  fixed: Map<string, number>,
+  drivers: Map<string, number>,
+  branches: Branch[],
+  regulators: CurrentRegulator[],
+) {
+  const sources = new Map(fixed);
+  const limitedOutputs = new Set<string>();
+  const solve = () => solveDc(new Map([...sources, ...drivers]), branches);
+  let dc = solve();
+  for (let pass = 0; pass < 3 && dc.converged; pass++) {
+    let changed = false;
+    for (const regulator of regulators) {
+      const draw = (result: DcResult) => Math.max(0, ...regulator.sense.map((nets) =>
+        nets.reduce((sum, net) => sum + outgoingCurrent(net, branches, result.currents), 0),
+      ));
+      if (draw(dc) <= regulator.limit + 1e-7) continue;
+      const [first] = regulator.rails;
+      if (!first || !first[1]) continue;
+      let low = 0, high = sources.get(first[0])! / first[1];
+      for (let n = 0; n < 21; n++) {
+        const scale = (low + high) / 2;
+        for (const [net, voltage] of regulator.rails) sources.set(net, voltage * scale);
+        const candidate = solve();
+        if (candidate.converged && draw(candidate) <= regulator.limit) low = scale;
+        else high = scale;
+      }
+      for (const [net, voltage] of regulator.rails) sources.set(net, voltage * low);
+      dc = solve();
+      for (const key of regulator.outputs) limitedOutputs.add(key);
+      changed = true;
+    }
+    if (!changed) break;
+  }
+  return { dc, sources, limitedOutputs };
+}
+
 /** Pure, synchronous solver. No DOM, timers, sound or Zustand side effects.
  * Wires/buses/closed contacts form equipotential nets. Loads NEVER union their ends.
  * Voltages use an ideal shared DC reference; TTL output current limits and analog
@@ -368,6 +429,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
   );
   let topology = buildTopology(input, relays, timerOutputs, pinsByComponent);
   let finalBranches: Branch[] = [];
+  let limitedOutputs = new Set<string>();
   let volts = new Map<string, number>(),
     currents = dictionary<number>();
   const root = (r: PinRef) => topology.uf.find(pinKey(r));
@@ -442,8 +504,14 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       : [];
     const sourceCurrents = dictionary<number>();
     if (running)
-      for (const c of components.filter((c) => c.assetId === 'power-supply'))
+      for (const c of components.filter((c) => c.assetId === 'power-supply')) {
+        const supply = getSupplySettings(c.settings.supply);
         for (const pin of ['plus', 'ch2-plus', '5v-plus']) {
+          const key = c.id + ':' + pin;
+          if (c.settings.outputEnabled === false) {
+            sourceCurrents[key] = 0;
+            continue;
+          }
           const source = root(ref(c.id, pin));
           let gateCurrent = 0;
           for (const chip of components.filter(
@@ -475,24 +543,18 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
               );
             }
           }
-          sourceCurrents[c.id + ':' + pin] =
-            gateCurrent +
-            Math.max(
-              0,
-              finalBranches.reduce(
-                (sum, b) =>
-                  sum +
-                  (b.a === source
-                    ? (currents[b.id] ?? 0)
-                    : b.b === source
-                      ? -(currents[b.id] ?? 0)
-                      : 0),
-                0,
-              ),
-            );
+          const total = gateCurrent + outgoingCurrent(source, finalBranches, currents);
+          const seriesCurrent = supply.tracking === 'series' && pin === 'ch2-plus'
+            ? Math.max(0, total + (sourceCurrents[c.id + ':plus'] ?? 0)) : Math.max(0, total);
+          const combinedLimit = supply.ch1Limit + supply.ch2Limit;
+          const share = supply.tracking === 'parallel' && pin !== '5v-plus' && combinedLimit > 0
+            ? (pin === 'plus' ? supply.ch1Limit : supply.ch2Limit) / combinedLimit : 1;
+          sourceCurrents[key] = seriesCurrent * share;
         }
+      }
     return {
       sourceCurrents,
+      limitedOutputs: running ? [...limitedOutputs] : [],
       status: faults.length ? 'error' : running ? 'running' : 'ready',
       isShorted,
       faults,
@@ -531,6 +593,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     }
     const fixed = new Map<string, number>(),
       sourcePins = new Map<string, PinRef[]>();
+    const regulators: CurrentRegulator[] = [];
     for (const c of components) {
       if (
         c.assetId !== 'power-supply' &&
@@ -539,15 +602,20 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         continue;
       if (c.assetId === 'power-supply' && c.settings.outputEnabled === false)
         continue;
+      const supply = getSupplySettings(c.settings.supply);
+      const tracking = supply.tracking;
+      const voltage = c.settings.voltage;
+      const ch2Voltage = tracking === 'independent' ? supply.ch2Voltage : voltage;
+      const series = tracking === 'series';
       const channels =
         c.assetId === 'panel-board'
-          ? [['plus', 'minus', 24] as const]
+          ? [['plus', 'minus', 24, 0] as const]
           : [
-              ['plus', 'minus', c.settings.voltage] as const,
-              ['ch2-plus', 'ch2-minus', 5] as const,
-              ['5v-plus', '5v-minus', 5] as const,
+              ['plus', 'minus', series ? voltage * 2 : voltage, series ? ch2Voltage : 0] as const,
+              ['ch2-plus', 'ch2-minus', ch2Voltage, 0] as const,
+              ['5v-plus', '5v-minus', supply.auxiliaryVoltage, 0] as const,
             ];
-      for (const [pp, np, voltage] of channels) {
+      for (const [pp, np, high, low] of channels) {
         const plus = ref(c.id, pp),
           minus = ref(c.id, np),
           a = root(plus),
@@ -567,8 +635,8 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             [a],
           );
         for (const [id, value, p] of [
-          [a, voltage, plus],
-          [b, 0, minus],
+          [a, high, plus],
+          [b, low, minus],
         ] as const) {
           if (fixed.has(id) && Math.abs(fixed.get(id)! - value) > EPS)
             fault(
@@ -580,6 +648,21 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           fixed.set(id, value);
           sourcePins.set(id, [...(sourcePins.get(id) ?? []), p]);
         }
+      }
+      if (c.assetId === 'power-supply') {
+        const main = root(ref(c.id, 'plus')), secondary = root(ref(c.id, 'ch2-plus'));
+        const auxiliary = root(ref(c.id, '5v-plus'));
+        const regulate = (rails: [string, number][], sense: string[][], limit: number, pins: string[]) => {
+          const driven = new Map(rails.filter(([, level]) => level > 0));
+          if (driven.size) regulators.push({ rails: driven, sense, limit, outputs: pins.map((pin) => c.id + ':' + pin) });
+        };
+        if (series) regulate([[main, voltage * 2], [secondary, ch2Voltage]], [[main], [main, secondary]], Math.min(supply.ch1Limit, supply.ch2Limit), ['plus', 'ch2-plus']);
+        else if (tracking === 'parallel') regulate([[main, voltage]], [[main]], supply.ch1Limit + supply.ch2Limit, ['plus', 'ch2-plus']);
+        else {
+          regulate([[main, voltage]], [[main]], supply.ch1Limit, ['plus']);
+          regulate([[secondary, ch2Voltage]], [[secondary]], supply.ch2Limit, ['ch2-plus']);
+        }
+        regulate([[auxiliary, supply.auxiliaryVoltage]], [[auxiliary]], 3, ['5v-plus']);
       }
     }
     for (const [id, pins] of topology.groups) {
@@ -623,14 +706,23 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       if (c.assetId === 'led-red') add('anode', 'cathode', 20, true);
     }
     finalBranches = branches;
+    // A Net driven by several independent supplies keeps the common setpoint.
+    const counts = new Map<string, number>();
+    for (const regulator of regulators)
+      for (const net of regulator.rails.keys()) counts.set(net, (counts.get(net) ?? 0) + 1);
+    const independentRegulators = regulators.filter((regulator) => [...regulator.rails.keys()].every((net) => counts.get(net) === 1));
     let drivers = new Map<string, number>(),
-      settled = false;
+      settled = false,
+      sourceLevels = fixed;
     for (
       let iteration = 0;
       iteration < Math.max(32, components.length * 4);
       iteration++
     ) {
-      const dc = solveDc(new Map([...fixed, ...drivers]), branches);
+      const regulated = solveRegulatedDc(fixed, drivers, branches, independentRegulators);
+      const { dc } = regulated;
+      limitedOutputs = regulated.limitedOutputs;
+      sourceLevels = regulated.sources;
       volts = dc.volts;
       currents = dc.currents;
       if (!dc.converged) break;
@@ -658,7 +750,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           const pin = ref(c.id, gate.output),
             id = root(pin),
             value = output === 1 ? vcc : gnd;
-          if (fixed.has(id) && Math.abs(fixed.get(id)! - value) > EPS)
+          if (sourceLevels.has(id) && Math.abs(sourceLevels.get(id)! - value) > EPS)
             fault(
               'OUTPUT_CONFLICT',
               `${c.label} [${c.id}]의 ${gate.output}번 출력이 반대 전원의 Net과 충돌합니다.`,

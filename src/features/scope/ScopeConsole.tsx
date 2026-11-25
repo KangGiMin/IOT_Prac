@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { useCircuitStore } from '../../store/usePhotoCircuitStore';
 import { useLearningCenter } from '../learning/useLearningCenter';
-import { downloadText } from '../learning/download';
-import { defaultScopeSettings, engineering, getScopeSettings, TIME_DIVS, VOLT_DIVS } from './model';
+import { defaultScopeSettings, engineering, getScopeChannel, getScopeSettings, TIME_DIVS, VOLT_DIVS } from './model';
 import type { ScopeChannelId, ScopeChannelSettings, ScopeSettings, WaveShape } from './model';
 import { ScopeDisplay, scopeAutoSetup } from './ScopeDisplay';
 import { measureScope } from './scopeMath';
 import { useScopeRuntime } from './runtime';
+import { saveScopeCapture, saveScopeImage } from './scopeActions';
 
 const shapes:Record<WaveShape,string>={sine:'정현파',square:'구형파',triangle:'삼각파',ramp:'톱니파',dc:'직류 DC'};
 function NumberField({label,value,min,max,step,onChange}:{label:string;value:number;min:number;max:number;step:number;onChange:(v:number)=>void}) {
@@ -22,7 +22,7 @@ export function ScopeConsole() {
   const settings=useMemo(()=>getScopeSettings(c?.settings.scope),[c?.settings.scope]);
   const record=useScopeRuntime(s=>s.records[id]);
   const reference=useScopeRuntime(s=>s.references[id]);
-  const selectedChannel=useLearningCenter(s=>s.scopeChannel);
+  const selectedChannel=useLearningCenter(s=>getScopeChannel(s.scopeChannels,id));
   const capture=record?.capture;
   const measurements=useMemo(()=>capture?{ch1:measureScope(capture.ch1,capture.dt),ch2:measureScope(capture.ch2,capture.dt)}:null,[capture]);
   const update=(next:ScopeSettings,running?:boolean)=>useCircuitStore.getState().updateScope(id,next,running);
@@ -40,9 +40,9 @@ export function ScopeConsole() {
   return <div className="scope-console">
     <div className="lesson-intro"><div><h3>확장 오실로스코프 · 아날로그 신호발생기</h3><p>사진의 LCD와 아래 확대 화면은 같은 측정 기록을 표시합니다. 회로 프로브와 내장 신호발생기를 채널별로 선택하세요.</p></div>
       <label className="lesson-field"><span>측정 장비</span><select aria-label="학습 오실로스코프 선택" value={id} onChange={e=>useLearningCenter.setState({scopeId:e.target.value})}>{scopes.map(scope=><option key={scope.id} value={scope.id}>{scope.label} · {scope.id}</option>)}</select></label></div>
-    <fieldset disabled={calibration} className="scope-control-fieldset">
+    <fieldset disabled={calibration || c.settings.scopePowered === false} className="scope-control-fieldset">
       <div className="lesson-actions">
-        <span>사진 다이얼 대상</span>{(['ch1','ch2'] as const).map(ch=><button key={ch} aria-pressed={selectedChannel===ch} onClick={()=>useLearningCenter.getState().setChannel(ch)}>{ch.toUpperCase()} 선택</button>)}
+        <span>사진 다이얼 대상</span>{(['ch1','ch2'] as const).map(ch=><button key={ch} aria-pressed={selectedChannel===ch} onClick={()=>useLearningCenter.getState().setChannel(id,ch)}>{ch.toUpperCase()} 선택</button>)}
         <button className="lesson-primary" aria-pressed={running} onClick={()=>update(settings,!running)}>측정 {running?'STOP':'RUN'}</button>
         <button onClick={()=>update(scopeAutoSetup(settings,capture),true)}>AUTO 자동 설정</button>
         <button onClick={()=>{update({...settings,trigger:{...settings.trigger,mode:'single'}},true);useScopeRuntime.getState().command(id,'single');}}>SINGLE 단발 측정</button>
@@ -114,7 +114,7 @@ export function ScopeConsole() {
       </section>
     </fieldset>
     <div className="lesson-actions"><button disabled={!capture} onClick={()=>{
-      if(!capture)return;const lines=['time_s,CH1_V,CH2_V',...capture.ch1.map((v,i)=>`${i*capture.dt},${v??''},${capture.ch2[i]??''}`)];downloadText('scope-capture.csv',lines.join('\n'),'text/csv;charset=utf-8');
-    }}>측정 CSV 저장</button><button disabled={!capture} onClick={()=>{const canvas=document.querySelector<HTMLCanvasElement>('.scope-expanded canvas');if(!canvas)return;const a=document.createElement('a');a.download='scope-screen.png';a.href=canvas.toDataURL('image/png');a.click();}}>파형 PNG 저장</button></div>
+      if(capture)saveScopeCapture(capture);
+    }}>측정 CSV 저장</button><button disabled={!capture} onClick={()=>saveScopeImage(document.querySelector<HTMLCanvasElement>('.scope-expanded canvas'))}>파형 PNG 저장</button></div>
   </div>;
 }

@@ -72,6 +72,19 @@ describe('Web Audio short alarm', () => {
     expect(vi.getTimerCount()).toBe(0);
     alarm.dispose();
   });
+  it('keeps a continuous buzzer on until the circuit de-energizes it', () => {
+    vi.useFakeTimers();
+    const { context, oscillator, gain } = fakeAudio();
+    const buzzer = new SoundAlert({ continuous: true, createContext: () => context as unknown as AudioContext });
+    buzzer.setActive(true);
+    expect(gain.gain.setValueAtTime.mock.calls).toEqual([[ALERT_PATTERN.volume, 10]]);
+    expect(vi.getTimerCount()).toBe(0);
+    context.currentTime = 10.3;
+    buzzer.setActive(false);
+    expect(gain.gain.setValueAtTime).toHaveBeenLastCalledWith(0, 10.3);
+    expect(oscillator.stop).toHaveBeenCalledOnce();
+    buzzer.dispose();
+  });
   it('cannot restart from an old resume promise after power-off', async () => {
     vi.useFakeTimers();
     const { alarm, context } = fakeAudio('suspended');

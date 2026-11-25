@@ -8,6 +8,7 @@ import {
   openWiring,
   selectCircuitNode,
   loadPopulatedWorkspace,
+  loadTestCircuit,
 } from './support';
 
 test.beforeEach(async ({ page }) => {
@@ -16,6 +17,45 @@ test.beforeEach(async ({ page }) => {
   await expect(
     page.getByRole('link', { name: '키보드 배선으로 이동', exact: true }),
   ).toBeAttached();
+});
+
+test('centers the six shared toolbar actions across both practice modes', async ({ page }) => {
+  const toolbar = page.getByRole('group', { name: '학습 편의 기능', exact: true });
+  const actions = toolbar.locator(':scope > a, :scope > button');
+  const layouts = [['시퀀스 제어', 1440], ['디지털 회로', 1440], ['시퀀스 제어', 390], ['디지털 회로', 390]] as const;
+  for (const [tab, width] of layouts) {
+    await page.setViewportSize({ width, height: 1100 });
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    await expect(actions).toHaveText([
+      '계측·논리 학습 센터', '연습문제 · 수업 도면 24선', '실행 취소 Ctrl+Z',
+      '다시 실행 Ctrl+Y', '회로 JSON 저장', '회로 JSON 불러오기',
+    ]);
+    await expect(toolbar).not.toContainText('예제 회로');
+    const layout = await toolbar.evaluate((element) => {
+      const toolbarRect = element.getBoundingClientRect();
+      const css = getComputedStyle(element);
+      const rows = new Map<number, DOMRect[]>();
+      for (const action of Array.from(element.querySelectorAll('a, button'))) {
+        const rect = action.getBoundingClientRect();
+        const centerY = Math.round(rect.top + rect.height / 2);
+        const row = rows.get(centerY) ?? [];
+        row.push(rect);
+        rows.set(centerY, row);
+      }
+      return {
+        centerX: toolbarRect.left + toolbarRect.width / 2,
+        gap: parseFloat(css.columnGap),
+        rows: [...rows.values()].map((row) => row.map(({ left, right }) => ({ left, right }))),
+      };
+    });
+    if (width === 1440) expect(layout.rows).toHaveLength(1);
+    else expect(layout.rows.length).toBeGreaterThan(1);
+    for (const row of layout.rows) {
+      const rowCenter = (row[0].left + row.at(-1)!.right) / 2;
+      expect(rowCenter).toBeCloseTo(layout.centerX, 0);
+      row.slice(1).forEach((action, i) => expect(action.left - row[i].right).toBeCloseTo(layout.gap, 0));
+    }
+  }
 });
 
 test('connects and undoes/redoes a wire using only the keyboard', async ({
@@ -60,13 +100,56 @@ test('connects and undoes/redoes a wire using only the keyboard', async ({
   ).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.photo-board-toolbar')).toContainText('1 배선');
+  const log = page.getByRole('region', { name: '배선 로그', exact: true });
+  const entry = log.getByRole('button', { name: /1번 배선/ });
+  await expect(entry).toContainText('seq-board · +24V (실습 전원)');
+  await expect(entry).toContainText('seq-lamp · +');
   await expect(
     page.getByRole('status', { name: '키보드 배선 상태' }),
   ).toHaveText('선택한 두 단자는 연결되어 있습니다.');
   await page.keyboard.press('ControlOrMeta+z');
   await expect(page.locator('.photo-board-toolbar')).toContainText('0 배선');
+  await expect(log.getByRole('listitem')).toHaveCount(0);
   await page.keyboard.press('ControlOrMeta+y');
   await expect(page.locator('.photo-board-toolbar')).toContainText('1 배선');
+  await expect(entry).toBeVisible();
+});
+
+test('uses all eight wire colors in both modes and restores the three new colors from JSON', async ({ page }) => {
+  const colors = [
+    ['보라', '#8b5cdb'],
+    ['주황', '#e67731'],
+    ['분홍', '#cc4f9c'],
+  ];
+  const layouts = [
+    { tab: '시퀀스 제어', from: 'seq-board', to: 'seq-relay', pins: ['1', '2', '3'] },
+    { tab: '디지털 회로', from: 'dig-power', to: 'dig-board', pins: ['a1', 'a2', 'a3'] },
+  ];
+  for (const { tab, from, to, pins } of layouts) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    const picker = page.getByRole('group', { name: '전선 색상', exact: true });
+    await expect(picker.getByRole('button')).toHaveCount(8);
+    await openWiring(page);
+    await page.getByLabel('출발 부품', { exact: true }).selectOption(from);
+    await page.getByLabel('출발 단자', { exact: true }).selectOption('plus');
+    await page.getByLabel('도착 부품', { exact: true }).selectOption(to);
+    for (const [index, [name]] of colors.entries()) {
+      const swatch = picker.getByRole('button', { name: `${name} 전선`, exact: true });
+      await swatch.click();
+      await expect(swatch).toHaveAttribute('aria-pressed', 'true');
+      await page.getByLabel('도착 단자', { exact: true }).selectOption(pins[index]);
+      await page.getByRole('button', { name: '배선 연결', exact: true }).click();
+    }
+  }
+
+  const saved = await downloadCircuit(page);
+  for (const { wires } of Object.values(saved.workspaces)) {
+    expect(wires.map(({ color }) => color)).toEqual(colors.map(([, color]) => color));
+  }
+  await uploadCircuit(page, saved);
+  await expect(page.getByText('JSON 회로를 전원 OFF로 불러왔습니다.', { exact: true })).toBeVisible();
+  const restored = await downloadCircuit(page);
+  expect(restored.workspaces).toEqual(saved.workspaces);
 });
 
 test('prevents self-connections, duplicates and wiring while power/calibration/wiring locks apply', async ({
@@ -108,10 +191,14 @@ test('wires an unrendered breadboard hole and resets terminal choices across mod
   page,
 }) => {
   await page.getByRole('tab', { name: '디지털 회로', exact: true }).click();
+  await expect(page.locator('.photo-canvas')).toHaveCount(1);
   const hole = page.locator(
     '[data-id="dig-board"] .photo-pin[data-handleid="bank4-j63"]',
   );
+  const log = page.getByRole('region', { name: '배선 로그', exact: true });
   await expect(hole).toHaveCount(0);
+  await expect(log).toContainText('연결된 배선이 없습니다.');
+  await page.getByLabel('Cable type').selectOption('clip');
   await openWiring(page);
   await page.getByLabel('출발 부품', { exact: true }).selectOption('dig-board');
   await page.getByLabel('출발 단자', { exact: true }).selectOption('bank4-j63');
@@ -125,8 +212,18 @@ test('wires an unrendered breadboard hole and resets terminal choices across mod
   expect(wires[0]).toMatchObject({
     from: { componentId: 'dig-board', pinId: 'bank4-j63' },
     to: { componentId: 'dig-led', pinId: 'anode' },
+    kind: 'clip',
   });
+  const entry = log.getByRole('button', { name: /1번 배선/ });
+  await expect(entry).toContainText('악어클립');
+  await expect(entry).toContainText('dig-board · 4구역 J63');
+  await expect(entry).toContainText('dig-led · A (+) 긴 다리');
+  await entry.click();
+  await expect(entry).toHaveAttribute('aria-pressed', 'true');
+  const selectedEdge = page.locator(`.react-flow__edge.selected[data-id="${wires[0].id}"]`);
+  await expect(selectedEdge.locator('.wire-terminal-highlight')).toHaveCount(2);
   await page.getByRole('tab', { name: '시퀀스 제어', exact: true }).click();
+  await expect(log.getByRole('listitem')).toHaveCount(0);
   await openWiring(page);
   await expect(page.getByLabel('출발 부품', { exact: true })).toHaveValue('');
   await page.getByRole('tab', { name: '디지털 회로', exact: true }).click();
@@ -137,6 +234,7 @@ test('wires an unrendered breadboard hole and resets terminal choices across mod
     page.getByRole('button', { name: '배선 연결', exact: true }),
   ).toBeDisabled();
   await expect(page.locator('.photo-board-toolbar')).toContainText('1 배선');
+  await expect(entry).toBeVisible();
 });
 
 test('keyboard movement detaches an inserted IC and history restores it', async ({
@@ -286,8 +384,12 @@ test('updates inspector descriptions and model names for all six TTL models', as
 });
 
 test('runs the 7402 NOR preset through live switches and grades all four rows', async ({ page }) => {
-  await page.getByRole('button', { name: '디지털 · 7402 NOR', exact: true }).click();
-  await expect(page.locator('.photo-board-toolbar')).toContainText('16 배선');
+  await loadTestCircuit(page, 'nor');
+  const log = page.getByRole('region', { name: '배선 로그', exact: true });
+  await expect(log.getByRole('listitem')).toHaveCount(16);
+  await expect(log.getByText('TTL IC 7402 · 1 OUT', { exact: true })).toHaveCount(2);
+  await expect(log.getByText('브레드보드 · 상단 + 레일 1번', { exact: true })).toBeVisible();
+  await expect(log.getByText('점퍼선', { exact: true })).toHaveCount(16);
   const power = page.getByRole('switch', { name: '메인 전원', exact: true });
   const led = page.locator('[data-id="output-led"] .light-overlay');
   const a = page.locator('[data-id="input-a"] .device-control');

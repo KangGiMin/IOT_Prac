@@ -47,7 +47,11 @@ export function buildExercise(e:Exercise,corrected=false):ExerciseCircuit {
  const path=(expr:Expression,a:string,b:string)=>{if(typeof expr==='string'){const nc=expr.startsWith('!'),owner=nc?expr.slice(1):expr,id='C'+(++serial);parts.push({id,label:`${owner} ${nc?'b (NC)':'a (NO)'}`,kind:'contact',owner,nc,purpose,pole});wire(a,id+':1');wire(id+':2',b);}else if('or'in expr)expr.or.forEach(x=>path(x,a,b));else expr.and.forEach((x,i)=>path(x,i===0?a:`J${serial}-${i}`,i===expr.and.length-1?b:`J${serial}-${i+1}`));};
  // Give each series junction a stable unique name independent of recursion.
  const connect=(expr:Expression,a:string,b:string)=>{if(typeof expr==='string'||'or'in expr){if(typeof expr!=='string')expr.or.forEach(x=>connect(x,a,b));else path(expr,a,b);}else{const nodes=[a,...expr.and.slice(1).map(()=>`J${++serial}`),b];expr.and.forEach((x,i)=>connect(x,nodes[i],nodes[i+1]));}};
- for(const rung of corrected&&e.correction?e.correction:e.rungs){purpose=rung.load;parts.push({id:rung.load,label:rung.load,kind:rung.kind,seconds:rung.seconds});connect(rung.when,'24V',rung.load+':1');wire(rung.load+':2','0V');}
+ for(const rung of corrected&&e.correction?e.correction:e.rungs){purpose=rung.load;parts.push({id:rung.load,label:rung.load,kind:rung.kind,seconds:rung.seconds});
+  if(e.id===22&&rung.kind==='lamp'&&typeof rung.when==='string')wire(rung.when+':1',rung.load+':1');
+  else connect(rung.when,'24V',rung.load+':1');
+  wire(rung.load+':2','0V');
+ }
  if(e.motor){purpose='M';parts.push({id:'M',label:'모터 (교육용 2단자 등가 모델)',kind:'motor'});
   const invert=(x:Expression):Expression=>typeof x==='string'?(x.startsWith('!')?x.slice(1):'!'+x):'or'in x?all(...x.or.map(invert)):any(...x.and.map(invert));
   if(e.id===24){pole=0;connect('R1','24V','M:1');connect('R2','0V','M:1');pole=1;connect('R2','24V','M:2');connect('R1','0V','M:2');}

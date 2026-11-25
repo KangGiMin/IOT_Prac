@@ -19,13 +19,13 @@ export const digitalGeometry = {
   columns: 63,
   firstX: (461.5 / 1448) * 100,
   lastX: (1266.5 / 1448) * 100,
-  rowPitch: 1.2,
   ic: { firstX: 19.3, lastX: 80.5, topY: 33.8, bottomY: 69.4 },
+  // Signal row centers measured in native image pixels, including the channel gaps.
   banks: [
-    { top: 10.8, bottom: 19.2 },
-    { top: 32.2, bottom: 40.8 },
-    { top: 53.7, bottom: 62.1 },
-    { top: 75.0, bottom: 83.4 },
+    [118, 131, 144, 157, 170, 209, 222, 234.5, 247, 260.5],
+    [352, 365, 378, 390.5, 403, 442, 455, 468, 480, 493],
+    [582, 595, 608, 621, 633.5, 672, 685, 698, 710, 724],
+    [813, 826, 838.5, 851, 864, 902, 915, 928.5, 941.5, 954.5],
   ],
   rails: [
     { id: 'top-plus', y: (80 / 1086) * 100 },
@@ -46,6 +46,7 @@ export const digitalGeometry = {
     { id: 'post-vc', label: 'Vc', x: 13.3, y: 24.1 },
   ],
 };
+export const breadboardRows = 'abcdefghij';
 export const holeId = (bank: number, row: string, column: number) =>
   `${bank === 0 ? '' : `bank${bank + 1}-`}${row}${column}`;
 export const breadboardPins: PhotoPinDefinition[] = digitalGeometry.posts.map(
@@ -72,13 +73,11 @@ for (let col = 1; col <= digitalGeometry.columns; col++) {
   const x = (columnCenters[col - 1] / 1448) * 100;
   digitalGeometry.banks.forEach((bank, b) => {
     for (let row = 0; row < 10; row++) {
-      const y =
-        (row < 5 ? bank.top : bank.bottom) +
-        (row % 5) * digitalGeometry.rowPitch;
+      const y = bank[row] / 1086 * 100;
       breadboardPins.push(
         pin(
-          holeId(b, 'abcdefghij'[row], col),
-          `${b + 1} / ${'ABCDEFGHIJ'[row]}${col}`,
+          holeId(b, breadboardRows[row], col),
+          `${b + 1} / ${breadboardRows[row].toUpperCase()}${col}`,
           x,
           y,
           'passive',
@@ -136,6 +135,18 @@ export function connectedBreadboardPins(
 }
 
 type Layout = Pick<ComponentAsset, 'pins' | 'controls' | 'overlays'>;
+// Insertion seams measured just inside the visible metal tips of the source photos.
+const leadPin = (id: string, label: string, x: number, y: number) =>
+  pin(id, label, x / 1122 * 100, y / 1402 * 100);
+export const plugInParts = {
+  'led-red': { offsets: [0, 1], heightRatio: 0.8 },
+  'resistor-330': { offsets: [0, 4], heightRatio: 0.49 },
+  'switch-3pin': { offsets: [0, 1, 2], heightRatio: 0.62 },
+} as const;
+export const plugInPart = (asset: CircuitComponent['assetId']) =>
+  asset === 'led-red' || asset === 'resistor-330' || asset === 'switch-3pin'
+    ? plugInParts[asset]
+    : undefined;
 export const digitalPins = {
   breadboard: { pins: breadboardPins, controls: [], overlays: [] },
   'power-supply': {
@@ -145,16 +156,23 @@ export const digitalPins = {
       pin('ch2-minus', 'CH2 −', 38.0, 85.4),
       pin('ch2-plus', 'CH2 +', 45.9, 85.4),
       pin('gnd', 'GND 접지', 53.0, 85.4),
-      pin('5v-minus', '5V −', 79.4, 85.4),
-      pin('5v-plus', '5V +', 87.4, 85.4),
+      pin('5v-minus', 'CH3 −', 79.4, 85.4),
+      pin('5v-plus', 'CH3 +', 87.4, 85.4),
     ],
     controls: [
+      { id:'power', label:'파워서플라이 전원', kind:'power', bounds:{x:7.9,y:77.8,width:6.4,height:8.5} },
       {
         id: 'output',
         label: 'OUTPUT ON/OFF',
         kind: 'power',
         bounds: { x: 29.7, y: 64.7, width: 3.6, height: 4.0 },
       },
+      { id:'ch2-volts', label:'CH2 전압', kind:'supply-control', field:'ch2Voltage', bounds:{x:5.5,y:26.6,width:10.1,height:13.5} },
+      { id:'ch1-amps', label:'CH1 전류 제한', kind:'supply-control', field:'ch1Limit', bounds:{x:82.6,y:45.6,width:10.4,height:13.6} },
+      { id:'ch2-amps', label:'CH2 전류 제한', kind:'supply-control', field:'ch2Limit', bounds:{x:5.5,y:45.3,width:10.2,height:13.6} },
+      { id:'series', label:'TRACKING 직렬', kind:'supply-control', field:'series', bounds:{x:50.5,y:64.6,width:3.3,height:4.0} },
+      { id:'parallel', label:'TRACKING 병렬', kind:'supply-control', field:'parallel', bounds:{x:64.2,y:64.6,width:3.4,height:4.0} },
+      { id:'ch3-range', label:'CH3 전압 선택', kind:'supply-control', field:'auxiliaryVoltage', bounds:{x:79.8,y:72.4,width:6.1,height:3.6} },
       {
         id: 'voltage',
         label: 'CH1 전압',
@@ -180,6 +198,7 @@ export const digitalPins = {
         bounds: { x: 80.1, y: 40.6, width: 2, height: 2.6 },
         color: '#ff2525',
       },
+      { id:'cc-ch2', kind:'glow', bounds:{x:16.4,y:41.0,width:1.5,height:2.0},color:'#ff2525' },
       {
         id: 'overload',
         kind: 'glow',
@@ -202,6 +221,10 @@ export const digitalPins = {
         setting: 'scopeRunning',
         bounds: { x: 89.4, y: 29.8, width: 5.0, height: 4.0 },
       },
+        { id:'scope-power', label:'오실로스코프 전원', kind:'scope-action', action:'power', bounds:{x:8.6,y:77.8,width:4.5,height:4.1} },
+        { id:'vertical-off', label:'OFF 채널 표시 해제', kind:'scope-action', action:'off', bounds:{x:68.2,y:50.7,width:4.4,height:4.1} },
+        { id:'horizontal-menu', label:'수평 시간축 MENU', kind:'scope-action', action:'horizontal', bounds:{x:78.7,y:50.7,width:4.5,height:4.1} },
+        ...[38.4, 44.9, 51.4, 57.9, 64.4].map((y, index) => ({ id:`scope-key-${index}`,label:`화면 소프트키 ${index + 1}`,kind:'scope-key' as const,index,bounds:{x:51.8,y,width:4.5,height:4.2} })),
         { id:'auto', label:'AUTO 자동 설정', kind:'scope-action', action:'auto', bounds:{x:81.6,y:29.8,width:5,height:4.2} },
         { id:'measure', label:'MEASURE 측정 메뉴', kind:'scope-action', action:'measure', bounds:{x:59.1,y:26.5,width:4.5,height:4.2} },
         { id:'cursor', label:'CURSOR 커서', kind:'scope-action', action:'cursor', bounds:{x:59.1,y:33.1,width:4.5,height:4.2} },
@@ -233,8 +256,8 @@ export const digitalPins = {
   },
   'led-red': {
     pins: [
-      pin('anode', 'A (+) 긴 다리', 38.6, 91.9),
-      pin('cathode', 'K (−) 짧은 다리', 60.6, 89.8),
+      pin('anode', 'A (+) 긴 다리', 419 / 1086 * 100, 1330 / 1448 * 100),
+      pin('cathode', 'K (−) 짧은 다리', 658 / 1086 * 100, 1299 / 1448 * 100),
     ],
     controls: [],
     overlays: [
@@ -247,15 +270,15 @@ export const digitalPins = {
     ],
   },
   'resistor-330': {
-    pins: [pin('1', '1', 8.8, 91.4), pin('2', '2', 91.8, 84.2)],
+    pins: [leadPin('1', '1', 99, 1278), leadPin('2', '2', 1027, 1178)],
     controls: [],
     overlays: [],
   },
   'switch-3pin': {
     pins: [
-      pin('1', 'LEFT', 36.5, 88.7),
-      pin('com', 'COM', 51.1, 88.7),
-      pin('2', 'RIGHT', 66.3, 88.7),
+      leadPin('1', 'LEFT', 414, 1244),
+      leadPin('com', 'COM', 576, 1244),
+      leadPin('2', 'RIGHT', 738, 1244),
     ],
     controls: [
       {
@@ -313,6 +336,17 @@ export function insertedPins(c: CircuitComponent): Record<string, PinRef> {
   const result: Record<string, PinRef> = {};
   const ins = c.insertion;
   if (!ins) return result;
+  const part = plugInPart(c.assetId);
+  if (part && ins.row) {
+    pinsFor(c).forEach((pin, index) => {
+      result[pin.id] = {
+        componentId: ins.boardId,
+        pinId: holeId(ins.bank, ins.row!, ins.column + part.offsets[index]),
+      };
+    });
+    return result;
+  }
+  if (c.assetId !== 'ic-dip14') return result;
   for (let i = 0; i < 14; i++)
     result[String(i + 1)] = {
       componentId: ins.boardId,

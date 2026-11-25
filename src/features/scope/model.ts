@@ -1,4 +1,6 @@
 export type ScopeChannelId = 'ch1' | 'ch2';
+export const getScopeChannel = (channels: Record<string, ScopeChannelId>, id: string): ScopeChannelId =>
+  Object.hasOwn(channels, id) ? channels[id] : 'ch1';
 export type WaveShape = 'sine' | 'square' | 'triangle' | 'ramp' | 'dc';
 export interface GeneratorSettings {
   enabled: boolean; shape: WaveShape; frequency: number; vpp: number;

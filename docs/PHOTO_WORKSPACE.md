@@ -57,7 +57,7 @@ React Flow가 같은 핸들 위치에서 SVG 전선 끝점을 계산합니다. �
 
 `App.tsx`는 두 모드의 전원과 단락 상태를 구독해 `SoundAlert`를 제어합니다. 전원 OFF 상태의 배선 오류는 시각 경고만 표시합니다. 다른 모드에 켜진 오류 회로가 있어도 경고음을 유지하고 해당 모드로 이동할 수 있는 상단 안내를 표시합니다.
 
-DC 근사·TTL 6종·릴레이 자기유지·AT8N 시간축·디지털 계측 파형·4대 오류 검사와 경고음을 제공합니다. 미션은 AND/NAND/NOT/XOR/OR/NOR/XNOR이며, 행별 LED 자동 채점과 오배선 힌트를 제공합니다. 7402 NOR 예제는 입력 2·3번과 출력 1번으로 배선되어 있습니다. 실행 취소·다시 실행과 JSON/예제 회로 입출력은 상단 학습 도구에서 사용할 수 있습니다. 최신 사용법은 [README](../README.md)에 있습니다.
+DC 근사·TTL 6종·릴레이 자기유지·AT8N 시간축·디지털 계측 파형·4대 오류 검사와 경고음을 제공합니다. 미션은 AND/NAND/NOT/XOR/OR/NOR/XNOR이며, 행별 LED 자동 채점과 오배선 힌트를 제공합니다. 7402 NOR 실습에는 입력 2·3번과 출력 1번을 사용합니다. 실행 취소·다시 실행과 회로 JSON 저장·불러오기는 상단 학습 도구에서 사용할 수 있습니다. 최신 사용법은 [README](../README.md)에 있습니다.
 
 보존된 `components/devices`, `WorkspaceCanvas`, `useCircuitStore`, `svgCircuits`, `svgGeometry`, `topology`는 이전 SVG 작업대입니다. `initialCircuits`, `useLabStore`, `shared`, `features/theory`는 이전 심볼/이론 화면입니다. 현재 PNG 화면은 이들을 실행하지 않습니다.
 
