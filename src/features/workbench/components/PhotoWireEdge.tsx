@@ -3,6 +3,8 @@ import type { EdgeProps } from '@xyflow/react';
 import type { CircuitComponent } from '../../../types/circuit';
 import { sequenceScrewRadii, sequenceWireExit } from '../utils/sequenceTerminal';
 
+const FORK_THICKNESS_RATIO = 0.15;
+
 interface Termination {
   x: number;
   y: number;
@@ -17,7 +19,7 @@ function ForkTerminal({ end, side, color }: {
   side: 'source' | 'target';
   color: string;
 }) {
-  const thickness = Math.min(end.radius, end.radiusY) * 0.12;
+  const thickness = Math.min(end.radius, end.radiusY) * FORK_THICKNESS_RATIO;
   // The inner edge touches the measured rim. No straight arms outside the circle.
   const rx = end.radius + thickness / 2;
   const r = end.radiusY + thickness / 2;
@@ -69,7 +71,7 @@ export function PhotoWireEdge(props: EdgeProps) {
   const target = terminal(props.target, props.targetHandleId, props.targetX, props.targetY);
   const anchor = (end: Termination) => ({
     x: end.x,
-    y: end.y + (digital ? 0 : (end.radiusY + Math.min(end.radius, end.radiusY) * 0.06) * 3.1 * (end.exit === 'top' ? -1 : 1)),
+    y: end.y + (digital ? 0 : (end.radiusY + Math.min(end.radius, end.radiusY) * FORK_THICKNESS_RATIO / 2) * 3.1 * (end.exit === 'top' ? -1 : 1)),
   });
   const start = anchor(source), finish = anchor(target);
   const [path] = getBezierPath({
