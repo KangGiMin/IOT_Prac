@@ -28,6 +28,13 @@ export const sequenceGeometry = {
   },
   dialCenter: { x: 50, y: 50 },
 };
+/** Photographed screw-head diameters in source PNG pixels. */
+export const sequenceScrewGeometry = {
+  'pb-switch': { image: { width: 1122, height: 1402 }, diameter: 76 },
+  'pilot-lamp': { image: { width: 1122, height: 1402 }, diameter: 74 },
+  'relay-socket': { image: sequenceGeometry.relayImages.socket, diameter: 68 },
+  virtualHeadRatio: 0.72,
+};
 // PB, lamp and relay centers follow the supplied 1134×1400 PNGs, including
 // transparent padding. The timer front has no wiring terminals.
 export const sequencePins = {

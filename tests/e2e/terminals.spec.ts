@@ -10,6 +10,65 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
+test('sizes both Y terminals to each screw and joins cables at their crimps before and after zooming', async ({ page }, testInfo) => {
+  const saved = await downloadCircuit(page);
+  const connections = [
+    ['seq-board', 'plus', 'seq-pb', 'no1'],
+    ['seq-pb', 'no1', 'seq-lamp', 'plus'],
+    ['seq-lamp', 'minus', 'seq-relay', '5'],
+    ['seq-relay', '1', 'seq-relay', '13'],
+    ['seq-relay', '14', 'seq-timer', '7'],
+    ['seq-timer', '2', 'seq-board', 'minus'],
+  ];
+  saved.workspaces.sequence.wires = connections.map(([a, ap, b, bp], index) => ({
+    id: `fitted-${index}`, from: { componentId: a, pinId: ap },
+    to: { componentId: b, pinId: bp }, color: '#dc4c4c',
+  }));
+  await uploadCircuit(page, saved);
+  for (let zoom = 0; zoom < 2; zoom++) {
+    if (zoom) await page.getByRole('button', { name: 'Zoom In', exact: true }).click();
+    for (const wire of saved.workspaces.sequence.wires) {
+      const edge = page.locator(`.react-flow__edge[data-id="${wire.id}"]`);
+      for (const [index, ref] of [wire.from, wire.to].entries()) {
+        const pin = terminal(page, ref.componentId, ref.pinId);
+        await pin.hover();
+        const end = edge.locator(`[data-terminal-end="${index ? 'target' : 'source'}"]`);
+        const metrics = await end.evaluate(el => {
+          const group = el as SVGGraphicsElement;
+          const matrix = group.getScreenCTM()!;
+          const center = new DOMPoint(0, 0).matrixTransform(matrix);
+          const fork = group.querySelector('.sequence-fork') as SVGPathElement;
+          return { x: center.x, y: center.y,
+            radius: Number(group.getAttribute('data-screw-radius')) * Math.hypot(matrix.a, matrix.b),
+            openCenter: !fork.isPointInStroke(new DOMPoint(0, 0)),
+            decorative: getComputedStyle(group).pointerEvents === 'none' };
+        });
+        const screw = (await pin.boundingBox())!;
+        expect(Math.abs(metrics.x - screw.x - screw.width / 2)).toBeLessThan(0.75);
+        expect(Math.abs(metrics.y - screw.y - screw.height / 2)).toBeLessThan(0.75);
+        expect(metrics.openCenter).toBe(true);
+        expect(metrics.decorative).toBe(true);
+        const photo = (await page.locator(`[data-id="${ref.componentId}"] .asset-interactions`).boundingBox())!;
+        const nativeDiameter = ref.componentId === 'seq-pb' ? 76 : ref.componentId === 'seq-lamp' ? 74 : 68;
+        const head = pin.locator('.terminal-screw');
+        const expectedRadius = await head.count() ? (await head.boundingBox())!.width / 2 : photo.width * nativeDiameter / 1122 / 2;
+        expect(Math.abs(metrics.radius - expectedRadius)).toBeLessThan(0.75);
+        const cablePoint = await edge.locator('.react-flow__edge-path').evaluate((el, first) => {
+          const path = el as SVGPathElement;
+          const point = path.getPointAtLength(first ? 0 : path.getTotalLength()).matrixTransform(path.getScreenCTM()!);
+          return { x: point.x, y: point.y };
+        }, index === 0);
+        const crimp = (await end.locator('.sequence-wire-crimp').boundingBox())!;
+        expect(cablePoint.x).toBeGreaterThanOrEqual(crimp.x - 0.5);
+        expect(cablePoint.x).toBeLessThanOrEqual(crimp.x + crimp.width + 0.5);
+        expect(cablePoint.y).toBeGreaterThanOrEqual(crimp.y - 0.5);
+        expect(cablePoint.y).toBeLessThanOrEqual(crimp.y + crimp.height + 0.5);
+      }
+    }
+  }
+  await page.locator('.photo-board-shell').screenshot({ path: testInfo.outputPath('fitted-y-terminals.png') });
+});
+
 test('fits the mounted relay inside the slot and leaves all fourteen screws clickable after zooming', async ({ page }, testInfo) => {
   await selfHoldPreset(page);
   const body = page.locator('[data-id="body"] .photo-node');
