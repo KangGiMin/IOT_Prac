@@ -28,15 +28,53 @@ export const sequenceGeometry = {
   },
   dialCenter: { x: 50, y: 50 },
 };
-/** Photographed screw-head diameters in source PNG pixels. */
+interface ScrewRim { x: number; y: number; rx: number; ry: number }
+/** Each photographed rim measured on the original PNG, including transparency.
+ * Pixel measurements are converted to percentage hotspots below. */
 export const sequenceScrewGeometry = {
-  'pb-switch': { image: { width: 1122, height: 1402 }, diameter: 76 },
-  'pilot-lamp': { image: { width: 1122, height: 1402 }, diameter: 74 },
-  'relay-socket': { image: sequenceGeometry.relayImages.socket, diameter: 68 },
+  'pb-switch': {
+    image: { width: 1122, height: 1402 },
+    heads: {
+      no1: { x: 403.5, y: 278.5, rx: 38.5, ry: 41.5 },
+      no2: { x: 510.5, y: 277.5, rx: 38.5, ry: 41.5 },
+      nc1: { x: 619.5, y: 276.5, rx: 38.5, ry: 41.5 },
+      nc2: { x: 724.5, y: 278.5, rx: 38.5, ry: 41.5 },
+    } as Record<string, ScrewRim>,
+  },
+  'pilot-lamp': {
+    image: { width: 1122, height: 1402 },
+    heads: {
+      plus: { x: 517.5, y: 274, rx: 36, ry: 41.5 },
+      minus: { x: 618, y: 275.5, rx: 35.5, ry: 40 },
+    } as Record<string, ScrewRim>,
+  },
+  'relay-socket': {
+    image: sequenceGeometry.relayImages.socket,
+    heads: {
+      '1': { x: 750.5, y: 301.5, rx: 29.5, ry: 31 },
+      '2': { x: 838.5, y: 301.5, rx: 30.5, ry: 33.5 },
+      '3': { x: 921, y: 300.5, rx: 32.5, ry: 33.5 },
+      '4': { x: 1005.5, y: 301, rx: 32.5, ry: 33.5 },
+      '5': { x: 755, y: 386, rx: 30, ry: 28.5 },
+      '6': { x: 840.5, y: 387, rx: 29.5, ry: 28.5 },
+      '7': { x: 927.5, y: 386, rx: 29.5, ry: 28.5 },
+      '8': { x: 1013.5, y: 387, rx: 29.5, ry: 28.5 },
+      '9': { x: 755, y: 901.5, rx: 29.5, ry: 34.5 },
+      '10': { x: 840, y: 902.5, rx: 29.5, ry: 32 },
+      '11': { x: 925.5, y: 902.5, rx: 29.5, ry: 32 },
+      '12': { x: 1011.5, y: 902.5, rx: 29.5, ry: 32 },
+      '13': { x: 754, y: 793.5, rx: 29.5, ry: 30 },
+      '14': { x: 1011, y: 793.5, rx: 29.5, ry: 29.5 },
+    } as Record<string, ScrewRim>,
+  },
   virtualHeadRatio: 0.72,
 };
-// PB, lamp and relay centers follow the supplied 1134×1400 PNGs, including
-// transparent padding. The timer front has no wiring terminals.
+const photoPin = (asset: 'pb-switch' | 'pilot-lamp' | 'relay-socket', id: string, label: string) => {
+  const { image, heads } = sequenceScrewGeometry[asset];
+  const rim = heads[id];
+  return pin(id, label, rim.x / image.width * 100, rim.y / image.height * 100);
+};
+// The timer front has no wiring terminals.
 export const sequencePins = {
   'panel-board': {
     pins: [
@@ -47,7 +85,7 @@ export const sequencePins = {
     overlays: [],
   },
   'pilot-lamp': {
-    pins: [pin('plus', '+', 45.3, 19.5), pin('minus', '−', 54.6, 19.5)],
+    pins: [photoPin('pilot-lamp', 'plus', '+'), photoPin('pilot-lamp', 'minus', '−')],
     controls: [],
     overlays: [
       {
@@ -60,10 +98,10 @@ export const sequencePins = {
   },
   'pb-switch': {
     pins: [
-      pin('no1', 'NO 1', 35.5, 19.9),
-      pin('no2', 'NO 2', 45, 19.9),
-      pin('nc1', 'NC 1', 54.5, 19.9),
-      pin('nc2', 'NC 2', 64, 19.9),
+      photoPin('pb-switch', 'no1', 'NO 1'),
+      photoPin('pb-switch', 'no2', 'NO 2'),
+      photoPin('pb-switch', 'nc1', 'NC 1'),
+      photoPin('pb-switch', 'nc2', 'NC 2'),
     ],
     controls: [
       {
@@ -78,20 +116,11 @@ export const sequencePins = {
   },
   'relay-socket': {
     pins: [
-      pin('1', '1 NC', 66.2, 21.3),
-      pin('2', '2 NC', 73.8, 21.3),
-      pin('3', '3 NC', 81.3, 21.3),
-      pin('4', '4 NC', 88.8, 21.3),
-      pin('5', '5 NO', 66.5, 27.6),
-      pin('6', '6 NO', 74, 27.6),
-      pin('7', '7 NO', 81.6, 27.6),
-      pin('8', '8 NO', 89, 27.6),
-      pin('9', '9 COM', 66.2, 64.1),
-      pin('10', '10 COM', 73.8, 64.1),
-      pin('11', '11 COM', 81.3, 64.1),
-      pin('12', '12 COM', 88.8, 64.1),
-      pin('13', '13 COIL −', 66.5, 56.4),
-      pin('14', '14 COIL +', 89, 56.4),
+      ...['1', '2', '3', '4'].map(id => photoPin('relay-socket', id, `${id} NC`)),
+      ...['5', '6', '7', '8'].map(id => photoPin('relay-socket', id, `${id} NO`)),
+      ...['9', '10', '11', '12'].map(id => photoPin('relay-socket', id, `${id} COM`)),
+      photoPin('relay-socket', '13', '13 COIL −'),
+      photoPin('relay-socket', '14', '14 COIL +'),
     ],
     controls: [],
     overlays: [],

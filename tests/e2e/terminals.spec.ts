@@ -6,20 +6,42 @@ const terminal = (page: Page, component: string, pin: string) =>
     `.react-flow__node[data-id="${component}"] .photo-pin[data-handleid="${pin}"]`,
   );
 
+// Native PNG measurements, independent of the application's percentage hotspots.
+const photographedRims: [string, string, number, number, number, number][] = [
+  ['seq-pb', 'no1', 403.5, 278.5, 38.5, 41.5],
+  ['seq-pb', 'no2', 510.5, 277.5, 38.5, 41.5],
+  ['seq-pb', 'nc1', 619.5, 276.5, 38.5, 41.5],
+  ['seq-pb', 'nc2', 724.5, 278.5, 38.5, 41.5],
+  ['seq-lamp', 'plus', 517.5, 274, 36, 41.5],
+  ['seq-lamp', 'minus', 618, 275.5, 35.5, 40],
+  ['seq-relay', '1', 750.5, 301.5, 29.5, 31],
+  ['seq-relay', '2', 838.5, 301.5, 30.5, 33.5],
+  ['seq-relay', '3', 921, 300.5, 32.5, 33.5],
+  ['seq-relay', '4', 1005.5, 301, 32.5, 33.5],
+  ['seq-relay', '5', 755, 386, 30, 28.5],
+  ['seq-relay', '6', 840.5, 387, 29.5, 28.5],
+  ['seq-relay', '7', 927.5, 386, 29.5, 28.5],
+  ['seq-relay', '8', 1013.5, 387, 29.5, 28.5],
+  ['seq-relay', '9', 755, 901.5, 29.5, 34.5],
+  ['seq-relay', '10', 840, 902.5, 29.5, 32],
+  ['seq-relay', '11', 925.5, 902.5, 29.5, 32],
+  ['seq-relay', '12', 1011.5, 902.5, 29.5, 32],
+  ['seq-relay', '13', 754, 793.5, 29.5, 30],
+  ['seq-relay', '14', 1011, 793.5, 29.5, 29.5],
+];
+
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
 test('sizes both Y terminals to each screw and joins cables at their crimps before and after zooming', async ({ page }, testInfo) => {
+  test.setTimeout(60000);
   const saved = await downloadCircuit(page);
-  const connections = [
-    ['seq-board', 'plus', 'seq-pb', 'no1'],
-    ['seq-pb', 'no1', 'seq-lamp', 'plus'],
-    ['seq-lamp', 'minus', 'seq-relay', '5'],
-    ['seq-relay', '1', 'seq-relay', '13'],
-    ['seq-relay', '14', 'seq-timer', '7'],
-    ['seq-timer', '2', 'seq-board', 'minus'],
+  const points = [
+    ['seq-board', 'plus'], ...photographedRims.map(([node, pin]) => [node, pin]),
+    ['seq-timer', '7'], ['seq-timer', '2'], ['seq-board', 'minus'],
   ];
+  const connections = points.map(([node, pin], i) => [node, pin, ...points[(i + 1) % points.length]]);
   saved.workspaces.sequence.wires = connections.map(([a, ap, b, bp], index) => ({
     id: `fitted-${index}`, from: { componentId: a, pinId: ap },
     to: { componentId: b, pinId: bp }, color: '#dc4c4c',
@@ -38,21 +60,37 @@ test('sizes both Y terminals to each screw and joins cables at their crimps befo
           const matrix = group.getScreenCTM()!;
           const center = new DOMPoint(0, 0).matrixTransform(matrix);
           const fork = group.querySelector('.sequence-fork') as SVGPathElement;
+          const bounds = fork.getBBox();
+          const metal = Number.parseFloat(getComputedStyle(fork).strokeWidth);
           return { x: center.x, y: center.y,
             radius: Number(group.getAttribute('data-screw-radius')) * Math.hypot(matrix.a, matrix.b),
+            radiusY: Number(group.getAttribute('data-screw-radius-y')) * Math.hypot(matrix.c, matrix.d),
+            innerX: (bounds.width / 2 - metal / 2) * Math.hypot(matrix.a, matrix.b),
+            innerY: (bounds.y + bounds.height - metal / 2) * Math.hypot(matrix.c, matrix.d),
             openCenter: !fork.isPointInStroke(new DOMPoint(0, 0)),
+            followsRim: !/[LV]/.test(fork.getAttribute('d')!),
             decorative: getComputedStyle(group).pointerEvents === 'none' };
         });
         const screw = (await pin.boundingBox())!;
         expect(Math.abs(metrics.x - screw.x - screw.width / 2)).toBeLessThan(0.75);
         expect(Math.abs(metrics.y - screw.y - screw.height / 2)).toBeLessThan(0.75);
         expect(metrics.openCenter).toBe(true);
+        expect(metrics.followsRim).toBe(true);
         expect(metrics.decorative).toBe(true);
         const photo = (await page.locator(`[data-id="${ref.componentId}"] .asset-interactions`).boundingBox())!;
-        const nativeDiameter = ref.componentId === 'seq-pb' ? 76 : ref.componentId === 'seq-lamp' ? 74 : 68;
         const head = pin.locator('.terminal-screw');
-        const expectedRadius = await head.count() ? (await head.boundingBox())!.width / 2 : photo.width * nativeDiameter / 1122 / 2;
-        expect(Math.abs(metrics.radius - expectedRadius)).toBeLessThan(0.75);
+        const rim = photographedRims.find(([node, pin]) => node === ref.componentId && pin === ref.pinId);
+        if (rim) {
+          const [, , x, y, rx, ry] = rim;
+          expect(Math.abs(metrics.x - photo.x - photo.width * x / 1122)).toBeLessThan(0.75);
+          expect(Math.abs(metrics.y - photo.y - photo.height * y / 1402)).toBeLessThan(0.75);
+          expect(Math.abs(metrics.radius - photo.width * rx / 1122)).toBeLessThan(0.75);
+          expect(Math.abs(metrics.radiusY - photo.height * ry / 1402)).toBeLessThan(0.75);
+          expect(Math.abs(metrics.innerX - photo.width * rx / 1122)).toBeLessThan(0.75);
+          expect(Math.abs(metrics.innerY - photo.height * ry / 1402)).toBeLessThan(0.75);
+        } else {
+          expect(Math.abs(metrics.radius - (await head.boundingBox())!.width / 2)).toBeLessThan(0.75);
+        }
         const cablePoint = await edge.locator('.react-flow__edge-path').evaluate((el, first) => {
           const path = el as SVGPathElement;
           const point = path.getPointAtLength(first ? 0 : path.getTotalLength()).matrixTransform(path.getScreenCTM()!);
@@ -66,7 +104,18 @@ test('sizes both Y terminals to each screw and joins cables at their crimps befo
       }
     }
   }
+  // Inspect a normal, unpowered circuit without fault highlights or dense wiring.
+  saved.workspaces.sequence.wires = [
+    { id: 'preview-a', from: { componentId: 'seq-board', pinId: 'plus' }, to: { componentId: 'seq-pb', pinId: 'nc1' }, color: '#dc4c4c' },
+    { id: 'preview-b', from: { componentId: 'seq-pb', pinId: 'nc1' }, to: { componentId: 'seq-relay', pinId: '8' }, color: '#dc4c4c' },
+    { id: 'preview-c', from: { componentId: 'seq-board', pinId: 'minus' }, to: { componentId: 'seq-relay', pinId: '12' }, color: '#3780d5' },
+  ];
+  await uploadCircuit(page, saved);
+  await page.getByRole('button', { name: '전체 보기', exact: true }).click();
+  await page.getByRole('button', { name: 'Zoom In', exact: true }).click();
+  await terminal(page, 'seq-pb', 'nc1').hover();
   await page.locator('.photo-board-shell').screenshot({ path: testInfo.outputPath('fitted-y-terminals.png') });
+  await page.locator('[data-id="seq-relay"]').screenshot({ path: testInfo.outputPath('fitted-relay.png') });
 });
 
 test('fits the mounted relay inside the slot and leaves all fourteen screws clickable after zooming', async ({ page }, testInfo) => {

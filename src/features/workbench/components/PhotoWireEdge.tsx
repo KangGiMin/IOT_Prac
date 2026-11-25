@@ -1,12 +1,13 @@
 import { BaseEdge, getBezierPath, Position, useReactFlow } from '@xyflow/react';
 import type { EdgeProps } from '@xyflow/react';
 import type { CircuitComponent } from '../../../types/circuit';
-import { sequenceScrewRadius, sequenceWireExit } from '../utils/sequenceTerminal';
+import { sequenceScrewRadii, sequenceWireExit } from '../utils/sequenceTerminal';
 
 interface Termination {
   x: number;
   y: number;
   radius: number;
+  radiusY: number;
   exit: 'top' | 'bottom';
 }
 
@@ -16,22 +17,26 @@ function ForkTerminal({ end, side, color }: {
   side: 'source' | 'target';
   color: string;
 }) {
-  const r = end.radius * 1.12;
-  const fork = `M ${-r} ${-0.8 * r} V 0 A ${r} ${r} 0 0 0 ${r} 0 V ${-0.8 * r}`;
+  const thickness = Math.min(end.radius, end.radiusY) * 0.12;
+  // The inner edge touches the measured rim. No straight arms outside the circle.
+  const rx = end.radius + thickness / 2;
+  const r = end.radiusY + thickness / 2;
+  const fork = `M ${-rx * Math.SQRT1_2} ${-r * Math.SQRT1_2} A ${rx} ${r} 0 1 0 ${rx * Math.SQRT1_2} ${-r * Math.SQRT1_2}`;
   return <g
     className="sequence-wire-terminal"
     data-terminal-end={side}
     data-screw-radius={end.radius}
+    data-screw-radius-y={end.radiusY}
     transform={`translate(${end.x},${end.y}) rotate(${end.exit === 'top' ? 180 : 0})`}
     pointerEvents="none"
   >
     <path d={`M ${-0.34 * r} ${r} L ${-0.5 * r} ${2.4 * r} H ${0.5 * r} L ${0.34 * r} ${r} Z`}
       fill="#c6b17b" stroke="#847447" strokeWidth={0.16 * r} />
     <path className="sequence-fork" d={fork} fill="none" stroke="#827042"
-      strokeWidth={0.18 * r} strokeLinecap="round" />
-    <path d={fork} fill="none" stroke="#e2d09a" strokeWidth={0.1 * r} strokeLinecap="round" />
-    <rect className="sequence-wire-crimp" x={-0.56 * r} y={1.9 * r}
-      width={1.12 * r} height={1.3 * r} rx={0.22 * r}
+      strokeWidth={thickness} strokeLinecap="round" />
+    <path d={fork} fill="none" stroke="#e2d09a" strokeWidth={thickness * 0.55} strokeLinecap="round" />
+    <rect className="sequence-wire-crimp" x={-0.56 * rx} y={1.9 * r}
+      width={1.12 * rx} height={1.3 * r} rx={0.22 * rx}
       fill={color} stroke="#26372d66" strokeWidth={0.12 * r} />
     <path d={`M ${-0.3 * r} ${2.15 * r} V ${2.9 * r}`}
       stroke="#ffffff66" strokeWidth={0.15 * r} strokeLinecap="round" />
@@ -48,11 +53,15 @@ export function PhotoWireEdge(props: EdgeProps) {
     const node = getInternalNode(nodeId);
     const handle = node?.internals.handleBounds?.source?.find(h => h.id === pinId);
     const component = node?.data.component as CircuitComponent | undefined;
+    const radii = !digital && component
+      ? sequenceScrewRadii(component, pinId, handle?.width ?? 12)
+      : { x: 4, y: 4 };
     return {
       // A top Handle's edge anchor differs from its photographed screw center.
       x: node && handle ? node.internals.positionAbsolute.x + handle.x + handle.width / 2 : x,
       y: node && handle ? node.internals.positionAbsolute.y + handle.y + handle.height / 2 : y,
-      radius: !digital && component ? sequenceScrewRadius(component, handle?.width ?? 12) : 4,
+      radius: radii.x,
+      radiusY: radii.y,
       exit: !digital && component ? sequenceWireExit(component, pinId) : 'top',
     };
   };
@@ -60,7 +69,7 @@ export function PhotoWireEdge(props: EdgeProps) {
   const target = terminal(props.target, props.targetHandleId, props.targetX, props.targetY);
   const anchor = (end: Termination) => ({
     x: end.x,
-    y: end.y + (digital ? 0 : end.radius * 1.12 * 3.1 * (end.exit === 'top' ? -1 : 1)),
+    y: end.y + (digital ? 0 : (end.radiusY + Math.min(end.radius, end.radiusY) * 0.06) * 3.1 * (end.exit === 'top' ? -1 : 1)),
   });
   const start = anchor(source), finish = anchor(target);
   const [path] = getBezierPath({
