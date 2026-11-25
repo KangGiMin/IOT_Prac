@@ -73,7 +73,7 @@ const simulation = solveCircuit({
 - 릴레이 단자 템플릿: NC 1–4, NO 5–8, COM 9–12, 코일 13/14. 최종 장비 소켓 핀맵에 맞춰 확인·보정합니다.
 - IC: 첨부 이미지의 74LS00 PDIP-14. VCC 14, GND 7, NAND 출력 3/6/8/11. 입력 LOW ≤0.8V, HIGH ≥2V, 권장 공급 4.75–5.25V. [TI 공식 데이터시트](https://www.ti.com/lit/ds/symlink/sn74ls00.pdf)
 - TTL 출력은 이상적인 0V/VCC 구동입니다. 실제 LS 출력 HIGH 전압, 팬아웃·출력 전류와 LED 구동 적합성까지 보증하는 SPICE 모델은 아닙니다.
-- 현재 AT8N On-Delay, TTL 6종, 디지털 계측 파형과 6대 미션 자동 채점을 제공합니다. 자동 채점은 `missionGrader.ts`가 복사된 회로에서 수행합니다. 실물의 아날로그 과도해석은 지원하지 않습니다. 최신 사용법은 [README](../README.md)를 확인하세요.
+- 현재 AT8N On-Delay, TTL 6종, 디지털 계측 파형과 7대 미션(AND/NAND/NOT/XOR/OR/NOR/XNOR) 자동 채점을 제공합니다. 자동 채점은 `missionGrader.ts`가 복사된 회로에서 수행합니다. 실물의 아날로그 과도해석은 지원하지 않습니다. 최신 사용법은 [README](../README.md)를 확인하세요.
 
 ## 경고음과 UI 연결
 

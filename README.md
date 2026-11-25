@@ -2,6 +2,14 @@
 
 React + TypeScript + Vite + Tailwind CSS + Zustand 기반의 PNG 회로 시뮬레이터입니다. 시퀀스 제어와 디지털 회로를 별도 작업대로 유지하며, 실제 장비 사진 위 상대 좌표 단자·버튼·계측 오버레이를 제공합니다.
 
+## 공개 실습 사이트
+
+[Circuit Lab · IoT 전기·전자 회로 실습실](https://gimin-iot-circuit-lab.famousessay4.chatgpt.site)
+
+Sites 정적 호스팅으로 제공하며 개발 PC와 VS Code가 꺼져 있어도 접속할 수 있습니다. 방문자 로그인은 필요하지 않습니다. 회로는 각 방문자의 브라우저에서 연산하며, 공유할 배선은 회로 JSON으로 저장하고 불러옵니다.
+
+호스팅 설정은 `.openai/hosting.json`에 있습니다. GitHub에 소스를 푸시하는 것과 공개 사이트에 새 버전을 배포하는 것은 별도 작업입니다. 소스를 수정한 뒤에는 빌드한 새 버전을 Sites에도 배포해야 공개 화면에 반영됩니다.
+
 ## 1. PNG 넣기
 
 누끼를 딴 개별 PNG를 **`public/assets/` 바로 아래**에 넣습니다. `sequence/`, `digital/` 하위 폴더는 사용하지 않습니다.
@@ -71,11 +79,13 @@ VS Code Live Server를 사용할 경우 먼저 `npm run build`를 실행하고 �
 
 1. 상단 **디지털 · 7400 NAND** 예제를 불러옵니다. 브레드보드, 장착된 IC, 입력 A/B 스위치, 저항·LED, 전원과 프로브가 배선되어 있습니다.
 2. 메인 전원을 ON으로 바꾸고 A/B 스위치를 조작해 LED와 파형을 확인합니다. 초기 00 입력의 NAND 출력은 HIGH입니다.
-3. 우측 미션에서 **NAND**를 선택합니다. A 입력, B 입력, 출력 LED를 확인한 뒤 **회로 검증하기**를 누릅니다.
+3. 아래 미션에서 **NAND**를 선택합니다. A 입력, B 입력, 출력 LED를 확인한 뒤 **회로 검증하기**를 누릅니다.
 4. 00·01·10·11의 실제 LED 결과와 성공/실패가 표시됩니다. 정상 예제는 100점입니다.
 5. 회로를 변경한 뒤 다시 검증합니다. 미션·대상·부품·설정·배선이 바뀌면 이전 채점은 숨겨집니다.
 
 시퀀스는 **시퀀스 · 자기유지** 예제를 불러와 전원을 ON으로 바꿉니다. START를 눌렀다 놓으면 릴레이와 램프가 유지되고, STOP을 눌렀다 놓으면 해제됩니다. 두 예제 모두 불러올 때 전원 OFF로 시작합니다.
+
+NOR는 상단 **디지털 · 7402 NOR** 예제를 불러옵니다. 메인 전원을 켜고 입력 A/B 스위치를 바꾸면 **00에서만 LED가 켜지고 01·10·11에서는 꺼집니다.** 아래 미션에서 **NOR → 회로 검증하기**를 누르면 네 행을 자동 채점합니다. 예제의 오실로스코프 CH1은 A 입력, CH2는 Y 출력을 측정합니다.
 
 ## 4. 미션과 자동 채점
 
@@ -86,6 +96,7 @@ VS Code Live Server를 사용할 경우 먼저 `npm run build`를 실행하고 �
 | NOT  | 7406                       | 0, 1           |
 | XOR  | 7486                       | 00, 01, 10, 11 |
 | OR   | 7402 + 7406 또는 7400 응용 | 00, 01, 10, 11 |
+| NOR  | 7402                       | 00, 01, 10, 11 |
 | XNOR | 7486 + 7406                | 00, 01, 10, 11 |
 
 각 미션은 논리 기호, 수식, 진리표, 권장 IC와 접이식 배선 힌트를 제공합니다. 검증 대상 스위치와 LED를 명시적으로 선택하므로 여러 LED나 스위치가 있어도 다른 부품의 결과를 합산하지 않습니다.
@@ -144,7 +155,7 @@ src/
   features/workbench/
     components/
       LogicMissions.tsx             # 미션·바인딩·진리표·점수·오류 힌트
-      LogicSymbol.tsx               # 6대 미션 논리 기호
+      LogicSymbol.tsx               # 7대 미션 논리 기호
       PhotoCanvas.tsx               # Zoom/Pan·드래그·SVG 전선
       PhotoComponentNode.tsx        # PNG와 핀/조작/발광 오버레이
       PhotoControl.tsx              # 버튼·다이얼·토글
@@ -157,7 +168,7 @@ src/
       AssetImage.tsx                # PNG와 onError 플레이스홀더
     data/
       photoCircuits.ts              # 초기 배치
-      logicMissions.ts              # 최종 6대 미션과 힌트
+      logicMissions.ts              # 7대 미션과 힌트
       presets.ts                    # 자기유지 / NAND 예제 팩터리
     utils/
       geometry.ts                   # 이미지 표시 영역과 백분율

@@ -43,11 +43,11 @@ export const LogicMissions = memo(function LogicMissions() {
   return (
     <section
       className="inspector-section logic-missions"
-      aria-label="6대 논리회로 실습 미션 및 자동 채점"
+      aria-label="7대 논리회로 실습 미션 및 자동 채점"
     >
       <div className="panel-heading">
         <ListChecks size={17} />
-        <h2>6대 논리회로 실습 미션</h2>
+        <h2>7대 논리회로 실습 미션</h2>
       </div>
       <p className="panel-description">
         미션을 선택하고 실제 LED 동작을 검증하세요.

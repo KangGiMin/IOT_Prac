@@ -282,6 +282,37 @@ test('updates inspector descriptions and model names for all six TTL models', as
   }
 });
 
+test('runs the 7402 NOR preset through live switches and grades all four rows', async ({ page }) => {
+  await page.getByRole('button', { name: '디지털 · 7402 NOR', exact: true }).click();
+  await expect(page.locator('.photo-board-toolbar')).toContainText('16 배선');
+  const power = page.getByRole('switch', { name: '메인 전원', exact: true });
+  const led = page.locator('[data-id="output-led"] .light-overlay');
+  const a = page.locator('[data-id="input-a"] .device-control');
+  const b = page.locator('[data-id="input-b"] .device-control');
+  await expect(power).not.toBeChecked();
+  await expect(led).toHaveCSS('opacity', '0');
+  await power.click();
+  await expect(led).toHaveCSS('opacity', '0.9'); // 00 -> 1
+  await b.click();
+  await expect(led).toHaveCSS('opacity', '0'); // 01 -> 0
+  await a.click();
+  await expect(led).toHaveCSS('opacity', '0'); // 11 -> 0
+  await b.click();
+  await expect(led).toHaveCSS('opacity', '0'); // 10 -> 0
+  await a.click();
+  await expect(led).toHaveCSS('opacity', '0.9');
+  await page.getByRole('button', { name: 'NOR', exact: true }).click();
+  await expect(page.getByRole('img', { name: 'NOR 논리 기호', exact: true })).toBeVisible();
+  await page.getByText('배선 힌트 펼치기', { exact: true }).click();
+  await expect(page.locator('.mission-hint')).toContainText('Y=1번');
+  await page.getByRole('button', { name: '회로 검증하기', exact: true }).click();
+  await expect(page.locator('.mission-grade-score')).toContainText('100점');
+  await expect(page.locator('.mission-truth-table .grade-pass')).toHaveCount(4);
+  await expect(led).toHaveCSS('opacity', '0.9');
+  await power.click();
+  await expect(led).toHaveCSS('opacity', '0');
+});
+
 test('keeps a 100-board file interactive without creating hundreds of thousands of handles', async ({
   page,
 }) => {

@@ -109,6 +109,9 @@ export function LearningToolbar() {
       <button onClick={() => state.loadPreset('nand')}>
         디지털 · 7400 NAND
       </button>
+      <button onClick={() => state.loadPreset('nor')}>
+        디지털 · 7402 NOR
+      </button>
     </div>
   );
 }

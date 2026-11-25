@@ -7,12 +7,12 @@ import type {
   CircuitWire,
   CircuitWorkspace,
 } from '../../../types/circuit';
-export type PresetId = 'self-hold' | 'nand';
+export type PresetId = 'self-hold' | 'nand' | 'nor';
 export function createPreset(id: PresetId): {
   mode: CircuitMode;
   workspace: CircuitWorkspace;
 } {
-  const mode = id === 'nand' ? 'digital' : 'sequence';
+  const mode = id === 'self-hold' ? 'sequence' : 'digital';
   let components: CircuitComponent[] = [];
   const wires: CircuitWire[] = [];
   const add = (
@@ -34,10 +34,12 @@ export function createPreset(id: PresetId): {
       kind: mode === 'digital' ? 'jumper' : undefined,
     });
   if (mode === 'digital') {
+    const nor = id === 'nor';
+    const outputPin = nor ? '1' : '3';
     add('breadboard', 'board', 0, 140);
     add('power-supply', 'power', 740, 80);
     add('oscilloscope', 'scope', 740, 340);
-    add('ic-dip14', 'ic', 240, 295).settings.icModel = '7400';
+    add('ic-dip14', 'ic', 240, 295).settings.icModel = nor ? '7402' : '7400';
     add('switch-3pin', 'input-a', 100, 10).label = '입력 A';
     add('switch-3pin', 'input-b', 260, 10).label = '입력 B';
     add('resistor-330', 'resistor', 430, 340);
@@ -46,8 +48,8 @@ export function createPreset(id: PresetId): {
     connect('power', 'plus', 'board', 'top-plus-1');
     connect('power', 'minus', 'board', 'top-minus-1');
     for (const [s, p] of [
-      ['input-a', '1'],
-      ['input-b', '2'],
+      ['input-a', nor ? '2' : '1'],
+      ['input-b', nor ? '3' : '2'],
     ] as const) {
       connect(s, '1', 'board', 'top-minus-2');
       connect(s, '2', 'board', 'top-plus-2');
@@ -55,11 +57,11 @@ export function createPreset(id: PresetId): {
     }
     connect('ic', '14', 'board', 'top-plus-3');
     connect('ic', '7', 'board', 'top-minus-3');
-    connect('ic', '3', 'resistor', '1');
+    connect('ic', outputPin, 'resistor', '1');
     connect('resistor', '2', 'output-led', 'anode');
     connect('output-led', 'cathode', 'board', 'top-minus-4');
     connect('scope', 'ch1', 'input-a', 'com');
-    connect('scope', 'ch2', 'ic', '3');
+    connect('scope', 'ch2', 'ic', outputPin);
     connect('scope', 'ref', 'board', 'top-minus-5');
   } else {
     add('panel-board', 'board', 0, 0);

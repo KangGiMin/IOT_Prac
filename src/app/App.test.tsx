@@ -131,7 +131,7 @@ describe('PNG workbench layout', () => {
     expect(html).toContain('시퀀스 제어 · 보호 정지');
     expect(html).toContain('경고음 활성화');
   });
-  it('exposes both modes, header controls, PNG palette, canvas and six missions', () => {
+  it('exposes both modes, header controls, PNG palette, canvas and seven missions', () => {
     const html = renderToStaticMarkup(<App />);
     for (const label of [
       '시퀀스 제어',
@@ -142,13 +142,13 @@ describe('PNG workbench layout', () => {
       '부품 팔레트',
       '실습 작업 공간',
       '선택 부품',
-      '6대 논리회로 실습 미션',
+      '7대 논리회로 실습 미션',
     ]) {
       expect(html).toContain(label);
     }
     expect(html).toContain('panel-board.png');
     expect(html).toMatch(/<img\b/);
-    for (const gate of ['AND', 'OR', 'NOT', 'NAND', 'XNOR', 'XOR'])
+    for (const gate of ['AND', 'OR', 'NOT', 'NAND', 'NOR', 'XNOR', 'XOR'])
       expect(html).toContain(`>${gate}</button>`);
     const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);

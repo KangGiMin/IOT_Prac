@@ -26,7 +26,9 @@ function liveServerEntry(): Plugin {
         'utf8',
       );
       // Relative URLs also work when Live Server serves a parent directory.
-      const liveHtml = html.replaceAll('./assets/', './dist/assets/');
+      const liveHtml = html
+        .replaceAll('./assets/', './dist/assets/')
+        .replace('href="./favicon.svg"', 'href="./dist/favicon.svg"');
       await writeFile(resolve(projectRoot, 'dist/index.html'), html, 'utf8');
       await writeFile(
         resolve(projectRoot, 'index.html'),

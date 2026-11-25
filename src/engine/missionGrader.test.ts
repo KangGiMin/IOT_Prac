@@ -17,6 +17,7 @@ const wire = (a: string, ap: string, b: string, bp: string): CircuitWire => ({
   color: '#dc4c4c',
 });
 function circuit(id: LogicGate): CircuitWorkspace {
+  if (id === 'NOR') return createPreset('nor').workspace;
   const w = createPreset('nand').workspace,
     ic = w.components.find((c) => c.id === 'ic')!;
   if (id === 'AND') ic.settings.icModel = '7408';
@@ -63,7 +64,7 @@ function circuit(id: LogicGate): CircuitWorkspace {
   return w;
 }
 describe('functional logic missions', () => {
-  it.each(['AND', 'NAND', 'NOT', 'XOR', 'OR', 'XNOR'] as const)(
+  it.each(['AND', 'NAND', 'NOT', 'XOR', 'OR', 'NOR', 'XNOR'] as const)(
     'grades every %s input row using the LED',
     (id) => {
       const w = circuit(id),
@@ -88,6 +89,12 @@ describe('functional logic missions', () => {
     )!.from.pinId = '12';
     w.wires.push(wire('power', 'plus', 'ic', '13'));
     expect(gradeLogicMission(w, mission('AND'), bindings).passed).toBe(true);
+  });
+  it('rejects NAND wiring submitted as NOR on the two differing input rows', () => {
+    const result = gradeLogicMission(circuit('NAND'), mission('NOR'), bindings);
+    expect(result.passed).toBe(false);
+    expect(result.score).toBe(50);
+    expect(result.rows.map(row => row.passed)).toEqual([true, false, false, true]);
   });
   it('accepts the three-NAND implementation of OR', () => {
     const w = circuit('NAND');

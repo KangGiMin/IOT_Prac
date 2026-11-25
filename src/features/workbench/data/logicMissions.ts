@@ -74,6 +74,21 @@ export const logicMissions: readonly LogicMission[] = [
     ],
   },
   {
+    id: 'NOR',
+    title: 'NOR · 부정 논리합',
+    formula: 'Y = ¬(A + B)',
+    inputs: 2,
+    goal: '두 입력이 모두 0일 때만 LED를 켜세요.',
+    recommended: '7402',
+    hint: '7402: A→2번, B→3번, Y=1번. 14번 VCC→+5V, 7번 GND→0V. 1번 출력→330Ω→LED 긴 다리 A(+), LED 짧은 다리 K(−)→0V. 7400과 핀맵이 다르므로 입력 1·2번 / 출력 3번으로 배선하지 마세요.',
+    truthTable: [
+      { a: 0, b: 0, output: 1 },
+      { a: 0, b: 1, output: 0 },
+      { a: 1, b: 0, output: 0 },
+      { a: 1, b: 1, output: 0 },
+    ],
+  },
+  {
     id: 'XNOR',
     title: 'XNOR · 배타적 논리합의 부정',
     formula: 'Y = ¬(A ⊕ B)',
