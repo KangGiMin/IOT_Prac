@@ -11,6 +11,7 @@ import { createPreset } from '../features/workbench/data/presets';
 import { placeDigital } from '../features/workbench/utils/digitalPlacement';
 import { makeComponent } from '../features/workbench/data/photoCircuits';
 import { capacityWorkspace } from '../test/circuitFixtures';
+import { defaultScopeSettings } from '../features/scope/model';
 const workspaces = () => ({
   sequence: createPreset('self-hold').workspace,
   digital: createPreset('nand').workspace,
@@ -23,6 +24,14 @@ function invalid(change: (data: ReturnType<typeof JSON.parse>) => void) {
 }
 
 describe('versioned circuit JSON', () => {
+  it('round-trips scope and analog generator settings and rejects invalid ranges',()=>{
+    const w=workspaces(),scope=w.digital.components.find(c=>c.assetId==='oscilloscope')!;
+    scope.settings.scope=defaultScopeSettings();scope.settings.scope.channels.ch1.source='generator';scope.settings.scope.channels.ch1.generator.frequency=1234;
+    const source=exportCircuitFile('digital',w),loaded=importCircuitFile(source);
+    expect(loaded.workspaces.digital.components.find(c=>c.id===scope.id)!.settings.scope).toEqual(scope.settings.scope);
+    const broken=JSON.parse(source);broken.workspaces.digital.components.find((c:{id:string})=>c.id===scope.id).settings.scope.channels.ch1.generator.frequency=-1;
+    expect(()=>importCircuitFile(JSON.stringify(broken))).toThrow();
+  });
   it('refits the large mounted relay frame in older JSON while preserving its wiring', () => {
     const before = workspaces();
     const body = before.sequence.components.find(c => c.id === 'body')!;

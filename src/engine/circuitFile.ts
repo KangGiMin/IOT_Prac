@@ -3,6 +3,7 @@ import { componentAssets } from '../config/assets';
 import { IC_MODELS } from '../config/ttlModels';
 import { solveCircuit } from './circuitSolver';
 import { alignMountedRelays } from '../features/workbench/utils/relayMount';
+import { parseScopeSettings } from '../features/scope/model';
 import type {
   CircuitComponent,
   CircuitMode,
@@ -160,6 +161,10 @@ function parseCircuitFile(source: string): {
         timerSeconds: number(s.timerSeconds, 0, 10),
         voltage: number(s.voltage, 0, 30),
       };
+      if (s.scope !== undefined) {
+        if (assetId !== 'oscilloscope') fail('계측 설정은 오실로스코프에서만 사용할 수 있습니다.');
+        settings.scope = parseScopeSettings(s.scope);
+      }
       for (const k of [
         'openCollector',
         'outputEnabled',

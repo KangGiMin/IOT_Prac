@@ -1,6 +1,7 @@
 import { IC_MODELS, TTL_MODELS, icModel } from '../../../config/ttlModels';
 import type { CircuitComponent } from '../../../types/circuit';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
+import { useLearningCenter } from '../../learning/useLearningCenter';
 export function DigitalControls({
   component: c,
 }: {
@@ -58,6 +59,7 @@ export function DigitalControls({
     );
   if (c.assetId === 'oscilloscope')
     return (
+      <>
       <button
         className="component-control"
         disabled={s.calibration}
@@ -69,6 +71,8 @@ export function DigitalControls({
       >
         {c.settings.scopeRunning === false ? 'RUN' : 'STOP'}
       </button>
+      <button className="component-control" onClick={()=>useLearningCenter.getState().openScope(c.id)}>확장 계측·사용법 열기</button>
+      </>
     );
   if (c.assetId === 'power-supply')
     return (

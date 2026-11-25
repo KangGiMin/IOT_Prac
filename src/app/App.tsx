@@ -9,7 +9,7 @@ import {
   Power,
   RotateCcw,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import type { CSSProperties } from 'react';
 import { wireColors } from '../config/assets';
@@ -19,6 +19,8 @@ import { PhotoCanvas } from '../features/workbench/components/PhotoCanvas';
 import { PhotoInspector } from '../features/workbench/components/PhotoInspector';
 import { PhotoPalette } from '../features/workbench/components/PhotoPalette';
 import { SoundAlert } from '../engine/soundAlert';
+import { ScopeAcquisition } from '../features/scope/ScopeAcquisition';
+const LearningCenter = lazy(() => import('../features/learning/LearningCenter').then(module => ({ default: module.LearningCenter })));
 
 const modes = [
   { id: 'sequence', label: '시퀀스 제어', Icon: CircuitBoard },
@@ -100,6 +102,7 @@ export function App() {
       onPointerDownCapture={unlockAlarm}
       onKeyDownCapture={unlockAlarm}
     >
+      <ScopeAcquisition />
       <a className="skip-workspace" href="#circuit-workspace">
         실습 영역으로 이동
       </a>
@@ -275,6 +278,7 @@ export function App() {
             <PhotoInspector />
           </div>
         </div>
+        <Suspense fallback={<section id="learning-center" className="learning-center">학습 센터를 불러오는 중입니다.</section>}><LearningCenter /></Suspense>
       </main>
       <footer className="circuit-footer">
         <span>

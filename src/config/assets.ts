@@ -131,7 +131,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'digital',
     label: '오실로스코프',
     model: 'RIGOL DS5152C',
-    description: 'CH1·CH2에 연결된 노드의 실시간 디지털 파형을 표시합니다.',
+    description: '회로 프로브와 내장 아날로그 발생기 입력을 측정합니다. 전압축·시간축·트리거·커서·자동 측정은 확장 계측 패널에서 조작하세요.',
     ...image('oscilloscope.png'),
     size: { width: 330, height: 247.5 },
     category: 'instrument',

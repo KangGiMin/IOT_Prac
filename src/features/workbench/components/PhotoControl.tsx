@@ -1,4 +1,5 @@
 import { sequenceGeometry } from '../../../config/sequencePins';
+import { ScopePhotoControl } from '../../scope/ScopePhotoControl';
 import type {
   CircuitComponent,
   ControlDefinition,
@@ -26,6 +27,9 @@ export function PhotoControl({
   const select = () => useCircuitStore.getState().select(component.id);
   const pressed = (value: boolean) =>
     useCircuitStore.getState().updateSettings(component.id, { pressed: value });
+
+  if (control.kind === 'scope-action' || control.kind === 'scope-dial')
+    return <ScopePhotoControl component={component} control={control} calibration={calibration}/>;
 
   if (control.kind === 'dial' && control.setting === 'timerSeconds') {
     const update = (event: React.PointerEvent<HTMLElement>) => {

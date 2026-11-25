@@ -18,6 +18,8 @@ import {
   makeComponent,
 } from '../features/workbench/data/photoCircuits';
 import { solveCircuit } from '../engine/circuitSolver';
+import { parseScopeSettings } from '../features/scope/model';
+import type { ScopeSettings } from '../features/scope/model';
 import type {
   AssetId,
   CalibrationSample,
@@ -48,6 +50,7 @@ const snapshot = (w: CircuitWorkspace): Snapshot =>
 const same = (a: Snapshot, b: Snapshot) =>
   JSON.stringify(a) === JSON.stringify(b);
 interface CircuitState {
+  updateScope: (id: string, settings: ScopeSettings, running?: boolean) => void;
   histories: Record<CircuitMode, { past: Snapshot[]; future: Snapshot[] }>;
   dragHistory: { mode: CircuitMode; id: string; before: Snapshot } | null;
   beginDrag: (id: string) => void;
@@ -214,6 +217,16 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
     });
   };
   return {
+    updateScope: (id, settings, running) => {
+      const validated = parseScopeSettings(settings);
+      set(s => {
+        if (s.calibration) return s;
+        const w = s.workspaces.digital;
+        if (!w.components.some(c => c.id === id && c.assetId === 'oscilloscope')) return s;
+        return { workspaces: { ...s.workspaces, digital: { ...w, components: w.components.map(c => c.id === id
+          ? { ...c, settings: { ...c.settings, scope: validated, ...(running === undefined ? {} : { scopeRunning: running }) } } : c) } } };
+      });
+    },
     histories: {
       sequence: { past: [], future: [] },
       digital: { past: [], future: [] },

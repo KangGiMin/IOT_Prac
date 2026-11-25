@@ -69,6 +69,8 @@ export type OverlayDefinition =
     };
 /** Interactive controls share the exact same percentage space as terminal pins. */
 export type ControlDefinition =
+  | { id:string; label:string; kind:'scope-action'; bounds:PercentRect; action:import('../features/scope/scopeActions').ScopePhotoAction }
+  | { id:string; label:string; kind:'scope-dial'; bounds:PercentRect; field:'timeDiv'|'voltsDiv'|'offset'|'triggerLevel'|'delayDiv' }
   | {
       id: string;
       label: string;
@@ -116,6 +118,7 @@ export interface ComponentAsset {
   overlays: readonly OverlayDefinition[];
 }
 export interface ComponentSettings {
+  scope?: import('../features/scope/model').ScopeSettings;
   icModel?: import('../config/ttlModels').IcModel;
   openCollector?: boolean;
   outputEnabled?: boolean;
