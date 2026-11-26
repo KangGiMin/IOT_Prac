@@ -112,6 +112,8 @@ export function PhotoControl({
       }} />;
   }
   if (control.kind === 'momentary') {
+    const detent = component.settings.buttonMode === 'detent';
+    const isPressed = component.settings.pressed;
     return (
       <button
         className={`device-control momentary-control nodrag nopan ${component.settings.pressed ? 'is-pressed' : ''}`}
@@ -119,51 +121,49 @@ export function PhotoControl({
         disabled={calibration}
         aria-label={control.label}
         aria-pressed={component.settings.pressed}
-        title={control.label}
+        title={detent ? `푸시버튼 ${isPressed ? 'ON' : 'OFF'}` : control.label}
         onClick={() => {
           select();
-          if (component.settings.buttonMode === 'detent')
-            pressed(!component.settings.pressed);
+          if (detent) pressed(!isPressed);
         }}
         onPointerDown={(event) => {
-          if (component.settings.buttonMode === 'detent') return;
+          if (detent) return;
           select();
           event.currentTarget.setPointerCapture(event.pointerId);
           pressed(true);
         }}
         onPointerUp={() => {
-          if (component.settings.buttonMode !== 'detent') pressed(false);
+          if (!detent) pressed(false);
         }}
         onPointerCancel={() => {
-          if (component.settings.buttonMode !== 'detent') pressed(false);
+          if (!detent) pressed(false);
         }}
         onLostPointerCapture={() => {
-          if (component.settings.buttonMode !== 'detent') pressed(false);
+          if (!detent) pressed(false);
         }}
         onKeyDown={(event) => {
-          if (
-            component.settings.buttonMode !== 'detent' &&
-            (event.key === ' ' || event.key === 'Enter')
-          ) {
+          if (detent && event.key === 'Enter' && event.repeat) {
+            event.preventDefault();
+          }
+          if (!detent && (event.key === ' ' || event.key === 'Enter')) {
             event.preventDefault();
             select();
             pressed(true);
           }
         }}
         onKeyUp={(event) => {
-          if (
-            component.settings.buttonMode !== 'detent' &&
-            (event.key === ' ' || event.key === 'Enter')
-          ) {
+          if (!detent && (event.key === ' ' || event.key === 'Enter')) {
             event.preventDefault();
             pressed(false);
           }
         }}
         onBlur={() => {
-          if (component.settings.buttonMode !== 'detent') pressed(false);
+          if (!detent) pressed(false);
         }}
       >
-        <span>{component.settings.pressed ? '누름' : '누르기'}</span>
+        <span>
+          {detent ? (isPressed ? 'ON' : 'OFF') : isPressed ? '누름' : '누르기'}
+        </span>
       </button>
     );
   }

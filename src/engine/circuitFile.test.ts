@@ -138,9 +138,12 @@ describe('versioned circuit JSON', () => {
   it('ignores execution state and clears physically held momentary buttons', () => {
     const data = JSON.parse(saved());
     data.workspaces.sequence.power.on = true;
-    data.workspaces.sequence.components.find(
+    const start = data.workspaces.sequence.components.find(
       (c: { id: string }) => c.id === 'start',
-    ).settings.pressed = true;
+    );
+    // Older files omitted the setting and used momentary behavior.
+    delete start.settings.buttonMode;
+    start.settings.pressed = true;
     const result = importCircuitFile(JSON.stringify(data));
     expect(result.workspaces.sequence.power.on).toBe(false);
     expect(
@@ -190,6 +193,7 @@ describe('versioned circuit JSON', () => {
   it('does not persist a held momentary button or make its release consume more file space', () => {
     const w = workspaces();
     const start = w.sequence.components.find((c) => c.id === 'start')!;
+    start.settings.buttonMode = 'momentary';
     const released = exportCircuitFile('sequence', w);
     start.settings.pressed = true;
     expect(exportCircuitFile('sequence', w)).toBe(released);

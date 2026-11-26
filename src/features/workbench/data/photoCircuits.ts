@@ -17,7 +17,13 @@ export const makeComponent = (
   assetId,
   label: componentAssets[assetId].label,
   position: { x, y },
-  settings: { pressed: false, switchOn: false, timerSeconds: 3, voltage: 5 },
+  settings: {
+    pressed: false,
+    switchOn: false,
+    timerSeconds: 3,
+    voltage: 5,
+    ...(assetId === 'pb-switch' ? { buttonMode: 'detent' } : {}),
+  },
 });
 
 export const createPhotoWorkspace = (mode: CircuitMode): CircuitWorkspace => {

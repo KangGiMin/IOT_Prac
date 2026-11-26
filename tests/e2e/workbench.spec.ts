@@ -268,10 +268,68 @@ test('keyboard movement detaches an inserted IC and history restores it', async 
   ).toEqual(moved);
 });
 
+test('toggles a sequence pushbutton and its lamp on each click', async ({
+  page,
+}) => {
+  await page.getByRole('button', { name: '초기화', exact: true }).click();
+  await page.getByRole('button', { name: '푸시버튼 스위치 추가' }).click();
+  await page.getByRole('button', { name: '표시 램프 추가' }).click();
+  const saved = await downloadCircuit(page);
+  const components = saved.workspaces.sequence.components;
+  const pbId = components.find((c) => c.assetId === 'pb-switch')!.id;
+  const lampId = components.find((c) => c.assetId === 'pilot-lamp')!.id;
+  saved.workspaces.sequence.wires = [
+    {
+      id: 'supply-to-pb',
+      from: { componentId: 'seq-board', pinId: 'plus' },
+      to: { componentId: pbId, pinId: 'no1' },
+      color: '#dc4c4c',
+    },
+    {
+      id: 'pb-to-lamp',
+      from: { componentId: pbId, pinId: 'no2' },
+      to: { componentId: lampId, pinId: 'plus' },
+      color: '#dc4c4c',
+    },
+    {
+      id: 'lamp-return',
+      from: { componentId: lampId, pinId: 'minus' },
+      to: { componentId: 'seq-board', pinId: 'minus' },
+      color: '#303b48',
+    },
+  ];
+  await uploadCircuit(page, saved);
+  await expect(page.locator('.photo-board-toolbar')).toContainText('3 배선');
+  await page.getByRole('switch', { name: '메인 전원', exact: true }).click();
+  const button = page.locator(`[data-id="${pbId}"] .momentary-control`);
+  const lamp = page.locator(`[data-id="${lampId}"] .light-overlay`);
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  await expect(lamp).toHaveCSS('opacity', '0');
+
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+  await expect(lamp).toHaveCSS('opacity', '0.9');
+  await button.click();
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  await expect(lamp).toHaveCSS('opacity', '0');
+
+  const panelButton = page.getByRole('button', { name: '푸시버튼 ON/OFF' });
+  await panelButton.press('Space');
+  await expect(button).toHaveAttribute('aria-pressed', 'true');
+  await expect(lamp).toHaveCSS('opacity', '0.9');
+  await panelButton.press('Space');
+  await expect(button).toHaveAttribute('aria-pressed', 'false');
+  await expect(lamp).toHaveCSS('opacity', '0');
+});
+
 test('releases a held momentary button when changing tabs before pointer-up', async ({
   page,
 }) => {
   await selfHoldPreset(page);
+  await selectCircuitNode(page, 'start');
+  await page
+    .getByRole('combobox', { name: '버튼 동작' })
+    .selectOption('momentary');
   const button = page.locator('[data-id="start"] .momentary-control');
   await button.scrollIntoViewIfNeeded();
   const box = (await button.boundingBox())!;

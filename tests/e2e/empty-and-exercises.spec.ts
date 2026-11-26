@@ -26,6 +26,7 @@ test('turns the photographed motor blades only while the wired PB is held', asyn
     expect(Math.abs(pin!.y + pin!.height / 2 - (image!.y + image!.height * 332 / 1309))).toBeLessThan(1);
   }
   await page.getByRole('button', {name:'푸시버튼 스위치 추가', exact:true}).click();
+  await page.getByRole('combobox', { name: '버튼 동작' }).selectOption('momentary');
   const board = page.locator('[data-id="seq-board"]');
   const pb = page.locator('.photo-node[data-asset="pb-switch"]');
   const pin = (device: typeof board, id: string) =>

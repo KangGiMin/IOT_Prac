@@ -156,8 +156,8 @@ export function PhotoInspector() {
                     })
                   }
                 >
-                  <option value="momentary">모멘터리</option>
-                  <option value="detent">디텐트</option>
+                  <option value="momentary">모멘터리 (누르는 동안 동작)</option>
+                  <option value="detent">디텐트 (누를 때마다 ON/OFF)</option>
                 </select>
               </label>
             )}
@@ -228,13 +228,18 @@ export function PhotoInspector() {
                   className="component-control"
                   disabled={state.calibration}
                   aria-pressed={component.settings.pressed}
+                  aria-label="푸시버튼 ON/OFF"
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && event.repeat)
+                      event.preventDefault();
+                  }}
                   onClick={() =>
                     state.updateSettings(component.id, {
                       pressed: !component.settings.pressed,
                     })
                   }
                 >
-                  디텐트 {component.settings.pressed ? '눌림' : '해제'}
+                  푸시버튼 {component.settings.pressed ? 'ON' : 'OFF'}
                 </button>
               )}
             {asset.id === 'timer-at8n' && (

@@ -87,6 +87,7 @@ describe('movement completion', () => {
 describe('interrupted interactions', () => {
   it('releases a momentary button and recalculates its circuit when leaving the mode', () => {
     const s = useCircuitStore.getState();
+    s.updateSettings('seq-pb', { buttonMode: 'momentary' });
     s.connect(
       { componentId: 'seq-board', pinId: 'plus' },
       { componentId: 'seq-pb', pinId: 'no1' },
@@ -115,8 +116,8 @@ describe('interrupted interactions', () => {
   it('preserves detent buttons while releasing momentary buttons', () => {
     const s = useCircuitStore.getState();
     s.loadPreset('self-hold');
-    s.updateSettings('start', { buttonMode: 'detent', pressed: true });
-    s.updateSettings('stop', { pressed: true });
+    s.updateSettings('start', { pressed: true });
+    s.updateSettings('stop', { buttonMode: 'momentary', pressed: true });
     s.setMode('digital');
     expect(
       workspace().components.find((c) => c.id === 'start')!.settings.pressed,
@@ -195,7 +196,7 @@ describe('interrupted interactions', () => {
 
   it('ends focus-loss interactions idempotently without adding empty undo entries', () => {
     const s = useCircuitStore.getState();
-    s.updateSettings('seq-pb', { pressed: true });
+    s.updateSettings('seq-pb', { buttonMode: 'momentary', pressed: true });
     s.beginDrag('seq-lamp');
     s.moveComponent('seq-lamp', { x: 700, y: 300 });
     s.endInteraction();
@@ -210,7 +211,7 @@ describe('interrupted interactions', () => {
 
   it('finishes a drag and releases momentary input before enabling calibration', () => {
     const s = useCircuitStore.getState();
-    s.updateSettings('seq-pb', { pressed: true });
+    s.updateSettings('seq-pb', { buttonMode: 'momentary', pressed: true });
     s.beginDrag('seq-lamp');
     s.moveComponent('seq-lamp', { x: 700, y: 300 });
     s.toggleCalibration();

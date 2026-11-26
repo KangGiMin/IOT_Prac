@@ -62,7 +62,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     label: '푸시버튼 스위치',
     model: 'Sysi N-2260-03 · NO / NC',
     description:
-      '누르면 NO 접점이 닫히고 NC 접점이 열립니다. 모멘터리와 디텐트 동작을 선택할 수 있습니다.',
+      '한 번 누르면 NO 접점이 닫히고 NC 접점이 열립니다. 다시 누르면 원래 상태로 돌아옵니다.',
     ...image('pb-switch.png'),
     size: { width: 160, height: 200 },
     category: 'control',
