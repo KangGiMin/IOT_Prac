@@ -27,7 +27,7 @@ test('centers the six shared toolbar actions across both practice modes', async 
     await page.setViewportSize({ width, height: 1100 });
     await page.getByRole('tab', { name: tab, exact: true }).click();
     await expect(actions).toHaveText([
-      '계측·논리 학습 센터', '연습문제 · 수업 도면 24선', '실행 취소 Ctrl+Z',
+      '계측·논리 학습 센터', '연습문제 · 수업 도면 26선', '실행 취소 Ctrl+Z',
       '다시 실행 Ctrl+Y', '회로 JSON 저장', '회로 JSON 불러오기',
     ]);
     await expect(toolbar).not.toContainText('예제 회로');

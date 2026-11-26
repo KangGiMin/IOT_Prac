@@ -45,7 +45,7 @@ describe('completed drawing workbenches', () => {
     const restarted = stepCircuit(circuit, leads, held, started, 3.01);
     expect(restarted.unstable).toBe(false);
     expect(restarted.on.R1).toBe(true);
-    expect(restarted.elapsed.T1).toBe(0);
+    expect(restarted.elapsed.T1).toBeCloseTo(0.01);
     expect(stepCircuit(circuit, leads, {}, restarted, 3.01).on.R1).toBe(false);
   });
 
@@ -56,6 +56,44 @@ describe('completed drawing workbenches', () => {
     const timed = stepCircuit(circuit, leads, {}, started, 0.3);
     expect(timed.on.BZ).toBe(false);
     expect(timed.on.LAMP1).toBe(true);
+  });
+
+  it.each([
+    { id:25, phase:1, secondLamp:{} },
+    { id:26, phase:.5, secondLamp:{ LAMP2:true } },
+  ])('blinks at each timer boundary and stops on PB2 in drawing $id', ({id,phase,secondLamp}) => {
+    const {circuit,leads}=buildCompletedWorkbench(exercises[id-1]);
+    const step=(previous:ReturnType<typeof stopped>,dt=0,buttons={})=>stepCircuit(circuit,leads,buttons,previous,dt);
+    const idle=step(stopped());
+    const start=step(idle,0,{PB1:true});
+    expect(idle.on.LAMP1).toBe(false);
+    expect(start.on).toMatchObject({R1:true,LAMP1:true,T2:false});
+    const before=step(start,phase-.01);
+    expect(before.on.LAMP1).toBe(true);
+    const transferred=step(before,.01);
+    expect(transferred.unstable).toBe(false);
+    expect(transferred.on).toMatchObject({R1:true,LAMP1:false,T1:false,T2:true,...secondLamp});
+    expect(transferred.timing.T2).toBe(false); // Output stays on with no coil feed.
+    const beforeReturn=step(transferred,phase-.01);
+    expect(beforeReturn.on.LAMP1).toBe(false);
+    const returned=step(beforeReturn,.01);
+    expect(returned.on).toEqual(start.on);
+    expect(step(start,phase*9).on).toEqual(transferred.on);
+    const stoppedMidCycle=step(transferred,0,{PB2:true});
+    expect(stoppedMidCycle.on.R1).toBe(false);
+    expect(stoppedMidCycle.on.LAMP1).toBe(false);
+    expect(stoppedMidCycle.on.LAMP2??false).toBe(false);
+    expect(step(stoppedMidCycle,phase*3).on).toEqual(idle.on);
+  });
+
+  it('flags a disconnected or bypassed common feed', () => {
+    const exercise=exercises[25];
+    const {parts,leads}=buildExercise(exercise);
+    const feed=parts.find(part=>part.purpose===exercise.feed?.id)!;
+    const missing=leads.filter(([from])=>from!==`${feed.id}:2`);
+    expect(gradeExercise(exercise,missing).some(row=>!row.pass)).toBe(true);
+    const bypassed:[string,string]=['24V',exercise.feed!.id];
+    expect(gradeExercise(exercise,[...leads,bypassed]).find(row=>row.action==='전원 인가')?.pass).toBe(false);
   });
 
   it('connects the lamps across their coils and powers the motor in drawing 22', () => {

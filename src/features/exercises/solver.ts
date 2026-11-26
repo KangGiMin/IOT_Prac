@@ -1,11 +1,10 @@
 import { buildExercise, type Exercise, type ExerciseCircuit, type Lead } from './model';
 export interface RunState {on:Record<string,boolean>;elapsed:Record<string,number>;timing:Record<string,boolean>;short:boolean;unstable:boolean;motor:string}
 export const stopped=():RunState=>({on:{},elapsed:{},timing:{},short:false,unstable:false,motor:'정지'});
-export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,previous:RunState,dt:number,power=true):RunState {
- if(!power)return stopped();
- let on={...previous.on},elapsed={...previous.elapsed};
+function settle(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,state:RunState):RunState {
+ let {on,elapsed,timing}=state;
  const visited=new Set<string>();
- const timersReset=new Set<string>();
+ const key=(outputs:RunState['on'],coils:RunState['timing'])=>JSON.stringify([outputs,coils]);
  for(let iteration=0;iteration<32;iteration++){
   const parent=new Map(c.ports.map(p=>[p,p]));
   const root=(p:string):string=>{if(!parent.has(p))parent.set(p,p);const a=parent.get(p)!;if(a===p)return p;const r=root(a);parent.set(p,r);return r;};
@@ -13,23 +12,58 @@ export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string
   for(const [a,b] of leads)if(c.ports.includes(a)&&c.ports.includes(b))union(a,b);
   for(const p of c.parts)if(p.kind==='contact'){const value=p.owner!.startsWith('PB')?!!buttons[p.owner!]:!!on[p.owner!];if(value!==!!p.nc)union(p.id+':1',p.id+':2');}
   if(root('24V')===root('0V'))return {...stopped(),short:true};
-  const next:Record<string,boolean>={},timing:Record<string,boolean>={};const nextElapsed={...elapsed};let motor='정지';
+  const next:Record<string,boolean>={},nextTiming:Record<string,boolean>={};
+  const nextElapsed={...elapsed};let motor='정지';
   for(const p of c.parts.filter(p=>p.kind!=='contact')){
    const powered=(root(p.id+':1')===root('24V')&&root(p.id+':2')===root('0V'));
    if(p.kind==='motor'){const reverse=root(p.id+':2')===root('24V')&&root(p.id+':1')===root('0V');motor=powered?'CW':reverse?'CCW':root(p.id+':1')===root(p.id+':2')?'정지 / 제동':'정지 / 개방';next[p.id]=powered||reverse;}
    else if(p.kind==='timer'){
-    timing[p.id]=powered;
-    // A break in the coil feed resets its timing even if a held input restarts it during settling.
-    if(!powered)timersReset.add(p.id);
-    nextElapsed[p.id]=powered&&!timersReset.has(p.id)&&previous.timing[p.id]?(previous.elapsed[p.id]??0)+dt:0;
-    next[p.id]=powered&&nextElapsed[p.id]>=p.seconds!;
+    nextTiming[p.id]=powered;
+    const offDelay=p.timerMode==='off-delay';
+    const output=!!on[p.id];
+    // OFF-delay retains the output even if feedback removes its coil feed in this same instant.
+    next[p.id]=offDelay?powered||output:powered&&(output||p.seconds===0);
+    const keepTime=offDelay?!powered&&output:powered;
+    nextElapsed[p.id]=keepTime&&powered===timing[p.id]?(elapsed[p.id]??0):0;
    }else next[p.id]=powered;
   }
-  const key=JSON.stringify(next);if(key===JSON.stringify(on))return {on:next,elapsed:nextElapsed,timing,short:false,unstable:false,motor};
-  if(visited.has(key))return {on:next,elapsed:nextElapsed,timing,short:false,unstable:true,motor:'경합'};
-  visited.add(key);on=next;elapsed=nextElapsed;
+  const nextKey=key(next,nextTiming);
+  if(nextKey===key(on,timing))return {on:next,elapsed:nextElapsed,timing:nextTiming,short:false,unstable:false,motor};
+  if(visited.has(nextKey))return {on:next,elapsed:nextElapsed,timing:nextTiming,short:false,unstable:true,motor:'경합'};
+  visited.add(nextKey);on=next;elapsed=nextElapsed;timing=nextTiming;
  }
  return {...stopped(),unstable:true};
+}
+
+export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,previous:RunState,dt:number,power=true):RunState {
+ if(!power)return stopped();
+ let state=settle(c,leads,buttons,previous);
+ let remaining=Number.isFinite(dt)?dt:0;
+ const timers=c.parts.filter(p=>p.kind==='timer');
+ const timedStates=new Map<string,number>();
+ const precision=1e-9;
+ while(remaining>precision&&!state.short&&!state.unstable){
+  const pending=timers.filter(p=>p.timerMode==='off-delay'
+   ? !state.timing[p.id]&&state.on[p.id] : state.timing[p.id]&&!state.on[p.id]);
+  if(!pending.length)break;
+  // Advance to the next contact change so a long frame can include multiple phases.
+  const nextEvent=Math.min(...pending.map(p=>p.seconds!-(state.elapsed[p.id]??0)));
+  const interval=Math.min(remaining,nextEvent);
+  for(const p of pending){
+   state.elapsed[p.id]+=interval;
+   if(state.elapsed[p.id]+precision>=p.seconds!)state.on[p.id]=p.timerMode!=='off-delay';
+  }
+  remaining-=interval;
+  if(nextEvent>interval+precision)break;
+  state=settle(c,leads,buttons,state);
+  if(remaining>precision){
+   const key=JSON.stringify([state.on,state.timing,state.elapsed]);
+   const prior=timedStates.get(key);
+   if(prior!==undefined&&prior-remaining>precision)remaining%=prior-remaining;
+   timedStates.set(key,remaining);
+  }
+ }
+ return state;
 }
 export function motorState(e:Exercise,state:RunState) {
  if(state.short||state.unstable)return '보호 정지';if(!e.motor)return '모터 없음';
@@ -47,7 +81,10 @@ export function gradeExercise(e:Exercise,leads:Lead[],corrected=false):TestRow[]
   rows.push({action,expected:summary(reference),actual:summary(actual),pass:actual.short===reference.short&&summary(reference)===summary(actual)});
  };
  run({},0,'전원 인가');
- for(const b of buttons){run({[b]:true},0,`${b} 누름`);run({},0,`${b} 놓음`);for(const delay of [.3,1,3,4])run({},delay,`${delay}초 경과`);}
+ const offDelay=e.rungs.find(r=>r.timerMode==='off-delay')?.seconds;
+ const onDelay=e.rungs.find(r=>r.timerMode==='on-delay')?.seconds;
+ const intervals=onDelay&&offDelay?[onDelay/2,onDelay/2,offDelay/2,offDelay/2,onDelay]:[.3,1,3,4];
+ for(const b of buttons){run({[b]:true},0,`${b} 누름`);run({},0,`${b} 놓음`);for(const delay of intervals)run({},delay,`${delay}초 경과`);}
  for(const a of buttons)for(const b of buttons.filter(x=>x!==a)){reference=stopped();actual=stopped();run({[a]:true},0,`${a} 먼저 입력`);run({},0,`${a} 해제`);run({[b]:true},0,`${b} 나중 입력`);run({},0,'입력 모두 해제');}
  for(let mask=0;mask<2**buttons.length;mask++){reference=stopped();actual=stopped();run(Object.fromEntries(buttons.map((b,i)=>[b,!!(mask&(1<<i))])),0,`동시 입력 ${buttons.map((b,i)=>`${b}=${(mask>>i)&1}`).join(' ')}`);}
  reference=stepCircuit(c,c.leads,{},reference,0,false);actual=stepCircuit(c,leads,{},actual,0,false);rows.push({action:'전원 OFF',expected:'전체 출력 정지',actual:Object.values(actual.on).some(Boolean)?'출력 잔류':'전체 출력 정지',pass:!Object.values(actual.on).some(Boolean)});

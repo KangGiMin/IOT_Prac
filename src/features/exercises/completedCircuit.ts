@@ -1,6 +1,6 @@
 import { easySteps, locateParts, physicalAliases } from './easyGuide';
 import { buildExercise } from './model';
-import type { Exercise } from './model';
+import type { Exercise, TimerMode } from './model';
 
 interface Terminal {
   id: string;
@@ -18,6 +18,7 @@ export interface WorkbenchDevice {
   kind: 'supply' | 'button' | 'relay' | 'timer' | 'lamp' | 'buzzer' | 'motor';
   rows: TerminalRow[];
   seconds?: number;
+  timerMode?: TimerMode;
 }
 
 const terminalOrder = ['c', 'a', 'b'];
@@ -43,11 +44,13 @@ export function buildCompletedWorkbench(exercise: Exercise) {
     if (part.kind === 'contact') continue;
     const motor = part.kind === 'motor';
     const labels = part.kind === 'relay' ? ['14 +', '13 −']
-      : part.kind === 'timer' ? ['7 +', '2 −'] : motor ? ['왼쪽', '오른쪽'] : ['+', '−'];
+      : part.kind === 'timer' ? (part.timerMode ? ['A1 +', 'A2 −'] : ['7 +', '2 −'])
+        : motor ? ['왼쪽', '오른쪽'] : ['+', '−'];
     devices.set(part.id, {
       id: part.id,
       kind: part.kind,
       seconds: part.seconds,
+      timerMode: part.timerMode,
       rows: [{
         id: 'load',
         label: part.kind === 'relay' ? '코일' : part.kind === 'timer' ? '전원 단자' : '부하 단자',

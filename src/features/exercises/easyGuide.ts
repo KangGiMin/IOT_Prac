@@ -4,7 +4,7 @@ import type { ExerciseCircuit,Lead } from './model';
 export type ContactMark=ReturnType<typeof numberedContacts>[number];
 export interface PartLocation {mark:ContactMark;roles:[DrawingPoint['role'],DrawingPoint['role']]}
 const motorIndices:Record<number,number[]>={1:[1,2],2:[1,2],3:[2,3],4:[6,7],5:[4,5,6],6:[7,8],7:[7,8],8:[7,8],9:[7,8],10:[10,11],11:[10,11],12:[7,8],22:[1,2,3],23:[3],24:[4,5,6,7]};
-const lampIndices:Record<number,number[]>={2:[3],3:[4,5],4:[8,9],13:[5,6],14:[6,7],15:[9,10,11],19:[6,7],20:[7,8],21:[13,14,15],23:[4]};
+const lampIndices:Record<number,number[]>={2:[3],3:[4,5],4:[8,9],13:[5,6],14:[6,7],15:[9,10,11],19:[6,7],20:[7,8],21:[13,14,15],23:[4],25:[6,7],26:[6,7]};
 const motorPoles:Record<number,[number,number]>={1:[1,2],2:[1,2],3:[2,3],4:[6,7],5:[5,6],6:[7,8],7:[7,8],8:[7,8],9:[7,8],10:[10,11],11:[10,11],12:[7,8],23:[3,3]};
 /** Never pretend an equivalent model contact exists in a source drawing. */
 export function locateParts(id:number,c:ExerciseCircuit):Record<string,PartLocation>{
@@ -21,6 +21,8 @@ export function locateParts(id:number,c:ExerciseCircuit):Record<string,PartLocat
   if(id===16&&p.owner==='T1')candidates=[marks[5]];
   if(id===17&&p.owner==='R1')candidates=[marks[p.purpose==='T1'?3:1]];
   if(id===18&&p.owner==='R1')candidates=[marks[p.purpose==='T1'?5:p.purpose==='BZ'?6:3]];
+  if(id===25&&p.owner==='R1')candidates=[marks[p.purpose==='T1'?3:p.purpose==='LAMP1'?6:1]];
+  if(id===26&&p.owner==='R1')candidates=[marks[p.purpose==='blink-feed'?3:1]];
   if((id===10||id===11)&&p.owner==='R3')candidates=[marks[p.purpose==='R3'?1:3]];
   if(p.purpose==='M'&&p.pole!==undefined&&motorPoles[id]){const m=marks[motorPoles[id][p.pole]];candidates=m.owner===p.owner&&(m.kind===role||m.kind==='changeover')?[m]:[];}
   if(id===24&&p.purpose==='M'){const m=marks[p.pole===0?(p.owner==='R1'?4:5):(p.owner==='R2'?6:7)];candidates=[m];}
@@ -41,9 +43,10 @@ export function simplePort(c:ExerciseCircuit,locations:Record<string,PartLocatio
  }
  if(p?.kind==='contact')return `${p.owner} ${p.nc?'b':'a'}접점 · 연습 모델의 ${side==='1'?'한쪽':'다른 쪽'} 단자 (원본 위치 없음)`;
  if(p?.kind==='relay')return `${p.label} 코일 ${side==='1'?'+쪽 (14번)':'−쪽 (13번)'}`;
- if(p?.kind==='timer')return `${p.label} 타이머 전원 ${side==='1'?'+쪽':'−쪽'}`;
+ if(p?.kind==='timer')return `${p.label} 타이머 전원 ${p.timerMode?(side==='1'?'A1 (+)':'A2 (−)'):(side==='1'?'+쪽':'−쪽')}`;
  if(p?.kind==='motor')return `모터 ${side==='1'?'왼쪽':'오른쪽'} 단자`;
  if(p)return `${p.label} ${p.kind==='buzzer'?'부저':'램프'}의 ${side==='1'?'한쪽':'다른 쪽'} 단자`;
+ if(port==='blink-feed')return '점선 공통 전원선';
  return '선을 나누어 잇는 자리';
 }
 export interface EasyStep {lead:Lead;title:string;why:string;marks:string[]}

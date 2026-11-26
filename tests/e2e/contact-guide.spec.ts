@@ -2,7 +2,7 @@ import {expect} from '@playwright/test';
 import {test} from './support';
 test('shows contacts on every diagram and guides real terminal wiring without internal codes',async({page},testInfo)=>{
  test.setTimeout(90000);await page.goto('/#exercises');
- for(let id=1;id<=24;id++){
+ for(let id=1;id<=26;id++){
   await page.locator('.exercise-catalog button').filter({hasText:new RegExp('^'+String(id).padStart(2,'0')+' ·')}).click();
   await expect(page.getByTestId('contact-overlay')).toBeVisible();expect(await page.locator('.drawing-contact').count()).toBeGreaterThan(0);
   expect(await page.locator('.easy-wiring-steps').textContent()).not.toMatch(/[CJ]\d+:/);

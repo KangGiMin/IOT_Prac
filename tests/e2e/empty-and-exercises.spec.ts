@@ -9,9 +9,10 @@ test('opens empty boards and resets only the active workspace with undo support'
  await page.getByRole('button',{name:/실행 취소/}).click();await expect(page.locator('.photo-board-toolbar')).toContainText('16 배선');
  await page.getByRole('tab',{name:'시퀀스 제어',exact:true}).click();await page.getByRole('button',{name:'초기화',exact:true}).click();await expect(page.locator('.react-flow__node')).toHaveCount(1);
 });
-test('includes every source image, classifies all 24 exercises and tests reference wiring',async({page},testInfo)=>{
- test.setTimeout(90000);await page.goto('/#exercises');await expect(page.getByRole('heading',{name:'연습문제 · 시퀀스 도면 24선'})).toBeVisible();
- for(let id=1;id<=24;id++){
+test('includes every drawing, classifies all 26 exercises and tests reference wiring',async({page},testInfo)=>{
+ test.setTimeout(90000);await page.goto('/#exercises');await expect(page.getByRole('heading',{name:'연습문제 · 시퀀스 도면 26선'})).toBeVisible();
+ await expect(page.locator('.exercise-catalog button')).toHaveCount(26);
+ for(let id=1;id<=26;id++){
   await page.locator('.exercise-catalog button').filter({hasText:new RegExp('^'+String(id).padStart(2,'0')+' ·')}).click();
   await expect.poll(()=>page.locator('.exercise-original').evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
   await page.getByRole('button',{name:'해설 배선 불러오기',exact:true}).click();await page.getByRole('button',{name:'배선 동작 자동 테스트',exact:true}).click();
@@ -36,6 +37,34 @@ test('includes every source image, classifies all 24 exercises and tests referen
  await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox',{name:/수정안과 비교/}).check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');
  await page.screenshot({path:testInfo.outputPath('exercise-page.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.body.scrollWidth)).toBeLessThanOrEqual(392);
+});
+
+test('shows and operates the alternate-lamp drawing and completed workbench', async ({page}, testInfo) => {
+  await page.goto('/#exercises');
+  await page.getByRole('combobox', {name:'카테고리'}).selectOption('타이머·경보');
+  await expect(page.locator('.exercise-catalog button')).toHaveCount(5);
+  await page.getByRole('button', {name:/^26 · 깜박이 회로 2/}).click();
+  await expect(page.locator('.exercise-original')).toHaveAttribute('src', /\/26\.svg$/);
+  await expect.poll(() => page.locator('.exercise-original').evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(1000);
+  await page.getByRole('button', {name:/^4번 R1 · c–a 접점 도면에서 찾기$/}).click();
+  await expect(page.locator('.contact-explanation')).toContainText('아래 점선에 전원을');
+  await page.getByRole('button', {name:'이 선 연결하기',exact:true}).first().click();
+  await expect(page.locator('.easy-progress')).toHaveText(/^배선 완료 1 \/ \d+가닥$/);
+  await page.locator('.drawing-lesson').screenshot({path:testInfo.outputPath('alternating-lamps-drawing.png')});
+  await page.getByRole('button', {name:'완성된 작업대 보기',exact:true}).click();
+  const board=page.getByRole('dialog', {name:'완성된 작업대',exact:true});
+  await expect(board.locator('[data-device="T2"]')).toContainText('OFF 지연');
+  await expect(board.locator('[data-device="T2"]')).toContainText('설정 0.5초');
+  await board.getByRole('switch', {name:'완성 작업대 전원'}).click();
+  await board.getByRole('button', {name:'PB1 누르기'}).press('Space');
+  const lamp1=board.locator('[data-device="LAMP1"]');
+  const lamp2=board.locator('[data-device="LAMP2"]');
+  await expect(lamp1).toHaveAttribute('data-active','true');
+  await expect(lamp2).toHaveAttribute('data-active','true');
+  await expect(lamp1).toHaveAttribute('data-active','true');
+  await board.getByRole('button', {name:'PB2 누르기'}).press('Space');
+  await expect(lamp1).toHaveAttribute('data-active','false');
+  await expect(lamp2).toHaveAttribute('data-active','false');
 });
 
 test('tests the assembled 3-input workbench without replacing the learner wiring', async ({ page }) => {

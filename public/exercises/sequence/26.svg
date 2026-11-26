@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" role="img" aria-labelledby="title">
+  <title id="title">교재 30쪽 깜박이 회로 2</title>
+  <defs>
+    <g id="no">
+      <circle cy="0" r="6" fill="#fff"/><circle cy="40" r="6" fill="#fff"/>
+      <path d="M16 2v36"/>
+    </g>
+    <g id="nc">
+      <circle cy="0" r="6" fill="#fff"/><circle cy="40" r="6" fill="#fff"/>
+      <path d="M-6 0h-9v40h9"/>
+    </g>
+    <g id="junction"><circle r="5" fill="#1b2630"/></g>
+    <g id="lamp"><circle r="27" fill="#fff"/><path d="m-19-19 38 38m0-38-38 38"/></g>
+  </defs>
+  <path fill="#fff" d="M0 0h1000v600H0z"/>
+  <g fill="none" stroke="#1b2630" stroke-width="3.3" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="6" d="M66 115h300M66 515h866"/>
+    <path stroke-width="4.5" stroke-dasharray="19 11" d="M335 252h597"/>
+    <path d="M113 115v49m0 52v86m0 52v73m0 46v42M222 115v49m0 52v39H113M335 115v49m0 52v36"/>
+    <path d="M435 252v43m0 52v81m0 44v43M591 252v43m0 52v81m0 44v43M750 252v43m0 52v76m0 54v38M896 252v43m0 52v76m0 54v38"/>
+    <use href="#no" x="113" y="170"/><path d="M129 190h14"/>
+    <use href="#no" x="222" y="170"/><use href="#no" x="335" y="170"/>
+    <use href="#nc" x="113" y="308"/><path d="M98 328H85"/>
+    <use href="#nc" x="435" y="301"/><use href="#no" x="591" y="301"/><use href="#nc" x="750" y="301"/><use href="#no" x="896" y="301"/>
+    <use href="#junction" x="113" y="115"/><use href="#junction" x="222" y="115"/><use href="#junction" x="335" y="115"/><use href="#junction" x="113" y="255"/>
+    <use href="#junction" x="435" y="252"/><use href="#junction" x="591" y="252"/><use href="#junction" x="750" y="252"/><use href="#junction" x="896" y="252"/>
+    <use href="#junction" x="113" y="515"/><use href="#junction" x="435" y="515"/><use href="#junction" x="591" y="515"/><use href="#junction" x="750" y="515"/><use href="#junction" x="896" y="515"/>
+    <rect x="69" y="427" width="88" height="46" fill="#fff"/>
+    <rect x="380" y="428" width="124" height="44" fill="#fff"/><path d="M424 428v44m-44-44 44 44m0-44-44 44"/>
+    <rect x="536" y="428" width="124" height="44" fill="#fff"/><path d="M536 428h44v44h-44z" fill="#1b2630"/>
+    <use href="#lamp" x="750" y="450"/><use href="#lamp" x="896" y="450"/>
+  </g>
+  <g fill="#1b2630" font-family="sans-serif" font-size="19">
+    <text x="500" y="63" text-anchor="middle" font-size="32" font-weight="700">깜박이 회로 2</text>
+    <text x="151" y="197">PB1</text><text x="244" y="197">R1</text><text x="357" y="197">R1</text><text x="135" y="335">PB2</text>
+    <text x="455" y="328">T2</text><text x="614" y="328">T1</text><text x="771" y="328">T2</text><text x="919" y="328">T2</text>
+    <text x="113" y="457" text-anchor="middle">R1</text>
+    <text x="444" y="401" font-size="16">ON DELAY · T1</text><text x="600" y="401" font-size="16">OFF DELAY · T2</text>
+    <text x="440" y="421" font-size="14">A1</text><text x="440" y="492" font-size="14">A2</text>
+    <text x="596" y="421" font-size="14">A1</text><text x="596" y="492" font-size="14">A2</text>
+    <text x="461" y="457" text-anchor="middle">0.5초</text><text x="620" y="457" text-anchor="middle">0.5초</text>
+    <text x="758" y="410" font-size="17">LAMP1</text><text x="904" y="410" font-size="17">LAMP2</text>
+    <text x="500" y="568" text-anchor="middle" font-size="16">교재 30쪽</text>
+  </g>
+</svg>

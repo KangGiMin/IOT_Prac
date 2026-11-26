@@ -5,6 +5,7 @@ import {
   exportCircuitFile,
   MAX_CIRCUIT_FILE_BYTES,
 } from '../../engine/circuitFile';
+import { exercises } from '../../features/exercises/model';
 export function LearningToolbar() {
   const state = useCircuitStore(
       useShallow(({ workspaces: _workspaces, ...state }) => state),
@@ -59,7 +60,7 @@ export function LearningToolbar() {
   return (
     <div className="learning-toolbar" role="group" aria-label="학습 편의 기능">
       <a className="learning-center-shortcut" href="#learning-center">계측·논리 학습 센터</a>
-      <a className="learning-center-shortcut" href="#exercises">연습문제 · 수업 도면 24선</a>
+      <a className="learning-center-shortcut" href="#exercises">연습문제 · 수업 도면 {exercises.length}선</a>
       <button
         disabled={!history.past.length || !!state.dragHistory}
         onClick={state.undo}

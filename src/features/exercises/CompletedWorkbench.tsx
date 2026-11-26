@@ -46,7 +46,7 @@ function Device({ data: { device, active, status, highlighted } }: NodeProps<Dev
         </div>
         <div>
           <strong>{name}</strong>
-          <span>{deviceNames[device.kind]}</span>
+          <span>{deviceNames[device.kind]}{device.timerMode && (device.timerMode === 'off-delay' ? ' · OFF 지연' : ' · ON 지연')}</span>
           <span className="completed-device-state">{status}</span>
         </div>
       </header>
@@ -107,9 +107,11 @@ function deviceState(device: WorkbenchDevice, run: WorkbenchRun, exercise: Exerc
     case 'timer': {
       const elapsed = Math.min(state.elapsed[device.id] ?? 0, device.seconds!);
       const timing = healthy && !!state.timing[device.id];
+      const holding = device.timerMode === 'off-delay' && output && !timing;
       return {
         active: output,
-        status: output ? `출력 ON · ${device.seconds}초`
+        status: holding ? `차단 지연 · ${Math.max(0, device.seconds! - elapsed).toFixed(1)}초 남음`
+          : output ? `출력 ON · ${device.seconds}초`
           : timing ? `${elapsed.toFixed(1)} / ${device.seconds}초`
             : `설정 ${device.seconds}초 · 대기`,
       };
@@ -146,7 +148,9 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
       buttons = {};
     }
     const dt = Math.max(0, (now - previous.now) / 1000);
-    return { power: true, buttons, now, state: stepCircuit(board.circuit, board.leads, buttons, previous.state, dt) };
+    const elapsed = stepCircuit(board.circuit, board.leads, previous.buttons, previous.state, dt);
+    const state = buttons === previous.buttons ? elapsed : stepCircuit(board.circuit, board.leads, buttons, elapsed, 0);
+    return { power: true, buttons, now, state };
   }, powerOff);
 
   useEffect(() => {
