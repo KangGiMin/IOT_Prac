@@ -10,7 +10,6 @@ const image = (fileName: ComponentAsset['fileName']) => ({
   src: `${assetRoot}${fileName}`,
 });
 export const jumperCableAsset = image('jumper-cable.png');
-export const motorUnitImage = { ...image('Motor.png'), label: '모터 유닛 Sysi N-2260-08' };
 /** Starter breadboard template; adjust this grid to the user's final PNG.
  * Each column has two isolated strips of five holes. Rails are separate buses.
  * This is a coordinate template, not the reference board's exact hole count.
@@ -44,6 +43,18 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     size: { width: 160, height: 200 },
     category: 'control',
     ...sequencePins['pilot-lamp'],
+  },
+  'motor-unit': {
+    id: 'motor-unit',
+    mode: 'sequence',
+    label: '모터 유닛',
+    model: 'Sysi N-2260-08',
+    description:
+      '가운데 두 나사 단자에 실습 전원을 연결하세요. 배선 극성을 바꾸면 회전 방향이 바뀝니다.',
+    ...image('Motor.png'),
+    size: { width: 184, height: 200 },
+    category: 'control',
+    ...sequencePins['motor-unit'],
   },
   'pb-switch': {
     id: 'pb-switch',

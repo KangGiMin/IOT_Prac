@@ -54,7 +54,7 @@ export function placeSequence(
   );
   if (
     !board ||
-    !['pilot-lamp', 'pb-switch', 'relay-socket', 'relay-unit-11p', 'timer-at8n'].includes(
+    !['pilot-lamp', 'motor-unit', 'pb-switch', 'relay-socket', 'relay-unit-11p', 'timer-at8n'].includes(
       item.assetId,
     )
   )

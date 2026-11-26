@@ -48,6 +48,13 @@ export const sequenceScrewGeometry = {
       minus: { x: 618, y: 275.5, rx: 35.5, ry: 40 },
     } as Record<string, ScrewRim>,
   },
+  'motor-unit': {
+    image: { width: 1201, height: 1309 },
+    heads: {
+      plus: { x: 540, y: 332, rx: 42, ry: 43 },
+      minus: { x: 672, y: 332, rx: 42, ry: 43 },
+    } as Record<string, ScrewRim>,
+  },
   'relay-socket': {
     image: sequenceGeometry.relayImages.socket,
     heads: {
@@ -69,7 +76,8 @@ export const sequenceScrewGeometry = {
   },
   virtualHeadRatio: 0.72,
 };
-const photoPin = (asset: 'pb-switch' | 'pilot-lamp' | 'relay-socket', id: string, label: string) => {
+type PhotographedScrewAsset = Exclude<keyof typeof sequenceScrewGeometry, 'virtualHeadRatio'>;
+const photoPin = (asset: PhotographedScrewAsset, id: string, label: string) => {
   const { image, heads } = sequenceScrewGeometry[asset];
   const rim = heads[id];
   return pin(id, label, rim.x / image.width * 100, rim.y / image.height * 100);
@@ -95,6 +103,11 @@ export const sequencePins = {
         color: '#ffde35',
       },
     ],
+  },
+  'motor-unit': {
+    pins: [photoPin('motor-unit', 'plus', '+'), photoPin('motor-unit', 'minus', '−')],
+    controls: [],
+    overlays: [],
   },
   'pb-switch': {
     pins: [

@@ -6,7 +6,7 @@ import { containBounds } from './geometry';
 /** Radius in workbench coordinates, independent of canvas zoom or hit area. */
 export function sequenceScrewRadii(component: CircuitComponent, pinId: string | null | undefined, handleWidth: number) {
   const id = component.assetId;
-  if (id === 'pb-switch' || id === 'pilot-lamp' || id === 'relay-socket') {
+  if (id === 'pb-switch' || id === 'pilot-lamp' || id === 'relay-socket' || id === 'motor-unit') {
     const photo = sequenceScrewGeometry[id];
     const frame = component.displaySize ?? componentAssets[id].size;
     const bounds = containBounds(frame, photo.image);

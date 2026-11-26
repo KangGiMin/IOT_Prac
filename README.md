@@ -22,6 +22,7 @@ public/assets/
   relay-socket.png
   relay-body.png
   RelayTimer.png
+  Motor.png
   timer-at8n.png
   screwdriver.png
   breadboard.png

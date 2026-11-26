@@ -5,6 +5,7 @@ export type CircuitMode = 'sequence' | 'digital';
 export type AssetId =
   | 'panel-board'
   | 'pilot-lamp'
+  | 'motor-unit'
   | 'pb-switch'
   | 'relay-socket'
   | 'relay-unit-11p'

@@ -226,7 +226,8 @@ select:focus-visible {
     .mission-truth-table th,
     .mission-detail code,
     .component-control,
-    .timer-socket-label
+    .timer-socket-label,
+    .motor-status
   ) {
   background: var(--theme-raised);
   border-color: var(--theme-border);

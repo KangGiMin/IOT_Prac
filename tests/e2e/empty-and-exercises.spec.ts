@@ -9,6 +9,34 @@ test('opens empty boards and resets only the active workspace with undo support'
  await page.getByRole('button',{name:/실행 취소/}).click();await expect(page.locator('.photo-board-toolbar')).toContainText('16 배선');
  await page.getByRole('tab',{name:'시퀀스 제어',exact:true}).click();await page.getByRole('button',{name:'초기화',exact:true}).click();await expect(page.locator('.react-flow__node')).toHaveCount(1);
 });
+
+test('places and wires the photographed motor from the sequence library', async ({page}) => {
+  await page.goto('/');
+  const addMotor = page.getByRole('button', {name:'모터 유닛 추가', exact:true});
+  await expect(addMotor.locator('img')).toHaveAttribute('src', /\/Motor\.png$/);
+  await addMotor.click();
+  const motor = page.locator('.photo-node[data-asset="motor-unit"]');
+  await expect.poll(() => motor.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1201);
+  await expect(motor.locator('.photo-pin')).toHaveCount(2);
+  for (const [id, x] of [['plus', 540], ['minus', 672]] as const) {
+    const motorPin = motor.locator(`.photo-pin[data-handleid="${id}"]`);
+    const image = await motor.locator('.asset-interactions').boundingBox();
+    const pin = await motorPin.boundingBox();
+    expect(Math.abs(pin!.x + pin!.width / 2 - (image!.x + image!.width * x / 1201))).toBeLessThan(1);
+    expect(Math.abs(pin!.y + pin!.height / 2 - (image!.y + image!.height * 332 / 1309))).toBeLessThan(1);
+    await page.locator(`[data-id="seq-board"] .photo-pin[data-handleid="${id}"]`).click();
+    await motorPin.click();
+  }
+  await expect(page.locator('.photo-board-toolbar')).toContainText('2 배선');
+  const power = page.getByRole('switch', {name:'메인 전원', exact:true});
+  await power.click();
+  await expect(motor.locator('.motor-status')).toHaveText('정회전 (CW)');
+  await power.click();
+  await expect(motor.locator('.motor-status')).toHaveText('정지');
+  await page.getByRole('tab', {name:'디지털 회로', exact:true}).click();
+  await expect(addMotor).toHaveCount(0);
+});
+
 test('includes every drawing, classifies all 26 exercises and tests reference wiring',async({page},testInfo)=>{
  test.setTimeout(90000);await page.goto('/#exercises');await expect(page.getByRole('heading',{name:'연습문제 · 시퀀스 도면 26선'})).toBeVisible();
  await expect(page.locator('.exercise-catalog button')).toHaveCount(26);

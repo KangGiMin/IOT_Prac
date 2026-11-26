@@ -485,6 +485,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             if (c.assetId === 'relay-socket') return relays.has(c.id);
             if (c.assetId === 'led-red') return current > 0.0001;
             if (c.assetId === 'pilot-lamp') return current * 480 >= 21.6;
+            if (c.assetId === 'motor-unit') return current > 0.0001;
             if (c.assetId === 'relay-body')
               return !!c.mountedSocketId && relays.has(c.mountedSocketId);
             if (c.assetId === 'timer-at8n') return !!timerStates[c.id];
@@ -695,6 +696,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       if (c.assetId === 'resistor-330') add('1', '2', 330);
       // Nominal teaching approximations, not measured hardware specifications.
       if (c.assetId === 'pilot-lamp') add('plus', 'minus', 480);
+      if (c.assetId === 'motor-unit') add('plus', 'minus', 240);
       if (
         c.assetId === 'relay-socket' &&
         components.some(

@@ -80,6 +80,11 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
   const energized = useCircuitStore((s) =>
     s.workspaces[s.mode].simulation.energizedComponents.includes(id),
   );
+  const motorCurrent = useCircuitStore((s) =>
+    component.assetId === 'motor-unit'
+      ? (s.workspaces[s.mode].simulation.componentCurrents?.[id] ?? 0)
+      : 0,
+  );
   const faulted = useCircuitStore(
     (s) =>
       s.workspaces[s.mode].simulation.faults?.some((fault) =>
@@ -381,6 +386,11 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
           {timer
             ? `${Math.min(timer.elapsed, component.settings.timerSeconds).toFixed(1)} / ${component.settings.timerSeconds.toFixed(1)} s`
             : 'POWER OFF'}
+        </div>
+      )}
+      {asset.id === 'motor-unit' && (
+        <div className="motor-status">
+          {energized ? (motorCurrent > 0 ? '정회전 (CW)' : '역회전 (CCW)') : '정지'}
         </div>
       )}
       {asset.id === 'switch-3pin' && (

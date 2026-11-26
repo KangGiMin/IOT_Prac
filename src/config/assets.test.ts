@@ -27,6 +27,7 @@ describe('user-supplied PNG contract', () => {
     const expected = [
       'panel-board.png',
       'pilot-lamp.png',
+      'Motor.png',
       'pb-switch.png',
       'relay-socket.png',
       'relay-body.png',

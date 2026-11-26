@@ -28,6 +28,31 @@ const timerCircuit = (): CircuitSolverInput => ({
   ],
 });
 describe('physical sequence modules', () => {
+  it('models the motor as a reversible load and stops when its return is open', () => {
+    const request: CircuitSolverInput = {
+      mode: 'sequence',
+      power: { on: true, voltage: 24 },
+      components: [make('panel-board', 'board'), make('motor-unit', 'motor')],
+      wires: [
+        wire('board', 'plus', 'motor', 'plus'),
+        wire('board', 'minus', 'motor', 'minus'),
+      ],
+    };
+    const forward = solveCircuit(request);
+    expect(forward.isShorted).toBe(false);
+    expect(forward.energizedComponents).toContain('motor');
+    expect(forward.componentCurrents.motor).toBeGreaterThan(0);
+    request.wires = [
+      wire('board', 'plus', 'motor', 'minus'),
+      wire('board', 'minus', 'motor', 'plus'),
+    ];
+    const reverse = solveCircuit(request);
+    expect(reverse.energizedComponents).toContain('motor');
+    expect(reverse.componentCurrents.motor).toBeCloseTo(-forward.componentCurrents.motor);
+    request.wires.pop();
+    expect(solveCircuit(request).energizedComponents).not.toContain('motor');
+  });
+
   it('requires an installed body before coil current and contact switching', () => {
     const request: CircuitSolverInput = {
       mode: 'sequence',
