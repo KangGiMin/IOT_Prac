@@ -9,6 +9,7 @@ import { AssetImage } from '../workbench/components/AssetImage';
 import { MotorRotor } from '../workbench/components/MotorRotor';
 import { buildCompletedWorkbench } from './completedCircuit';
 import type { WorkbenchDevice } from './completedCircuit';
+import { RelayScrewPhoto } from './RelayScrewPhoto';
 import type { Exercise } from './model';
 import { gradeExercise, motorState, stepCircuit, stopped } from './solver';
 import type { RunState } from './solver';
@@ -37,7 +38,7 @@ function Device({ data: { device, active, status, highlighted } }: NodeProps<Dev
   return (
     <article className="completed-device" data-device={device.id} data-active={active}>
       <header className="completed-device-heading">
-        <div className="completed-device-photo" aria-hidden="true">
+        {device.kind !== 'relay' && <div className="completed-device-photo" aria-hidden="true">
           {device.kind === 'motor' ? (
             <div className="completed-motor-photo">
               <AssetImage
@@ -50,14 +51,14 @@ function Device({ data: { device, active, status, highlighted } }: NodeProps<Dev
             </div>
           ) : asset ? <AssetImage asset={componentAssets[asset]} thumbnail /> : <BellRing size={34} />}
           {device.kind === 'lamp' && active && <span className="completed-lamp-glow" />}
-        </div>
+        </div>}
         <div>
           <strong>{name}</strong>
           <span>{deviceNames[device.kind]}{device.timerMode && (device.timerMode === 'off-delay' ? ' · OFF 지연' : ' · ON 지연')}</span>
           <span className="completed-device-state">{status}</span>
         </div>
       </header>
-      <div className="completed-device-terminals">
+      {device.screwPorts ? <RelayScrewPhoto ports={device.screwPorts} highlighted={highlighted} /> : <div className="completed-device-terminals">
         {device.rows.map((row) => (
           <div className="completed-terminal-row" key={row.id}>
             <span>{row.label}</span>
@@ -77,7 +78,7 @@ function Device({ data: { device, active, status, highlighted } }: NodeProps<Dev
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </article>
   );
 }
@@ -200,7 +201,9 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
     for (let start = 0; start < board.devices.length; start += columns) {
       const row = board.devices.slice(start, start + columns);
       row.forEach((_, column) => result.push({ x: column * (nodeWidth + 65), y }));
-      y += 146 + Math.max(...row.map((device) => device.rows.length)) * 43;
+      y += Math.max(...row.map((device) =>
+        device.kind === 'relay' ? 98 + nodeWidth * 1402 / 1122 + 48 : 146 + device.rows.length * 43,
+      ));
     }
     return result;
   }, [board, columnCount]);
@@ -337,7 +340,7 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
             </ol>
           </section>
         </div>
-        <p className="completed-workbench-note">단자는 도면의 접점 번호와 기능을 기준으로 표시합니다.{exercise.motor && ' 모터는 도면의 전압 방향에 따른 교육용 상태를 표시합니다.'}</p>
+        <p className="completed-workbench-note">릴레이 배선은 사진의 실제 나사 번호에 연결됩니다.{exercise.motor && ' 모터는 도면의 전압 방향에 따른 교육용 상태를 표시합니다.'}</p>
       </div>
     </dialog>
   );

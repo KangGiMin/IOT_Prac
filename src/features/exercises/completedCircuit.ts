@@ -1,4 +1,5 @@
-import { easySteps, locateParts, physicalAliases } from './easyGuide';
+import { buildWiringGuide } from './easyGuide';
+import { relay14, sequencePins } from '../../config/sequencePins';
 import { buildExercise } from './model';
 import type { Exercise, TimerMode } from './model';
 
@@ -19,6 +20,7 @@ export interface WorkbenchDevice {
   rows: TerminalRow[];
   seconds?: number;
   timerMode?: TimerMode;
+  screwPorts?: ReadonlyMap<string, string>;
 }
 
 const terminalOrder = ['c', 'a', 'b'];
@@ -26,10 +28,8 @@ const terminalOrder = ['c', 'a', 'b'];
 export function buildCompletedWorkbench(exercise: Exercise) {
   const corrected = !!exercise.correction;
   const circuit = buildExercise(exercise, corrected);
-  const locations = locateParts(exercise.id, circuit);
-  const aliases = physicalAliases(locations);
+  const { locations, relay, aliases, steps } = buildWiringGuide(exercise.id, circuit);
   const hiddenTerminals = new Set(aliases.map(([, alias]) => alias));
-  const steps = easySteps(circuit, locations);
   const supply: WorkbenchDevice = {
     id: 'supply',
     kind: 'supply',
@@ -42,9 +42,29 @@ export function buildCompletedWorkbench(exercise: Exercise) {
   const devices = new Map<string, WorkbenchDevice>();
   for (const part of circuit.parts) {
     if (part.kind === 'contact') continue;
+    if (part.kind === 'relay') {
+      const ports = relay.portsByScrew.get(part.id)!;
+      const screwPorts = new Map(sequencePins['relay-socket'].pins.map(({ id }) =>
+        [id, ports.get(id) ?? `${part.id}:unused:${id}`],
+      ));
+      devices.set(part.id, {
+        id: part.id,
+        kind: 'relay',
+        screwPorts,
+        rows: [
+          { id: 'a', label: 'a · NO', terminals: relay14.poles.map(({ no }) => ({ id: screwPorts.get(no)!, label: no })) },
+          { id: 'b', label: 'b · NC', terminals: relay14.poles.map(({ nc }) => ({ id: screwPorts.get(nc)!, label: nc })) },
+          { id: 'coil', label: '코일', terminals: [
+            { id: screwPorts.get(relay14.coil.plus)!, label: `${relay14.coil.plus} +` },
+            { id: screwPorts.get(relay14.coil.minus)!, label: `${relay14.coil.minus} −` },
+          ] },
+          { id: 'c', label: 'c · 공통', terminals: relay14.poles.map(({ com }) => ({ id: screwPorts.get(com)!, label: com })) },
+        ],
+      });
+      continue;
+    }
     const motor = part.kind === 'motor';
-    const labels = part.kind === 'relay' ? ['14 +', '13 −']
-      : part.kind === 'timer' ? (part.timerMode ? ['A1 +', 'A2 −'] : ['7 +', '2 −'])
+    const labels = part.kind === 'timer' ? (part.timerMode ? ['A1 +', 'A2 −'] : ['7 +', '2 −'])
         : motor ? ['왼쪽', '오른쪽'] : ['+', '−'];
     devices.set(part.id, {
       id: part.id,
@@ -53,7 +73,7 @@ export function buildCompletedWorkbench(exercise: Exercise) {
       timerMode: part.timerMode,
       rows: [{
         id: 'load',
-        label: part.kind === 'relay' ? '코일' : part.kind === 'timer' ? '전원 단자' : '부하 단자',
+        label: part.kind === 'timer' ? '전원 단자' : '부하 단자',
         terminals: labels.map((label, index) => ({ id: `${part.id}:${index + 1}`, label })),
       }],
     });
@@ -61,6 +81,7 @@ export function buildCompletedWorkbench(exercise: Exercise) {
 
   for (const part of circuit.parts) {
     if (part.kind !== 'contact') continue;
+    if (relay.screws.has(`${part.id}:1`)) continue;
     const owner = part.owner!;
     let device = devices.get(owner);
     if (!device) {
@@ -82,7 +103,7 @@ export function buildCompletedWorkbench(exercise: Exercise) {
       const label = location ? `도면 ${location.mark.number}번` : '등가 접점';
       device.rows.push({
         id: rowId,
-        label: device.kind === 'relay' ? '접점' : label,
+        label,
         terminals,
       });
     }

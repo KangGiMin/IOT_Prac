@@ -86,10 +86,34 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
   const wireCount=await completed.getByRole('listitem').count();
   expect(wireCount).toBeGreaterThan(0);
   await expect(completed.locator('.react-flow__edge')).toHaveCount(wireCount);
+  const relayPhotos = completed.locator('.relay-screw-photo');
+  expect(await relayPhotos.count()).toBeGreaterThan(0);
+  for (const photo of await relayPhotos.all()) {
+    const screws = photo.locator('[data-screw]');
+    await expect(screws).toHaveCount(14);
+    await expect(screws.locator('.react-flow__handle')).toHaveCount(14);
+    const centers = await screws.evaluateAll((elements) => Object.fromEntries(
+      elements.map((element) => {
+        const { left, top } = (element as HTMLElement).style;
+        return [element.getAttribute('data-screw'), [parseFloat(left), parseFloat(top)]];
+      }),
+    ));
+    expect(centers['14'][0]).toBeLessThan(centers['13'][0]);
+    expect(centers['5'][1]).toBeLessThan(centers['1'][1]);
+    expect(centers['1'][1]).toBeLessThan(centers['14'][1]);
+    expect(centers['14'][1]).toBeLessThan(centers['9'][1]);
+  }
+  await expect(completed.getByRole('listitem').filter({hasText:/코일 \+ \(14번 나사\)|코일 − \(13번 나사\)/}).first()).toBeVisible();
   await completed.getByRole('button',{name:'동작 자동 테스트',exact:true}).click();
   await expect(completed.getByRole('status')).toContainText(/자동 테스트 (\d+)\/\1단계 일치/);
   await completed.getByRole('button',{name:'완성된 작업대 닫기',exact:true}).click();
   await expect(completed).toBeHidden();
+  if (id === 4 || id === 10) {
+    await page.getByRole('checkbox', { name: /수정안과 비교/ }).check();
+    await page.getByRole('button', { name: '해설 배선 불러오기', exact: true }).click();
+    await page.getByRole('button', { name: '배선 동작 자동 테스트', exact: true }).click();
+    await expect(page.getByRole('status').filter({ hasText: '단계 일치' })).toContainText('원본 해석과 일치');
+  }
  }
  await page.getByRole('button',{name:'배선 초기화',exact:true}).click();await page.getByRole('button',{name:'배선 동작 자동 테스트',exact:true}).click();await expect(page.getByRole('status').filter({hasText:'단계 일치'})).toContainText('배선과 접점 종류');
  await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox',{name:/수정안과 비교/}).check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');

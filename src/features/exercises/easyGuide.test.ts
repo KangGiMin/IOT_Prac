@@ -1,6 +1,6 @@
 import {describe,expect,it} from 'vitest';
 import {buildExercise,exercises} from './model';
-import {easySteps,locateParts,physicalAliases} from './easyGuide';
+import {buildWiringGuide} from './easyGuide';
 import {drawingContacts,numberedContacts} from './drawingContacts';
 import {gradeExercise} from './solver';
 describe('source locations and beginner wiring',()=>{
@@ -10,10 +10,11 @@ describe('source locations and beginner wiring',()=>{
  });
  it.each(exercises)('can rebuild drawing $id using plain terminal wiring without junction codes',e=>{
   for(const corrected of e.correction?[false,true]:[false]){
-   const c=buildExercise(e,corrected),locations=locateParts(e.id,c),steps=easySteps(c,locations);
+   const c=buildExercise(e,corrected);
+   const {locations,steps,aliases}=buildWiringGuide(e.id,c);
    expect(steps.length).toBeGreaterThan(0);expect(steps.every(s=>!/[CJ]\d+:?/.test(s.title))).toBe(true);
-   expect(gradeExercise(e,[...physicalAliases(locations),...steps.map(s=>s.lead)],corrected).every(r=>r.pass)).toBe(true);
-   for(const loc of Object.values(locations))expect(loc.mark.owner).toBe(c.parts.find(p=>locations[p.id]===loc)?.owner);
+   expect(gradeExercise(e,[...aliases,...steps.map(s=>s.lead)],corrected).every(r=>r.pass)).toBe(true);
+   for(const [id,loc] of Object.entries(locations))expect(loc.mark.owner).toBe(c.parts.find(p=>p.id===id)?.owner);
   }
  });
  it('does not fabricate a second terminal on omitted original symbols',()=>{expect(numberedContacts(4).filter(c=>c.owner==='PB3').every(c=>c.kind==='unknown'&&c.points.length===1)).toBe(true);});

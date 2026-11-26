@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { ExerciseCircuit, Lead } from './model';
 import { contactSummary, numberedContacts } from './drawingContacts';
-import { easySteps, locateParts, physicalAliases } from './easyGuide';
+import { relay14 } from '../../config/sequencePins';
+import { RelayScrewPhoto } from './RelayScrewPhoto';
+import type { WiringGuide } from './easyGuide';
 const colors={c:'#b35b00',a:'#08795d',b:'#205fbd','?':'#8052a0'};
-export function DrawingLesson({id,c,src,power,leads,onConnect,corrected}:{id:number;c:ExerciseCircuit;src:string;power:boolean;leads:Lead[];onConnect:(leads:Lead[])=>void;corrected:boolean}){
+export function DrawingLesson({id,c,src,power,leads,onConnect,corrected,guide}:{id:number;c:ExerciseCircuit;src:string;power:boolean;leads:Lead[];onConnect:(lead:Lead)=>void;corrected:boolean;guide:WiringGuide}){
  const marks=useMemo(()=>numberedContacts(id),[id]);
- const locations=useMemo(()=>locateParts(id,c),[id,c]);
- const steps=useMemo(()=>easySteps(c,locations),[c,locations]);
- const aliases=useMemo(()=>physicalAliases(locations),[locations]);
+ const {steps,aliases}=guide;
  const [visible,setVisible]=useState(true),[selected,setSelected]=useState<string[]>([]),[zoom,setZoom]=useState(100),[ratio,setRatio]=useState(.75);
  const active=marks.find(m=>selected.includes(m.id));
  const activeDevice=active?.owner.startsWith('PB')?'버튼':active?.owner.startsWith('T')?'타이머':'릴레이';
@@ -45,9 +45,9 @@ export function DrawingLesson({id,c,src,power,leads,onConnect,corrected}:{id:num
    <p className="easy-progress">배선 완료 {connected.filter(Boolean).length} / {steps.length}가닥</p>
    <ol className="exercise-guide easy-wiring-steps">{steps.map((step,i)=><li key={`${step.lead[0]}-${step.lead[1]}`} className={connected[i]?'is-connected':''}>
     <strong>{step.title}</strong><p>{step.why}</p>
-    <div><button disabled={!step.marks.length} onClick={()=>locate(step.marks)}>이 접점 도면에서 보기</button><button disabled={power||connected[i]} onClick={()=>{locate(step.marks);onConnect([...aliases,step.lead]);}}>{connected[i]?'연결했어요':'이 선 연결하기'}</button></div>
+    <div><button disabled={!step.marks.length} onClick={()=>locate(step.marks)}>이 접점 도면에서 보기</button><button disabled={power||connected[i]} onClick={()=>{locate(step.marks);onConnect(step.lead);}}>{connected[i]?'연결했어요':'이 선 연결하기'}</button></div>
    </li>)}</ol>
-   <details className="contact-pin-reference"><summary>실제 14핀 릴레이 소켓에 옮겨 연결할 때</summary><p>코일은 14번이 +, 13번이 −예요. 접점은 아래에서 같은 줄의 세 번호를 한 묶음으로 사용하세요. a나 b를 코일에 연결하는 것이 아니에요.</p><table><thead><tr><th>묶음</th><th>c 공통</th><th>a 붙는 쪽</th><th>b 떨어지는 쪽</th></tr></thead><tbody>{[0,1,2,3].map(i=><tr key={i}><td>{i+1}</td><td>{9+i}</td><td>{5+i}</td><td>{1+i}</td></tr>)}</tbody></table><p>도면의 같은 R1 접점들이 한 릴레이의 서로 다른 묶음에 해당해요. 기기 전원을 끈 상태에서 소켓에 적힌 번호를 확인하세요.</p></details>
+   <details className="contact-pin-reference"><summary>릴레이 본체 사진에서 나사 찾기</summary><RelayScrewPhoto /><p>맨 위는 a(NO), 둘째 줄은 b(NC), 맨 아래는 c(공통)입니다. 코일은 왼쪽 {relay14.coil.plus}번이 +, 오른쪽 {relay14.coil.minus}번이 −입니다.</p><table><thead><tr><th>왼쪽부터</th><th>a · NO</th><th>b · NC</th><th>c · 공통</th></tr></thead><tbody>{relay14.poles.map(({ no, nc, com }, index)=><tr key={com}><td>{index + 1}열</td><td>{no}</td><td>{nc}</td><td>{com}</td></tr>)}</tbody></table></details>
   </section>
  </div>;
 }

@@ -129,6 +129,10 @@
   min-height: 98px;
   padding: 7px;
 }
+.completed-device:has(.relay-screw-photo) .completed-device-heading {
+  display: block;
+  min-height: 0;
+}
 .completed-device-photo {
   position: relative;
   display: grid;
