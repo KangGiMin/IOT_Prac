@@ -1751,6 +1751,27 @@ p {
   font-size: 10px;
   pointer-events: none;
 }
+.motor-rotor {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.motor-blades {
+  transform-box: view-box;
+  animation: motor-turn .8s linear infinite;
+}
+.motor-rotor[data-reverse='true'] .motor-blades {
+  animation-direction: reverse;
+}
+@keyframes motor-turn {
+  to { transform: rotate(1turn); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motor-rotor { display: none; }
+}
 .photo-node[data-asset='timer-at8n'] .photo-pin {
   width: 12px;
   height: 12px;

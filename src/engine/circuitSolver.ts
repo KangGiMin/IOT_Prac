@@ -6,6 +6,7 @@ import {
 } from '../config/ttlModels';
 import { connectedBreadboardPins, insertedPins } from '../config/digitalPins';
 import { componentAssets } from '../config/assets';
+import { relay14 } from '../config/sequencePins';
 import { getSupplySettings } from '../config/supplySettings';
 import type {
   CircuitComponent,
@@ -205,9 +206,8 @@ function buildTopology(
         (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
       )
     ) {
-      // Training unit: NC 1–4, NO 5–8, COM 9–12, coil 13(-)/14(+).
-      for (let pole = 0; pole < 4; pole++)
-        contact(c, String(9 + pole), String((relays.has(c.id) ? 5 : 1) + pole));
+      for (const { com, no, nc } of relay14.poles)
+        contact(c, com, relays.has(c.id) ? no : nc);
     }
   }
   const groups = new Map<string, PinRef[]>();
@@ -703,7 +703,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
         )
       )
-        add('14', '13', 1200);
+        add(relay14.coil.plus, relay14.coil.minus, 1200);
       if (c.assetId === 'timer-at8n') add('7', '2', 1200);
       if (c.assetId === 'led-red') add('anode', 'cathode', 20, true);
     }
@@ -845,7 +845,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
                   (b) =>
                     b.assetId === 'relay-body' && b.mountedSocketId === c.id,
                 ) &&
-                Math.abs(currents[c.id] ?? 0) * 1200 >= 18,
+                (currents[c.id] ?? 0) * 1200 >= 18,
             )
             .map((c) => c.id)
         : [],

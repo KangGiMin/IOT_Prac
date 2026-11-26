@@ -10,7 +10,7 @@ test('opens empty boards and resets only the active workspace with undo support'
  await page.getByRole('tab',{name:'시퀀스 제어',exact:true}).click();await page.getByRole('button',{name:'초기화',exact:true}).click();await expect(page.locator('.react-flow__node')).toHaveCount(1);
 });
 
-test('places and wires the photographed motor from the sequence library', async ({page}) => {
+test('turns the photographed motor blades only while the wired PB is held', async ({page}, testInfo) => {
   await page.goto('/');
   const addMotor = page.getByRole('button', {name:'모터 유닛 추가', exact:true});
   await expect(addMotor.locator('img')).toHaveAttribute('src', /\/Motor\.png$/);
@@ -24,15 +24,44 @@ test('places and wires the photographed motor from the sequence library', async 
     const pin = await motorPin.boundingBox();
     expect(Math.abs(pin!.x + pin!.width / 2 - (image!.x + image!.width * x / 1201))).toBeLessThan(1);
     expect(Math.abs(pin!.y + pin!.height / 2 - (image!.y + image!.height * 332 / 1309))).toBeLessThan(1);
-    await page.locator(`[data-id="seq-board"] .photo-pin[data-handleid="${id}"]`).click();
-    await motorPin.click();
   }
-  await expect(page.locator('.photo-board-toolbar')).toContainText('2 배선');
+  await page.getByRole('button', {name:'푸시버튼 스위치 추가', exact:true}).click();
+  const board = page.locator('[data-id="seq-board"]');
+  const pb = page.locator('.photo-node[data-asset="pb-switch"]');
+  const pin = (device: typeof board, id: string) =>
+    device.locator(`.photo-pin[data-handleid="${id}"]`);
+  for (const [from, to] of [
+    [pin(board, 'minus'), pin(motor, 'minus')],
+    [pin(board, 'plus'), pin(pb, 'no1')],
+    [pin(pb, 'no2'), pin(motor, 'plus')],
+  ]) {
+    await from.click();
+    await to.click();
+  }
+  await expect(page.locator('.photo-board-toolbar')).toContainText('3 배선');
   const power = page.getByRole('switch', {name:'메인 전원', exact:true});
   await power.click();
-  await expect(motor.locator('.motor-status')).toHaveText('정회전 (CW)');
-  await power.click();
   await expect(motor.locator('.motor-status')).toHaveText('정지');
+  const push = pb.getByRole('button', {name:'푸시버튼 누르기'});
+  await push.focus();
+  await page.keyboard.down('Space');
+  await expect(motor.locator('.motor-status')).toHaveText('정회전 (CW)');
+  const blades = motor.locator('.motor-blades');
+  await expect(blades).toHaveCSS('animation-name', 'motor-turn');
+  const [first, later] = await blades.evaluate((element) => {
+    const animation = element.getAnimations()[0];
+    animation.pause();
+    animation.currentTime = 0;
+    const firstAngle = getComputedStyle(element).transform;
+    animation.currentTime = 250;
+    return [firstAngle, getComputedStyle(element).transform];
+  });
+  expect(later).not.toBe(first);
+  await motor.screenshot({path:testInfo.outputPath('running-motor.png')});
+  await page.keyboard.up('Space');
+  await expect(motor.locator('.motor-status')).toHaveText('정지');
+  await expect(blades).toHaveCount(0);
+  await power.click();
   await page.getByRole('tab', {name:'디지털 회로', exact:true}).click();
   await expect(addMotor).toHaveCount(0);
 });
@@ -152,7 +181,7 @@ test('renders the motor photo and retains the wired forward and reverse operatio
   await expect(photo).toHaveAttribute('src', /\/assets\/Motor\.png$/);
   await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1201);
   await expect(motor.locator('.react-flow__handle')).toHaveCount(2);
-  await expect(motor.locator('.completed-motor')).toHaveCount(0);
+  await expect(motor.locator('.motor-blades')).toHaveCount(0);
   await completed.getByRole('switch', { name: '완성 작업대 전원' }).click();
 
   for (const [button, direction, animationDirection] of [
@@ -161,7 +190,7 @@ test('renders the motor photo and retains the wired forward and reverse operatio
     await completed.getByRole('button', { name: `${button} 누르기` }).focus();
     await page.keyboard.down('Space');
     await expect(motor.locator('.completed-device-state')).toHaveText(direction);
-    await expect(motor.locator('.completed-motor')).toHaveCSS('animation-direction', animationDirection);
+    await expect(motor.locator('.motor-blades')).toHaveCSS('animation-direction', animationDirection);
     await page.keyboard.up('Space');
     await expect(motor.locator('.completed-device-state')).toHaveText('정지 / 개방');
   }

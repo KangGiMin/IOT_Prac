@@ -76,6 +76,50 @@ describe('physical sequence modules', () => {
     body.mountedSocketId = 'not-a-socket';
     expect(solveCircuit(request).energizedComponents).not.toContain('socket');
   });
+  it('closes all b contacts at rest and transfers to all a contacts with correct coil polarity', () => {
+    const request: CircuitSolverInput = {
+      mode: 'sequence',
+      power: { on: true, voltage: 24 },
+      components: [
+        make('panel-board', 'board'),
+        make('pb-switch', 'pb'),
+        make('relay-socket', 'socket'),
+        { ...make('relay-body', 'body'), mountedSocketId: 'socket' },
+        make('motor-unit', 'motor'),
+      ],
+      wires: [
+        wire('board', 'plus', 'pb', 'no1'),
+        wire('pb', 'no2', 'socket', '14'),
+        wire('board', 'minus', 'socket', '13'),
+        wire('board', 'plus', 'socket', '9'),
+        wire('socket', '5', 'motor', 'plus'),
+        wire('motor', 'minus', 'board', 'minus'),
+      ],
+    };
+    const verify = (run: ReturnType<typeof solveCircuit>, energized: boolean) => {
+      expect(run.energizedComponents.includes('socket')).toBe(energized);
+      expect(run.energizedComponents.includes('motor')).toBe(energized);
+      const net = (pin: string) => run.nets.find(({ pins }) =>
+        pins.some(({ componentId, pinId }) => componentId === 'socket' && pinId === pin),
+      )?.id;
+      for (let pole = 0; pole < 4; pole++) {
+        const com = net(String(9 + pole));
+        expect(com).toBe(net(String((energized ? 5 : 1) + pole)));
+        expect(com).not.toBe(net(String((energized ? 1 : 5) + pole)));
+      }
+    };
+    verify(solveCircuit(request), false);
+    request.components[1].settings.pressed = true;
+    const engaged = solveCircuit(request);
+    verify(engaged, true);
+    request.previous = engaged;
+    request.components[1].settings.pressed = false;
+    verify(solveCircuit(request), false);
+    request.components[1].settings.pressed = true;
+    request.wires[1] = wire('pb', 'no2', 'socket', '13');
+    request.wires[2] = wire('board', 'minus', 'socket', '14');
+    verify(solveCircuit(request), false);
+  });
   it('switches both delayed contact groups exactly after the configured time', () => {
     const request = timerCircuit();
     const start = solveCircuit(request);

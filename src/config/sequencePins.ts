@@ -11,12 +11,21 @@ const pin = (
   role: PinRole = 'terminal',
 ): PhotoPinDefinition => ({ id, label, position: { x, y }, role });
 type Layout = Pick<ComponentAsset, 'pins' | 'controls' | 'overlays'>;
+export const relay14 = {
+  coil: { plus: '14', minus: '13' },
+  poles: [
+    { com: '9', no: '5', nc: '1' },
+    { com: '10', no: '6', nc: '2' },
+    { com: '11', no: '7', nc: '3' },
+    { com: '12', no: '8', nc: '4' },
+  ],
+} as const;
 /** PNG-relative percentages; edit these numbers after installing final cutouts. */
 export const sequenceGeometry = {
   railYs: [18, 36, 54, 72, 90],
   left: 5,
   right: 95,
-  // Slot between the upper NO and lower coil screws, on relay-socket.png.
+  // Slot between the upper contact rows and lower coil screws on relay-socket.png.
   mount: { x: 78.3, y: 42.2, width: 19.2, height: 21.8 },
   relayImages: {
     socket: { width: 1122, height: 1402 },
@@ -58,20 +67,20 @@ export const sequenceScrewGeometry = {
   'relay-socket': {
     image: sequenceGeometry.relayImages.socket,
     heads: {
-      '1': { x: 750.5, y: 301.5, rx: 29.5, ry: 31 },
-      '2': { x: 838.5, y: 301.5, rx: 30.5, ry: 33.5 },
-      '3': { x: 921, y: 300.5, rx: 32.5, ry: 33.5 },
-      '4': { x: 1005.5, y: 301, rx: 32.5, ry: 33.5 },
-      '5': { x: 755, y: 386, rx: 30, ry: 28.5 },
-      '6': { x: 840.5, y: 387, rx: 29.5, ry: 28.5 },
-      '7': { x: 927.5, y: 386, rx: 29.5, ry: 28.5 },
-      '8': { x: 1013.5, y: 387, rx: 29.5, ry: 28.5 },
+      '5': { x: 750.5, y: 301.5, rx: 29.5, ry: 31 },
+      '6': { x: 838.5, y: 301.5, rx: 30.5, ry: 33.5 },
+      '7': { x: 921, y: 300.5, rx: 32.5, ry: 33.5 },
+      '8': { x: 1005.5, y: 301, rx: 32.5, ry: 33.5 },
+      '1': { x: 755, y: 386, rx: 30, ry: 28.5 },
+      '2': { x: 840.5, y: 387, rx: 29.5, ry: 28.5 },
+      '3': { x: 927.5, y: 386, rx: 29.5, ry: 28.5 },
+      '4': { x: 1013.5, y: 387, rx: 29.5, ry: 28.5 },
       '9': { x: 755, y: 901.5, rx: 29.5, ry: 34.5 },
       '10': { x: 840, y: 902.5, rx: 29.5, ry: 32 },
       '11': { x: 925.5, y: 902.5, rx: 29.5, ry: 32 },
       '12': { x: 1011.5, y: 902.5, rx: 29.5, ry: 32 },
-      '13': { x: 754, y: 793.5, rx: 29.5, ry: 30 },
-      '14': { x: 1011, y: 793.5, rx: 29.5, ry: 29.5 },
+      '14': { x: 754, y: 793.5, rx: 29.5, ry: 30 },
+      '13': { x: 1011, y: 793.5, rx: 29.5, ry: 29.5 },
     } as Record<string, ScrewRim>,
   },
   virtualHeadRatio: 0.72,
@@ -129,11 +138,11 @@ export const sequencePins = {
   },
   'relay-socket': {
     pins: [
-      ...['1', '2', '3', '4'].map(id => photoPin('relay-socket', id, `${id} NC`)),
-      ...['5', '6', '7', '8'].map(id => photoPin('relay-socket', id, `${id} NO`)),
-      ...['9', '10', '11', '12'].map(id => photoPin('relay-socket', id, `${id} COM`)),
-      photoPin('relay-socket', '13', '13 COIL −'),
-      photoPin('relay-socket', '14', '14 COIL +'),
+      ...relay14.poles.map(({ no }) => photoPin('relay-socket', no, `${no} a (NO)`)),
+      ...relay14.poles.map(({ nc }) => photoPin('relay-socket', nc, `${nc} b (NC)`)),
+      ...relay14.poles.map(({ com }) => photoPin('relay-socket', com, `${com} c (COM)`)),
+      photoPin('relay-socket', relay14.coil.plus, `${relay14.coil.plus} COIL +`),
+      photoPin('relay-socket', relay14.coil.minus, `${relay14.coil.minus} COIL −`),
     ],
     controls: [],
     overlays: [],

@@ -14,20 +14,20 @@ const photographedRims: [string, string, number, number, number, number][] = [
   ['seq-pb', 'nc2', 724.5, 278.5, 38.5, 41.5],
   ['seq-lamp', 'plus', 517.5, 274, 36, 41.5],
   ['seq-lamp', 'minus', 618, 275.5, 35.5, 40],
-  ['seq-relay', '1', 750.5, 301.5, 29.5, 31],
-  ['seq-relay', '2', 838.5, 301.5, 30.5, 33.5],
-  ['seq-relay', '3', 921, 300.5, 32.5, 33.5],
-  ['seq-relay', '4', 1005.5, 301, 32.5, 33.5],
-  ['seq-relay', '5', 755, 386, 30, 28.5],
-  ['seq-relay', '6', 840.5, 387, 29.5, 28.5],
-  ['seq-relay', '7', 927.5, 386, 29.5, 28.5],
-  ['seq-relay', '8', 1013.5, 387, 29.5, 28.5],
+  ['seq-relay', '5', 750.5, 301.5, 29.5, 31],
+  ['seq-relay', '6', 838.5, 301.5, 30.5, 33.5],
+  ['seq-relay', '7', 921, 300.5, 32.5, 33.5],
+  ['seq-relay', '8', 1005.5, 301, 32.5, 33.5],
+  ['seq-relay', '1', 755, 386, 30, 28.5],
+  ['seq-relay', '2', 840.5, 387, 29.5, 28.5],
+  ['seq-relay', '3', 927.5, 386, 29.5, 28.5],
+  ['seq-relay', '4', 1013.5, 387, 29.5, 28.5],
   ['seq-relay', '9', 755, 901.5, 29.5, 34.5],
   ['seq-relay', '10', 840, 902.5, 29.5, 32],
   ['seq-relay', '11', 925.5, 902.5, 29.5, 32],
   ['seq-relay', '12', 1011.5, 902.5, 29.5, 32],
-  ['seq-relay', '13', 754, 793.5, 29.5, 30],
-  ['seq-relay', '14', 1011, 793.5, 29.5, 29.5],
+  ['seq-relay', '14', 754, 793.5, 29.5, 30],
+  ['seq-relay', '13', 1011, 793.5, 29.5, 29.5],
 ];
 
 test.beforeEach(async ({ page }) => {
@@ -463,8 +463,8 @@ test('clicks and drags directly on photographed PB, lamp and relay screws, inclu
     ]),
   ).toEqual([
     ['seq-pb', 'no1', 'seq-lamp', 'plus'],
-    ['seq-pb', 'no1', 'seq-relay', '1'],
-    ['seq-relay', '5', 'seq-lamp', 'minus'],
+    ['seq-pb', 'no1', 'seq-relay', '5'],
+    ['seq-relay', '1', 'seq-lamp', 'minus'],
   ]);
 });
 

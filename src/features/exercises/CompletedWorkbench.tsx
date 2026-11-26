@@ -6,6 +6,7 @@ import { componentAssets } from '../../config/assets';
 import { SoundAlert } from '../../engine/soundAlert';
 import type { AssetId } from '../../types/circuit';
 import { AssetImage } from '../workbench/components/AssetImage';
+import { MotorRotor } from '../workbench/components/MotorRotor';
 import { buildCompletedWorkbench } from './completedCircuit';
 import type { WorkbenchDevice } from './completedCircuit';
 import type { Exercise } from './model';
@@ -32,14 +33,20 @@ type DeviceNode = Node<{
 function Device({ data: { device, active, status, highlighted } }: NodeProps<DeviceNode>) {
   const asset = deviceAssets[device.kind];
   const name = device.kind === 'supply' ? 'DC 24V' : device.id;
+  const [motorPhotoLoaded, setMotorPhotoLoaded] = useState(false);
   return (
     <article className="completed-device" data-device={device.id} data-active={active}>
       <header className="completed-device-heading">
         <div className="completed-device-photo" aria-hidden="true">
           {device.kind === 'motor' ? (
             <div className="completed-motor-photo">
-              <AssetImage asset={componentAssets['motor-unit']} thumbnail />
-              {active && <span className={`completed-motor${status === 'CCW' ? ' is-reversed' : ''}`} />}
+              <AssetImage
+                asset={componentAssets['motor-unit']}
+                thumbnail
+                onLoad={() => setMotorPhotoLoaded(true)}
+                onFallback={() => setMotorPhotoLoaded(false)}
+              />
+              {active && motorPhotoLoaded && <MotorRotor reverse={status === 'CCW'} />}
             </div>
           ) : asset ? <AssetImage asset={componentAssets[asset]} thumbnail /> : <BellRing size={34} />}
           {device.kind === 'lamp' && active && <span className="completed-lamp-glow" />}

@@ -74,7 +74,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     label: '릴레이 본체',
     model: 'RELAY UNIT · 14P',
     description:
-      '릴레이 소켓을 장착하면 코일 13(−)/14(+)와 네 조의 NC·NO·COM 접점을 사용할 수 있습니다.',
+      '릴레이 소켓을 장착하세요. 위 첫 줄은 a(NO) 5~8, 둘째 줄은 b(NC) 1~4입니다. 코일은 왼쪽 14(+), 오른쪽 13(−)이고, 맨 아래는 공통 9~12입니다.',
     ...image('relay-socket.png'),
     size: { width: 210, height: 200 },
     category: 'control',

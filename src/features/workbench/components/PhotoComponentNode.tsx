@@ -17,6 +17,7 @@ import { containBounds, formatCoordinates, percentAt } from '../utils/geometry';
 import { breadboardPoint, plugInPhoto } from '../utils/digitalPlacement';
 import { AssetImage } from './AssetImage';
 import { PhotoControl } from './PhotoControl';
+import { MotorRotor } from './MotorRotor';
 
 export type PhotoNode = Node<{ component: CircuitComponent }, 'photo'>;
 
@@ -189,6 +190,9 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
           }
         }}
       >
+        {asset.id === 'motor-unit' && energized && natural && (
+          <MotorRotor reverse={motorCurrent < 0} />
+        )}
         {asset.id === 'panel-board' &&
           calibration &&
           sequenceGeometry.railYs.map((y) => (
