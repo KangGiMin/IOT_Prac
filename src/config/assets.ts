@@ -80,6 +80,17 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     category: 'control',
     ...sequencePins['relay-body'],
   },
+  'relay-unit-11p': {
+    id: 'relay-unit-11p',
+    mode: 'sequence',
+    label: '11핀 릴레이 유닛',
+    model: 'Sysi N-2260-10 · 11P',
+    description: '11핀 소켓의 외형과 인쇄된 결선도를 볼 수 있는 배치용 부품입니다.',
+    ...image('RelayTimer.png'),
+    size: { width: 192, height: 256 },
+    category: 'control',
+    ...sequencePins['relay-unit-11p'],
+  },
   'timer-at8n': {
     id: 'timer-at8n',
     mode: 'sequence',

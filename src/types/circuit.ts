@@ -7,6 +7,7 @@ export type AssetId =
   | 'pilot-lamp'
   | 'pb-switch'
   | 'relay-socket'
+  | 'relay-unit-11p'
   | 'relay-body'
   | 'timer-at8n'
   | 'screwdriver'

@@ -23,13 +23,14 @@ describe('user-supplied PNG contract', () => {
       componentAssets['timer-at8n'].pins.find((p) => p.id === '2')!.label,
     ).toContain('−');
   });
-  it('loads all 14 exact filenames directly under assets, without mode subfolders', () => {
+  it('loads the exact filenames directly under assets, without mode subfolders', () => {
     const expected = [
       'panel-board.png',
       'pilot-lamp.png',
       'pb-switch.png',
       'relay-socket.png',
       'relay-body.png',
+      'RelayTimer.png',
       'timer-at8n.png',
       'screwdriver.png',
       'breadboard.png',

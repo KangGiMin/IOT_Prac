@@ -137,6 +137,8 @@ export const sequencePins = {
       },
     ],
   },
+  // The bare 11-pin socket is available as a board placement reference.
+  'relay-unit-11p': { pins: [], controls: [], overlays: [] },
   // Front PNG has no rear pins: these are explicitly shown as a rear-socket strip.
   'timer-at8n': {
     pins: [

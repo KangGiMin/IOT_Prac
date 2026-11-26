@@ -21,6 +21,7 @@ public/assets/
   pb-switch.png
   relay-socket.png
   relay-body.png
+  RelayTimer.png
   timer-at8n.png
   screwdriver.png
   breadboard.png
@@ -202,7 +203,7 @@ src/
   main.tsx
 tests/e2e/                          # 실제 브라우저 조작 회귀 테스트
 playwright.config.ts                # 브라우저·미리보기 서버·실패 추적 설정
-public/assets/                      # 사용자 제공 PNG 14개
+public/assets/                      # 사용자 제공 PNG
 app.html                            # Vite 원본 HTML
 index.html                          # 빌드가 갱신하는 Live Server 진입점
 ```

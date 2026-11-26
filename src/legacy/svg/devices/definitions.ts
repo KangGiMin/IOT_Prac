@@ -131,6 +131,8 @@ export const deviceDefinitions: Record<AssetId, ComponentDefinition> = {
     'control',
     ['sequence'],
   ),
+  // Reserved here because AssetId is shared with the photo workbench.
+  'relay-unit-11p': device('relay-unit-11p', '11핀 릴레이 유닛', 'N-2260-10', 192, 256, 'control', []),
   'timer-at8n': device(
     'timer-at8n',
     '타이머 릴레이',
