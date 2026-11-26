@@ -84,3 +84,28 @@ test('shows the timer settings and delayed lamps in the completed workbench', as
   await expect(completed.locator('[data-device="PL1"]')).toHaveAttribute('data-active', 'false');
   await expect(completed.locator('[data-device="PL2"]')).toHaveAttribute('data-active', 'false');
 });
+
+test('renders the motor photo and retains the wired forward and reverse operation', async ({ page }) => {
+  await page.goto('/#exercises');
+  await page.locator('.exercise-catalog button').filter({ hasText: /^24 ·/ }).click();
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대', exact: true });
+  const motor = completed.locator('[data-device="M"]');
+  const photo = motor.locator('img.asset-photo');
+  await expect(photo).toHaveAttribute('src', /\/assets\/Motor\.png$/);
+  await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1201);
+  await expect(motor.locator('.react-flow__handle')).toHaveCount(2);
+  await expect(motor.locator('.completed-motor')).toHaveCount(0);
+  await completed.getByRole('switch', { name: '완성 작업대 전원' }).click();
+
+  for (const [button, direction, animationDirection] of [
+    ['PB1', 'CW', 'normal'], ['PB2', 'CCW', 'reverse'],
+  ]) {
+    await completed.getByRole('button', { name: `${button} 누르기` }).focus();
+    await page.keyboard.down('Space');
+    await expect(motor.locator('.completed-device-state')).toHaveText(direction);
+    await expect(motor.locator('.completed-motor')).toHaveCSS('animation-direction', animationDirection);
+    await page.keyboard.up('Space');
+    await expect(motor.locator('.completed-device-state')).toHaveText('정지 / 개방');
+  }
+});

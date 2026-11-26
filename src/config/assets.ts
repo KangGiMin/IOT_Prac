@@ -10,6 +10,7 @@ const image = (fileName: ComponentAsset['fileName']) => ({
   src: `${assetRoot}${fileName}`,
 });
 export const jumperCableAsset = image('jumper-cable.png');
+export const motorUnitImage = { ...image('Motor.png'), label: '모터 유닛 Sysi N-2260-08' };
 /** Starter breadboard template; adjust this grid to the user's final PNG.
  * Each column has two isolated strips of five holes. Rails are separate buses.
  * This is a coordinate template, not the reference board's exact hole count.

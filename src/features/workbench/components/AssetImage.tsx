@@ -11,7 +11,7 @@ export function AssetImage({
   onLoad,
   onFallback,
 }: {
-  asset: ComponentAsset;
+  asset: Pick<ComponentAsset, 'src' | 'label' | 'fileName'>;
   thumbnail?: boolean;
   style?: CSSProperties;
   onLoad?: (natural: Size) => void;

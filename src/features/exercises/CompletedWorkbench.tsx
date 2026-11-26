@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Background, ConnectionMode, Controls, Handle, Position, ReactFlow } from '@xyflow/react';
 import type { Edge, Node, NodeProps } from '@xyflow/react';
-import { BellRing, Cog, Power, X } from 'lucide-react';
-import { componentAssets } from '../../config/assets';
+import { BellRing, Power, X } from 'lucide-react';
+import { componentAssets, motorUnitImage } from '../../config/assets';
 import { SoundAlert } from '../../engine/soundAlert';
 import type { AssetId } from '../../types/circuit';
 import { AssetImage } from '../workbench/components/AssetImage';
@@ -36,11 +36,12 @@ function Device({ data: { device, active, status, highlighted } }: NodeProps<Dev
     <article className="completed-device" data-device={device.id} data-active={active}>
       <header className="completed-device-heading">
         <div className="completed-device-photo" aria-hidden="true">
-          {asset ? <AssetImage asset={componentAssets[asset]} thumbnail /> : (
-            device.kind === 'motor'
-              ? <Cog size={38} className={status === 'CCW' ? 'completed-motor is-reversed' : 'completed-motor'} />
-              : <BellRing size={34} />
-          )}
+          {device.kind === 'motor' ? (
+            <div className="completed-motor-photo">
+              <AssetImage asset={motorUnitImage} thumbnail />
+              {active && <span className={`completed-motor${status === 'CCW' ? ' is-reversed' : ''}`} />}
+            </div>
+          ) : asset ? <AssetImage asset={componentAssets[asset]} thumbnail /> : <BellRing size={34} />}
           {device.kind === 'lamp' && active && <span className="completed-lamp-glow" />}
         </div>
         <div>
