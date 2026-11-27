@@ -82,6 +82,9 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
   const completed=page.getByRole('dialog',{name:'완성된 작업대',exact:true});
   await expect(completed).toBeVisible();
   await expect(completed.locator('.completed-workbench-header p')).toHaveText(new RegExp('^'+String(id).padStart(2,'0')+' ·'));
+  const diagram = completed.locator('.completed-drawing-image');
+  await expect(diagram).toHaveAttribute('src', new RegExp('/' + String(id).padStart(2,'0') + '\\.(png|svg)$'));
+  await expect.poll(() => diagram.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBeGreaterThan(0);
   const timing = completed.getByRole('region', { name: '회로 타임 차트', exact: true });
   await expect(timing.getByRole('img', { name: '시간에 따른 버튼 입력과 회로 출력 파형' })).toBeVisible();
   await expect(timing.locator('[data-timing-signal="power"] path.workbench-timing-wave')).toHaveAttribute('d', / H .* V /);
@@ -110,7 +113,7 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
   }
   await expect(wireList.getByRole('listitem').filter({hasText:/코일 \+ \(14번 나사\)|코일 − \(13번 나사\)/}).first()).toBeVisible();
   await completed.getByRole('button',{name:'동작 자동 테스트',exact:true}).click();
-  await expect(completed.getByRole('status')).toContainText(/자동 테스트 (\d+)\/\1단계 일치/);
+  await expect(completed.locator('.completed-workbench-status')).toContainText(/자동 테스트 (\d+)\/\1단계 일치/);
   await completed.getByRole('button',{name:'완성된 작업대 닫기',exact:true}).click();
   await expect(completed).toBeHidden();
   if (id === 4 || id === 10) {
@@ -124,6 +127,51 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
  await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox',{name:/수정안과 비교/}).check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');
  await page.screenshot({path:testInfo.outputPath('exercise-page.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.body.scrollWidth)).toBeLessThanOrEqual(392);
+});
+
+test('selects the same wire on the completed board and the original drawing', async ({ page }, testInfo) => {
+  await page.goto('/#exercises');
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대' });
+  const log = completed.getByRole('region', { name: '완성 배선', exact: true });
+  const drawing = completed.getByRole('region', { name: '01번 실습 도면' });
+  const first = log.getByRole('button', { name: /^1번 배선/ });
+  await first.click();
+  await expect(first).toHaveAttribute('aria-pressed', 'true');
+  await expect(drawing).toBeFocused();
+  await expect(drawing.getByRole('status')).toContainText('1번 배선');
+  const line = drawing.locator('polyline.completed-drawing-path');
+  await expect(drawing.locator('.completed-drawing-overlay')).toBeVisible();
+  await expect(line).toHaveCount(1);
+  const points = (await line.getAttribute('points'))!.split(' ').map((point) => point.split(',').map(Number));
+  expect(points[0][0]).toBeCloseTo(197, 0);
+  expect(points.at(-1)![0]).toBeCloseTo(197, 0);
+  expect(points[0][1]).toBeLessThan(points.at(-1)![1]);
+  await expect(drawing.locator('[data-end="from"] text')).toHaveText('A');
+  await expect(drawing.locator('[data-end="to"] text')).toHaveText('B');
+  await drawing.locator('.completed-drawing-scroll').screenshot({ path: testInfo.outputPath('selected-wire-on-drawing.png') });
+  await drawing.getByRole('button', { name: '배선 목록으로', exact: true }).click();
+  await expect(first).toBeFocused();
+  const second = log.getByRole('button', { name: /^2번 배선/ });
+  await second.click();
+  await expect(drawing.getByRole('status')).toContainText('2번 배선');
+  await expect(first).toHaveAttribute('aria-pressed', 'false');
+  await second.click();
+  await expect(drawing.locator('.completed-drawing-overlay')).toHaveCount(0);
+});
+
+test('labels an unverified end without inventing a path on the source drawing', async ({ page }) => {
+  await page.goto('/#exercises');
+  await page.getByRole('button', { name: /^05 ·/ }).click();
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대' });
+  const wire = completed.getByRole('region', { name: '완성 배선', exact: true })
+    .getByRole('button', { name: /전원 \+ .*PB1/ }).first();
+  await wire.click();
+  const drawing = completed.getByRole('region', { name: '05번 실습 도면' });
+  await expect(drawing.getByRole('status')).toContainText('다른 끝은 원본에서 위치를 확인할 수 없습니다');
+  await expect(drawing.locator('[data-end="to"]')).toHaveCount(1);
+  await expect(drawing.locator('polyline.completed-drawing-path')).toHaveCount(0);
 });
 
 test('reads the alternating-lamp timing chart on a narrow screen without changing the workbench', async ({ page }, testInfo) => {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Background, ConnectionMode, Controls, Handle, Position, ReactFlow } from '@xyflow/react';
 import type { Edge, Node, NodeProps } from '@xyflow/react';
 import { BellRing, Power, X } from 'lucide-react';
@@ -11,6 +11,7 @@ import { buildCompletedWorkbench } from './completedCircuit';
 import type { WorkbenchDevice } from './completedCircuit';
 import { RelayScrewPhoto } from './RelayScrewPhoto';
 import { WorkbenchTimingChart } from './WorkbenchTimingChart';
+import { CompletedDrawing } from './CompletedDrawing';
 import { buildWorkbenchTiming } from './workbenchTiming';
 import type { Exercise } from './model';
 import { gradeExercise, motorState, stepCircuit, stopped } from './solver';
@@ -132,10 +133,12 @@ function deviceState(device: WorkbenchDevice, run: WorkbenchRun, exercise: Exerc
   }
 }
 
-export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
+export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise: Exercise; drawingSrc: string; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
   const timingSection = useRef<HTMLElement>(null);
+  const drawingSection = useRef<HTMLElement>(null);
+  const wireLog = useRef<HTMLElement>(null);
   const [columnCount, setColumnCount] = useState<number>();
   const board = useMemo(() => buildCompletedWorkbench(exercise), [exercise]);
   const timing = useMemo(() => buildWorkbenchTiming(exercise, board), [exercise, board]);
@@ -247,6 +250,19 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
     dispatch({ type: 'button', id, pressed, now: performance.now() });
   };
   const chooseWire = (index: number) => setSelected((current) => current === index ? null : index);
+  const chooseLogWire = (index: number) => {
+    chooseWire(index);
+    if (selected !== index) {
+      drawingSection.current?.focus({ preventScroll: true });
+      drawingSection.current?.scrollIntoView({ block: 'start' });
+    }
+  };
+  const returnToLog = useCallback(() => {
+    const button = wireLog.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+      ?? wireLog.current?.querySelector('button');
+    button?.scrollIntoView({ block: 'center' });
+    button?.focus({ preventScroll: true });
+  }, []);
 
   return (
     <dialog ref={dialog} className="completed-workbench" aria-labelledby="completed-workbench-title" onClose={onClose}>
@@ -328,7 +344,7 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
               <Controls showInteractive={false} aria-label="완성 작업대 확대·축소" />
             </ReactFlow>}
           </div>
-          <section className="wiring-log completed-workbench-wiring" aria-labelledby="completed-wiring-title">
+          <section ref={wireLog} className="wiring-log completed-workbench-wiring" aria-labelledby="completed-wiring-title">
             <div className="wiring-log-heading">
               <h3 id="completed-wiring-title">완성 배선</h3>
               <span>{board.steps.length}가닥</span>
@@ -336,7 +352,7 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
             <ol className="wiring-log-list" role="list">
               {board.steps.map((step, index) => (
                 <li key={index}>
-                  <button type="button" aria-pressed={selected === index} onClick={() => chooseWire(index)}>
+                  <button type="button" aria-pressed={selected === index} onClick={() => chooseLogWire(index)}>
                     <span className="wiring-log-row-heading">
                       <span className="wiring-log-swatch" style={{ backgroundColor: edges[index].style?.stroke }} aria-hidden="true" />
                       <strong>{index + 1}번 배선</strong>
@@ -349,6 +365,9 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
           </section>
         </div>
         <p className="completed-workbench-note">릴레이 배선은 사진의 실제 나사 번호에 연결됩니다.{exercise.motor && ' 모터는 도면의 전압 방향에 따른 교육용 상태를 표시합니다.'}</p>
+        <CompletedDrawing id={exercise.id} src={drawingSrc} geometry={board.drawing}
+          step={selected === null ? undefined : board.steps[selected]} index={selected}
+          sectionRef={drawingSection} onReturnToLog={returnToLog} />
         <WorkbenchTimingChart timing={timing} sectionRef={timingSection} />
       </div>
     </dialog>

@@ -17,6 +17,7 @@ export function ExercisesPage(){
  const [id,setId]=useState(1),[category,setCategory]=useState('전체'),[corrected,setCorrected]=useState(false);
  const [showCompleted, setShowCompleted] = useState(false);
  const e=exercises.find(x=>x.id===id)!;const c=useMemo(()=>buildExercise(e,corrected),[e,corrected]);
+ const drawingSrc=imageRoot+(e.diagram??`${String(id).padStart(2,'0')}.png`);
  const guide=useMemo(()=>buildWiringGuide(id,c),[id,c]);
  const [leads,setLeads]=useState<Lead[]>([]),[from,setFrom]=useState(''),[to,setTo]=useState(''),[power,setPower]=useState(false),[buttons,setButtons]=useState<Record<string,boolean>>({}),[state,setState]=useState(stopped),[grade,setGrade]=useState<TestRow[]>([]);
  const connectedLeads=useMemo(()=>[...leads,...guide.aliases],[leads,guide]);
@@ -44,8 +45,8 @@ export function ExercisesPage(){
  </div>
  <p>{e.category} 연습이에요. 먼저 그림에서 버튼과 릴레이 이름을 찾아보세요. 같은 R1이라고 적힌 접점들은 R1 릴레이가 켜질 때 함께 움직여요.</p>
  {e.note&&<p className="lesson-warning">{e.diagram?'도면 참고':'원본 해석 주의'} · {e.note}</p>}{e.correction&&<label><input type="checkbox" checked={corrected} onChange={x=>choose(id,x.target.checked)}/> 수정안과 비교 (원본 이미지 보존, 배선은 새로 시작)</label>}
- <DrawingLesson key={id+':'+corrected} id={id} c={c} guide={guide} src={imageRoot+(e.diagram??`${String(id).padStart(2,'0')}.png`)} power={power} leads={leads} corrected={corrected} onConnect={lead=>{if(power)return;setLeads(previous=>previous.some(([a,b])=>a===lead[0]&&b===lead[1]||a===lead[1]&&b===lead[0])?previous:[...previous,lead]);setGrade([]);}}/>
- {showCompleted && <CompletedWorkbench exercise={e} onClose={()=>setShowCompleted(false)} />}
+ <DrawingLesson key={id+':'+corrected} id={id} c={c} guide={guide} src={drawingSrc} power={power} leads={leads} corrected={corrected} onConnect={lead=>{if(power)return;setLeads(previous=>previous.some(([a,b])=>a===lead[0]&&b===lead[1]||a===lead[1]&&b===lead[0])?previous:[...previous,lead]);setGrade([]);}}/>
+ {showCompleted && <CompletedWorkbench exercise={e} drawingSrc={drawingSrc} onClose={()=>setShowCompleted(false)} />}
  <section><h3>선을 이은 뒤 이렇게 눌러 보세요</h3><ol>{(e.procedure??defaultProcedure).map(instruction=><li key={instruction}>{instruction}</li>)}</ol>
  <details><summary>접점 조건을 수식으로 자세히 보기</summary><table className="lesson-table"><thead><tr><th>부품</th><th>동작 조건 · AND는 둘 다, OR는 하나라도</th></tr></thead><tbody>
  {e.feed&&<tr><td>{e.feed.label}</td><td>{describeExpression(e.feed.when)}</td></tr>}

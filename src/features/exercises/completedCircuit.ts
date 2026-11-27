@@ -1,4 +1,5 @@
 import { buildWiringGuide } from './easyGuide';
+import { drawingWireGeometry } from './drawingWire';
 import { relay14, sequencePins } from '../../config/sequencePins';
 import { buildExercise } from './model';
 import type { Exercise, TimerMode } from './model';
@@ -126,6 +127,7 @@ export function buildCompletedWorkbench(exercise: Exercise) {
     buttons,
     deviceByTerminal,
     steps,
+    drawing: drawingWireGeometry(exercise.id, locations, aliases),
     // Shared printed terminals are electrically identical inside the device.
     leads: [...steps.map((step) => step.lead), ...aliases],
   };
