@@ -174,6 +174,50 @@ test('labels an unverified end without inventing a path on the source drawing', 
   await expect(drawing.locator('polyline.completed-drawing-path')).toHaveCount(0);
 });
 
+test('picks a conductor on the original drawing and shows only its completed wire', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#exercises');
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대', exact: true });
+  const drawing = completed.getByRole('region', { name: '01번 실습 도면' });
+  const image = drawing.locator('.completed-drawing-image');
+  await image.evaluate((element: HTMLImageElement) => element.decode());
+  await drawing.getByRole('slider', { name: '완성 작업대 도면 확대' }).fill('200');
+  const size = (await image.boundingBox())!;
+  await image.click({ position: { x: size.width * 0.197, y: size.height * 0.228 } });
+  const view = completed.getByRole('region', { name: '완성 작업대 배선 보기', exact: true });
+  await expect(view).toBeFocused();
+  await expect(view.getByRole('status')).toContainText('1번 배선');
+  await expect(view.getByRole('status')).toBeInViewport();
+  await expect(completed.locator('.react-flow__edge.selected')).toHaveCount(1);
+  await expect(completed.locator('.react-flow__handle.is-highlighted')).toHaveCount(2);
+  await expect(view.getByRole('button', { pressed: true })).toHaveText(/1번 배선/);
+  await view.getByRole('button', { name: '실습 도면으로', exact: true }).click();
+  await expect(drawing).toBeFocused();
+  await image.click({ position: { x: size.width * 0.1, y: size.height * 0.07 } });
+  await expect(drawing.getByRole('status')).toContainText('완성 배선을 찾을 수 없습니다');
+  await expect(completed.locator('.react-flow__edge.selected')).toHaveCount(0);
+});
+
+test('highlights only related leads from a shared supply rail', async ({ page }) => {
+  await page.goto('/#exercises');
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대', exact: true });
+  const image = completed.locator('.completed-drawing-image');
+  await image.evaluate((element: HTMLImageElement) => element.decode());
+  const size = (await image.boundingBox())!;
+  await image.click({ position: { x: size.width * 0.43, y: size.height * 0.1494 } });
+  const view = completed.getByRole('region', { name: '완성 작업대 배선 보기', exact: true });
+  await expect(view.getByRole('status')).toContainText('공유 구간');
+  const wires = view.getByRole('button', { pressed: true });
+  const titles = await wires.allTextContents();
+  expect(titles.length).toBeGreaterThan(1);
+  expect(titles.every((title) => title.includes('전원 +'))).toBe(true);
+  await expect(completed.locator('.react-flow__edge.selected')).toHaveCount(titles.length);
+  await wires.first().click();
+  await expect(completed.locator('.react-flow__edge.selected')).toHaveCount(1);
+});
+
 test('reads the alternating-lamp timing chart on a narrow screen without changing the workbench', async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/#exercises');

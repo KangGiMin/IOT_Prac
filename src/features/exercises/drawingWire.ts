@@ -92,6 +92,43 @@ export interface WireHighlight {
   segments?: Line[];
 }
 
+export function wiresAtDrawingPoint(
+  traces: readonly WireHighlight[],
+  geometry: DrawingWireGeometry,
+  leads: readonly Lead[],
+  point: Point,
+  size: { width: number; height: number },
+  radius: number,
+): number[] {
+  // Measure in screen pixels so the tolerance stays useful on a phone and when zoomed.
+  const x = size.width / 100;
+  const y = size.height / 100;
+  const pointDistance = (end: Point) => Math.hypot((point.x - end.x) * x, (point.y - end.y) * y);
+  const segmentDistance = (a: Point, b: Point) => {
+    const dx = (b.x - a.x) * x;
+    const dy = (b.y - a.y) * y;
+    const px = (point.x - a.x) * x;
+    const py = (point.y - a.y) * y;
+    const lengthSquared = dx * dx + dy * dy;
+    if (!lengthSquared) return pointDistance(a);
+    const t = Math.max(0, Math.min(1, (px * dx + py * dy) / lengthSquared));
+    return Math.hypot(px - t * dx, py - t * dy);
+  };
+  const distances = traces.map(({ ends, path, segments }) => Math.min(
+    ...ends.map((end) => end ? pointDistance(end) : Infinity),
+    ...(path?.slice(1).map((end, i) => segmentDistance(path[i], end)) ?? []),
+    ...(segments?.map(([a, b]) => segmentDistance(a, b)) ?? []),
+  ));
+  const nearest = Math.min(...distances);
+  if (nearest <= radius) {
+    // A junction or a coincident trace can represent several completed leads.
+    return distances.flatMap((d, index) => d <= Math.min(radius, nearest + 1.5) ? [index] : []);
+  }
+
+  const rail = [...geometry.rails].find(([, [a, b]]) => segmentDistance(a, b) <= radius);
+  return rail ? leads.flatMap((lead, index) => lead.includes(rail[0]) ? [index] : []) : [];
+}
+
 export function wireOnDrawing(
   geometry: DrawingWireGeometry,
   [from, to]: Lead,

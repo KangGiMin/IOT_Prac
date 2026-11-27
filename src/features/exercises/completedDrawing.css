@@ -18,6 +18,11 @@
 .completed-drawing-selection p {
   margin: 0;
 }
+.completed-drawing .completed-drawing-hint {
+  margin: 8px 0;
+  color: var(--theme-muted);
+  font-size: 14px;
+}
 .completed-drawing-selection {
   padding: 9px 12px;
   margin: 8px 0;
@@ -38,6 +43,10 @@
 .completed-drawing .completed-drawing-scroll {
   max-width: 1080px;
   margin: 10px auto 0;
+}
+.completed-drawing-image {
+  cursor: crosshair;
+  user-select: none;
 }
 .completed-drawing-overlay {
   position: absolute;

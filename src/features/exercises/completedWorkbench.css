@@ -72,6 +72,25 @@
 .completed-workbench-status strong {
   color: var(--theme-accent);
 }
+.completed-workbench-view {
+  min-width: 0;
+  scroll-margin-top: 100px;
+}
+.completed-workbench-selection {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 9px 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--theme-accent);
+  background: var(--theme-raised);
+  font-size: 14px;
+}
+.completed-workbench .completed-workbench-selection :is(button, p) {
+  margin: 0;
+}
 .completed-workbench-layout {
   display: grid;
   min-width: 0;

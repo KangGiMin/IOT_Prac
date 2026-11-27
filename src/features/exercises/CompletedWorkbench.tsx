@@ -136,13 +136,14 @@ function deviceState(device: WorkbenchDevice, run: WorkbenchRun, exercise: Exerc
 export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise: Exercise; drawingSrc: string; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
+  const workbenchView = useRef<HTMLElement>(null);
   const timingSection = useRef<HTMLElement>(null);
   const drawingSection = useRef<HTMLElement>(null);
-  const wireLog = useRef<HTMLElement>(null);
+  const wireLog = useRef<HTMLOListElement>(null);
   const [columnCount, setColumnCount] = useState<number>();
   const board = useMemo(() => buildCompletedWorkbench(exercise), [exercise]);
   const timing = useMemo(() => buildWorkbenchTiming(exercise, board), [exercise, board]);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selection, setSelection] = useState<number[]>([]);
   const [verified, setVerified] = useState<{ passed: number; total: number }>();
   const [sound] = useState(() => new SoundAlert({ continuous: true }));
   const buzzer = board.devices.find((device) => device.kind === 'buzzer');
@@ -214,7 +215,7 @@ export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise
     }
     return result;
   }, [board, columnCount]);
-  const highlighted = selected === null ? [] : board.steps[selected].lead;
+  const highlighted = selection.flatMap((index) => board.steps[index].lead);
   const nodes: DeviceNode[] = board.devices.map((device, index) => ({
     id: device.id,
     type: 'device',
@@ -225,7 +226,7 @@ export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise
   }));
   const edges: Edge[] = useMemo(() => board.steps.map((step, index) => {
     const [from, to] = step.lead;
-    const active = selected === index;
+    const active = selection.includes(index);
     const stroke = active ? '#00a4d6' : from === '24V' ? '#dc4c4c' : from === '0V' ? '#3780d5'
       : canvasColors[index % canvasColors.length];
     return {
@@ -237,9 +238,9 @@ export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise
       ariaLabel: step.title,
       selected: active,
       zIndex: active ? 4 : 2,
-      style: { stroke, strokeWidth: active ? 4 : 2.3, opacity: selected === null || active ? 0.9 : 0.22 },
+      style: { stroke, strokeWidth: active ? 4 : 2.3, opacity: !selection.length || active ? 0.9 : 0.22 },
     };
-  }), [board, selected]);
+  }), [board, selection]);
 
   const togglePower = () => {
     if (buzzer) void sound.unlock();
@@ -249,14 +250,24 @@ export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise
     if (buzzer && pressed) void sound.unlock();
     dispatch({ type: 'button', id, pressed, now: performance.now() });
   };
-  const chooseWire = (index: number) => setSelected((current) => current === index ? null : index);
+  const chooseWire = (index: number) => setSelection((current) => current.length === 1 && current[0] === index ? [] : [index]);
+  const showDrawing = () => {
+    drawingSection.current?.focus({ preventScroll: true });
+    drawingSection.current?.scrollIntoView({ block: 'start' });
+  };
   const chooseLogWire = (index: number) => {
     chooseWire(index);
-    if (selected !== index) {
-      drawingSection.current?.focus({ preventScroll: true });
-      drawingSection.current?.scrollIntoView({ block: 'start' });
-    }
+    if (selection.length !== 1 || selection[0] !== index) showDrawing();
   };
+  const chooseDrawingWires = useCallback((indexes: number[]) => {
+    setSelection(indexes);
+    if (!indexes.length) return;
+    workbenchView.current?.focus({ preventScroll: true });
+    workbenchView.current?.scrollIntoView({ block: 'start' });
+    const log = wireLog.current;
+    const row = log?.children.item(indexes[0]);
+    if (log && row) log.scrollTop += row.getBoundingClientRect().top - log.getBoundingClientRect().top;
+  }, []);
   const returnToLog = useCallback(() => {
     const button = wireLog.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
       ?? wireLog.current?.querySelector('button');
@@ -319,55 +330,65 @@ export function CompletedWorkbench({ exercise, drawingSrc, onClose }: { exercise
             : run.power ? 'PB를 눌렀다 놓고 부품 상태를 확인하세요.' : '전원을 켜면 PB로 동작을 테스트할 수 있습니다.'}
           {verified && <strong>자동 테스트 {verified.passed}/{verified.total}단계 일치</strong>}
         </div>
-        <div className="completed-workbench-layout">
-          <div ref={canvas} className="completed-workbench-canvas">
-            {columnCount && <ReactFlow<DeviceNode>
-              key={columnCount}
-              nodes={nodes}
-              edges={edges}
-              nodeTypes={nodeTypes}
-              connectionMode={ConnectionMode.Loose}
-              nodesDraggable={false}
-              nodesConnectable={false}
-              nodesFocusable={false}
-              elementsSelectable={false}
-              deleteKeyCode={null}
-              onEdgeClick={(_, edge) => chooseWire(Number(edge.id))}
-              onPaneClick={() => setSelected(null)}
-              fitView
-              fitViewOptions={{ padding: 0.13 }}
-              minZoom={0.15}
-              maxZoom={2}
-              aria-label="도면의 완성 배선 작업대"
-            >
-              <Background gap={20} size={1} color="#88a499" />
-              <Controls showInteractive={false} aria-label="완성 작업대 확대·축소" />
-            </ReactFlow>}
-          </div>
-          <section ref={wireLog} className="wiring-log completed-workbench-wiring" aria-labelledby="completed-wiring-title">
-            <div className="wiring-log-heading">
-              <h3 id="completed-wiring-title">완성 배선</h3>
-              <span>{board.steps.length}가닥</span>
+        <section ref={workbenchView} className="completed-workbench-view" tabIndex={-1} aria-label="완성 작업대 배선 보기">
+          {selection.length > 0 && <div className="completed-workbench-selection">
+            <div role="status">
+              {selection.length === 1
+                ? <><strong>{selection[0] + 1}번 배선</strong> · {board.steps[selection[0]].title}</>
+                : <><strong>공유 구간 · 배선 {selection.length}가닥</strong><p>완성 배선 목록에서 강조된 전선을 각각 선택할 수 있습니다.</p></>}
             </div>
-            <ol className="wiring-log-list" role="list">
-              {board.steps.map((step, index) => (
-                <li key={index}>
-                  <button type="button" aria-pressed={selected === index} onClick={() => chooseLogWire(index)}>
-                    <span className="wiring-log-row-heading">
-                      <span className="wiring-log-swatch" style={{ backgroundColor: edges[index].style?.stroke }} aria-hidden="true" />
-                      <strong>{index + 1}번 배선</strong>
-                    </span>
-                    {step.title}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </section>
-        </div>
+            <button type="button" onClick={showDrawing}>실습 도면으로</button>
+          </div>}
+          <div className="completed-workbench-layout">
+            <div ref={canvas} className="completed-workbench-canvas">
+              {columnCount && <ReactFlow<DeviceNode>
+                key={columnCount}
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                connectionMode={ConnectionMode.Loose}
+                nodesDraggable={false}
+                nodesConnectable={false}
+                nodesFocusable={false}
+                elementsSelectable={false}
+                deleteKeyCode={null}
+                onEdgeClick={(_, edge) => chooseWire(Number(edge.id))}
+                onPaneClick={() => setSelection([])}
+                fitView
+                fitViewOptions={{ padding: 0.13 }}
+                minZoom={0.15}
+                maxZoom={2}
+                aria-label="도면의 완성 배선 작업대"
+              >
+                <Background gap={20} size={1} color="#88a499" />
+                <Controls showInteractive={false} aria-label="완성 작업대 확대·축소" />
+              </ReactFlow>}
+            </div>
+            <section className="wiring-log completed-workbench-wiring" aria-labelledby="completed-wiring-title">
+              <div className="wiring-log-heading">
+                <h3 id="completed-wiring-title">완성 배선</h3>
+                <span>{board.steps.length}가닥</span>
+              </div>
+              <ol ref={wireLog} className="wiring-log-list" role="list">
+                {board.steps.map((step, index) => (
+                  <li key={index}>
+                    <button type="button" aria-pressed={selection.includes(index)} onClick={() => chooseLogWire(index)}>
+                      <span className="wiring-log-row-heading">
+                        <span className="wiring-log-swatch" style={{ backgroundColor: edges[index].style?.stroke }} aria-hidden="true" />
+                        <strong>{index + 1}번 배선</strong>
+                      </span>
+                      {step.title}
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          </div>
+        </section>
         <p className="completed-workbench-note">릴레이 배선은 사진의 실제 나사 번호에 연결됩니다.{exercise.motor && ' 모터는 도면의 전압 방향에 따른 교육용 상태를 표시합니다.'}</p>
         <CompletedDrawing id={exercise.id} src={drawingSrc} geometry={board.drawing}
-          step={selected === null ? undefined : board.steps[selected]} index={selected}
-          sectionRef={drawingSection} onReturnToLog={returnToLog} />
+          steps={board.steps} selection={selection} sectionRef={drawingSection}
+          onReturnToLog={returnToLog} onSelect={chooseDrawingWires} />
         <WorkbenchTimingChart timing={timing} sectionRef={timingSection} />
       </div>
     </dialog>
