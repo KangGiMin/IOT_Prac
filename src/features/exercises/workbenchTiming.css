@@ -1,0 +1,113 @@
+.workbench-timing {
+  margin: 16px 0 8px;
+  padding: 14px;
+  border: 1px solid var(--theme-border);
+  border-radius: 9px;
+  scroll-margin-top: 92px;
+}
+.workbench-timing h3,
+.workbench-timing p {
+  margin: 0 0 8px;
+}
+.workbench-timing p,
+.workbench-timing-operations {
+  font-size: 14px;
+  color: var(--theme-muted);
+}
+.workbench-timing-operations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.workbench-timing-operations b {
+  color: var(--theme-text);
+}
+.workbench-timing-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-bg);
+}
+.workbench-timing-chart {
+  display: block;
+  width: 100%;
+  min-width: 760px;
+}
+.workbench-timing-grid,
+.workbench-timing-base {
+  stroke: var(--theme-border);
+  stroke-width: 1;
+}
+.workbench-timing-grid {
+  stroke-dasharray: 3 4;
+}
+.workbench-timing-axis,
+.workbench-timing-name,
+.workbench-timing-motor-label {
+  font-size: 13px;
+  fill: var(--theme-text);
+}
+.workbench-timing-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.workbench-timing-wave {
+  stroke: var(--theme-accent);
+  stroke-width: 2.4;
+  fill: none;
+}
+.timing-input .workbench-timing-wave {
+  stroke: var(--theme-muted);
+}
+.timing-timer .workbench-timing-wave {
+  stroke-dasharray: 6 2;
+}
+.workbench-timing-pulse path {
+  stroke: var(--theme-accent);
+  stroke-dasharray: 2 3;
+}
+.workbench-timing-pulse circle {
+  fill: var(--theme-accent);
+}
+.workbench-timing-motor {
+  fill: var(--theme-raised);
+  stroke: var(--theme-border);
+}
+.workbench-timing-cursor {
+  stroke: var(--theme-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 3;
+}
+.workbench-timing-position {
+  display: grid;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+.workbench-timing-position input {
+  width: 100%;
+  accent-color: var(--theme-accent);
+}
+.workbench-timing-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
+  gap: 6px;
+  margin: 8px 0 0;
+}
+.workbench-timing-values > div {
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: var(--theme-raised);
+}
+.workbench-timing-values dt {
+  font-size: 14px;
+  color: var(--theme-muted);
+}
+.workbench-timing-values dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+}

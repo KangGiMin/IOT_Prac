@@ -1,5 +1,6 @@
 import { buildExercise, type Exercise, type ExerciseCircuit, type Lead } from './model';
 export interface RunState {on:Record<string,boolean>;elapsed:Record<string,number>;timing:Record<string,boolean>;short:boolean;unstable:boolean;motor:string}
+export interface TimerTransition {id:string;on:boolean}
 export const stopped=():RunState=>({on:{},elapsed:{},timing:{},short:false,unstable:false,motor:'정지'});
 function settle(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,state:RunState):RunState {
  let {on,elapsed,timing}=state;
@@ -35,10 +36,14 @@ function settle(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,st
  return {...stopped(),unstable:true};
 }
 
-export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,previous:RunState,dt:number,power=true):RunState {
+export function stepCircuit(
+ c:ExerciseCircuit,leads:Lead[],buttons:Record<string,boolean>,previous:RunState,
+ dt:number,power=true,onTimerTransition?:(afterSeconds:number,state:RunState,changes:TimerTransition[])=>void,
+):RunState {
  if(!power)return stopped();
  let state=settle(c,leads,buttons,previous);
- let remaining=Number.isFinite(dt)?dt:0;
+ const duration=Number.isFinite(dt)?dt:0;
+ let remaining=duration;
  const timers=c.parts.filter(p=>p.kind==='timer');
  const timedStates=new Map<string,number>();
  const precision=1e-9;
@@ -49,14 +54,20 @@ export function stepCircuit(c:ExerciseCircuit,leads:Lead[],buttons:Record<string
   // Advance to the next contact change so a long frame can include multiple phases.
   const nextEvent=Math.min(...pending.map(p=>p.seconds!-(state.elapsed[p.id]??0)));
   const interval=Math.min(remaining,nextEvent);
+  const changes:TimerTransition[]=[];
   for(const p of pending){
    state.elapsed[p.id]+=interval;
-   if(state.elapsed[p.id]+precision>=p.seconds!)state.on[p.id]=p.timerMode!=='off-delay';
+   if(state.elapsed[p.id]+precision>=p.seconds!){
+    const on=p.timerMode!=='off-delay';
+    state.on[p.id]=on;
+    if(onTimerTransition)changes.push({id:p.id,on});
+   }
   }
   remaining-=interval;
   if(nextEvent>interval+precision)break;
   state=settle(c,leads,buttons,state);
-  if(remaining>precision){
+  onTimerTransition?.(duration-remaining,state,changes);
+  if(!onTimerTransition&&remaining>precision){
    const key=JSON.stringify([state.on,state.timing,state.elapsed]);
    const prior=timedStates.get(key);
    if(prior!==undefined&&prior-remaining>precision)remaining%=prior-remaining;

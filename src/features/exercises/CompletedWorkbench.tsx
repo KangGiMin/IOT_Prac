@@ -10,6 +10,8 @@ import { MotorRotor } from '../workbench/components/MotorRotor';
 import { buildCompletedWorkbench } from './completedCircuit';
 import type { WorkbenchDevice } from './completedCircuit';
 import { RelayScrewPhoto } from './RelayScrewPhoto';
+import { WorkbenchTimingChart } from './WorkbenchTimingChart';
+import { buildWorkbenchTiming } from './workbenchTiming';
 import type { Exercise } from './model';
 import { gradeExercise, motorState, stepCircuit, stopped } from './solver';
 import type { RunState } from './solver';
@@ -133,8 +135,10 @@ function deviceState(device: WorkbenchDevice, run: WorkbenchRun, exercise: Exerc
 export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const canvas = useRef<HTMLDivElement>(null);
+  const timingSection = useRef<HTMLElement>(null);
   const [columnCount, setColumnCount] = useState<number>();
   const board = useMemo(() => buildCompletedWorkbench(exercise), [exercise]);
+  const timing = useMemo(() => buildWorkbenchTiming(exercise, board), [exercise, board]);
   const [selected, setSelected] = useState<number | null>(null);
   const [verified, setVerified] = useState<{ passed: number; total: number }>();
   const [sound] = useState(() => new SoundAlert({ continuous: true }));
@@ -289,6 +293,10 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
             const result = gradeExercise(exercise, board.leads, board.corrected);
             setVerified({ passed: result.filter((row) => row.pass).length, total: result.length });
           }}>동작 자동 테스트</button>
+          <button type="button" onClick={() => {
+            timingSection.current?.focus({ preventScroll: true });
+            timingSection.current?.scrollIntoView({ block: 'start' });
+          }}>타임 차트 보기</button>
         </div>
         <div className="completed-workbench-status" role="status">
           {run.state.short ? '단락 · 출력 정지' : run.state.unstable ? '접점 경합 · 동시 입력을 해제하세요.'
@@ -341,6 +349,7 @@ export function CompletedWorkbench({ exercise, onClose }: { exercise: Exercise; 
           </section>
         </div>
         <p className="completed-workbench-note">릴레이 배선은 사진의 실제 나사 번호에 연결됩니다.{exercise.motor && ' 모터는 도면의 전압 방향에 따른 교육용 상태를 표시합니다.'}</p>
+        <WorkbenchTimingChart timing={timing} sectionRef={timingSection} />
       </div>
     </dialog>
   );

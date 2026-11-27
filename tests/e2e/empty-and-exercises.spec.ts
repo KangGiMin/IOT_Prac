@@ -82,8 +82,13 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
   const completed=page.getByRole('dialog',{name:'완성된 작업대',exact:true});
   await expect(completed).toBeVisible();
   await expect(completed.locator('.completed-workbench-header p')).toHaveText(new RegExp('^'+String(id).padStart(2,'0')+' ·'));
+  const timing = completed.getByRole('region', { name: '회로 타임 차트', exact: true });
+  await expect(timing.getByRole('img', { name: '시간에 따른 버튼 입력과 회로 출력 파형' })).toBeVisible();
+  await expect(timing.locator('[data-timing-signal="power"] path.workbench-timing-wave')).toHaveAttribute('d', / H .* V /);
+  await expect(timing.locator('[data-timing-signal="PB1"] path.workbench-timing-wave')).toHaveAttribute('d', / H .* V /);
   if(id===4||id===10)await expect(completed.locator('.completed-workbench-header p')).toContainText('수정안 적용');
-  const wireCount=await completed.getByRole('listitem').count();
+  const wireList = completed.getByRole('region', { name: '완성 배선', exact: true });
+  const wireCount=await wireList.getByRole('listitem').count();
   expect(wireCount).toBeGreaterThan(0);
   await expect(completed.locator('.react-flow__edge')).toHaveCount(wireCount);
   const relayPhotos = completed.locator('.relay-screw-photo');
@@ -103,7 +108,7 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
     expect(centers['1'][1]).toBeLessThan(centers['14'][1]);
     expect(centers['14'][1]).toBeLessThan(centers['9'][1]);
   }
-  await expect(completed.getByRole('listitem').filter({hasText:/코일 \+ \(14번 나사\)|코일 − \(13번 나사\)/}).first()).toBeVisible();
+  await expect(wireList.getByRole('listitem').filter({hasText:/코일 \+ \(14번 나사\)|코일 − \(13번 나사\)/}).first()).toBeVisible();
   await completed.getByRole('button',{name:'동작 자동 테스트',exact:true}).click();
   await expect(completed.getByRole('status')).toContainText(/자동 테스트 (\d+)\/\1단계 일치/);
   await completed.getByRole('button',{name:'완성된 작업대 닫기',exact:true}).click();
@@ -119,6 +124,31 @@ test('includes every drawing, classifies all 26 exercises and tests reference wi
  await page.locator('.exercise-catalog button').filter({hasText:/^04 ·/}).click();await page.getByRole('checkbox',{name:/수정안과 비교/}).check();await expect(page.locator('.exercise-bench h3')).toContainText('수정안');
  await page.screenshot({path:testInfo.outputPath('exercise-page.png'),fullPage:true});
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.body.scrollWidth)).toBeLessThanOrEqual(392);
+});
+
+test('reads the alternating-lamp timing chart on a narrow screen without changing the workbench', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/#exercises');
+  await page.getByRole('button', { name: /^26 ·/ }).click();
+  await page.getByRole('button', { name: '완성된 작업대 보기', exact: true }).click();
+  const completed = page.getByRole('dialog', { name: '완성된 작업대', exact: true });
+  const electricalPower = completed.getByRole('switch', { name: '완성 작업대 전원' });
+  await completed.getByRole('button', { name: '타임 차트 보기', exact: true }).click();
+  const timing = completed.getByRole('region', { name: '회로 타임 차트', exact: true });
+  await expect(timing).toBeFocused();
+  const chart = timing.getByRole('region', { name: '회로 파형 그래프' });
+  expect(await chart.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+  const slider = timing.getByRole('slider', { name: '타임 차트 확인 시점' });
+  const lamp = (id: number) => timing.locator(`[data-timing-value="LAMP${id}"] dd`);
+  await slider.fill('1.49');
+  await expect(lamp(1)).toHaveText('점등');
+  await expect(lamp(2)).toHaveText('소등');
+  await slider.fill('1.5');
+  await expect(lamp(1)).toHaveText('소등');
+  await expect(lamp(2)).toHaveText('점등');
+  await expect(timing.locator('[data-timing-signal="T1"] .workbench-timing-pulse').first()).toBeAttached();
+  await expect(electricalPower).toHaveAttribute('aria-checked', 'false');
+  await timing.screenshot({ path: testInfo.outputPath('sequence-timing-chart.png') });
 });
 
 test('shows and operates the alternate-lamp drawing and completed workbench', async ({page}, testInfo) => {
@@ -158,7 +188,7 @@ test('tests the assembled 3-input workbench without replacing the learner wiring
   const open = page.getByRole('button', { name: '완성된 작업대 보기', exact: true });
   await open.click();
   const completed = page.getByRole('dialog', { name: '완성된 작업대', exact: true });
-  await expect(completed.getByRole('listitem')).toHaveCount(31);
+  await expect(completed.getByRole('region', { name: '완성 배선', exact: true }).getByRole('listitem')).toHaveCount(31);
   await expect.poll(() => completed.locator('[data-device="PB1"]').evaluate((node) => node.getBoundingClientRect().width)).toBeGreaterThan(100);
   await completed.getByRole('button', { name: /^1번 배선/ }).click();
   await expect(completed.locator('.completed-terminal .is-highlighted')).toHaveCount(2);
