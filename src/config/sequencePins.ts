@@ -1,8 +1,4 @@
-import type {
-  ComponentAsset,
-  PhotoPinDefinition,
-  PinRole,
-} from '../types/circuit';
+import type { ComponentAsset, PhotoPinDefinition, PinRole } from '../types/circuit';
 const pin = (
   id: string,
   label: string,
@@ -30,14 +26,20 @@ export const sequenceGeometry = {
   relayImages: {
     socket: { width: 1122, height: 1402 },
     body: {
-      width: 1254, height: 1254,
+      width: 1254,
+      height: 1254,
       // Visible housing inside the transparent PNG canvas (percent).
       housing: { x: 14.3, y: 4.4, width: 71.1, height: 91.2 },
     },
   },
   dialCenter: { x: 50, y: 50 },
 };
-interface ScrewRim { x: number; y: number; rx: number; ry: number }
+interface ScrewRim {
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+}
 /** Each photographed rim measured on the original PNG, including transparency.
  * Pixel measurements are converted to percentage hotspots below. */
 export const sequenceScrewGeometry = {
@@ -89,7 +91,7 @@ type PhotographedScrewAsset = Exclude<keyof typeof sequenceScrewGeometry, 'virtu
 const photoPin = (asset: PhotographedScrewAsset, id: string, label: string) => {
   const { image, heads } = sequenceScrewGeometry[asset];
   const rim = heads[id];
-  return pin(id, label, rim.x / image.width * 100, rim.y / image.height * 100);
+  return pin(id, label, (rim.x / image.width) * 100, (rim.y / image.height) * 100);
 };
 // The timer front has no wiring terminals.
 export const sequencePins = {

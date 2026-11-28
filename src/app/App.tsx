@@ -1,14 +1,6 @@
 import { LearningToolbar } from './components/LearningToolbar';
 import { ThemeControl } from './components/ThemeControl';
-import {
-  Cable,
-  CircuitBoard,
-  Crosshair,
-  Cpu,
-  FlaskConical,
-  Power,
-  RotateCcw,
-} from 'lucide-react';
+import { Cable, CircuitBoard, Crosshair, Cpu, FlaskConical, Power, RotateCcw } from 'lucide-react';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import type { CSSProperties } from 'react';
@@ -20,8 +12,16 @@ import { PhotoInspector } from '../features/workbench/components/PhotoInspector'
 import { PhotoPalette } from '../features/workbench/components/PhotoPalette';
 import { SoundAlert } from '../engine/soundAlert';
 import { ScopeAcquisition } from '../features/scope/ScopeAcquisition';
-const LearningCenter = lazy(() => import('../features/learning/LearningCenter').then(module => ({ default: module.LearningCenter })));
-const ExercisesPage = lazy(() => import('../features/exercises/ExercisesPage').then(module => ({ default: module.ExercisesPage })));
+const LearningCenter = lazy(() =>
+  import('../features/learning/LearningCenter').then((module) => ({
+    default: module.LearningCenter,
+  })),
+);
+const ExercisesPage = lazy(() =>
+  import('../features/exercises/ExercisesPage').then((module) => ({
+    default: module.ExercisesPage,
+  })),
+);
 
 const modes = [
   { id: 'sequence', label: '시퀀스 제어', Icon: CircuitBoard },
@@ -30,19 +30,21 @@ const modes = [
 
 /** Full-width workbench first; library and inspector follow in page flow. */
 export function App() {
-  const [exercisePage,setExercisePage]=useState(typeof window!=='undefined'&&window.location.hash==='#exercises');
-  useEffect(()=>{const sync=()=>setExercisePage(window.location.hash==='#exercises');window.addEventListener('hashchange',sync);return()=>window.removeEventListener('hashchange',sync);},[]);
-  const state = useCircuitStore(
-    useShallow(({ workspaces: _workspaces, ...state }) => state),
+  const [exercisePage, setExercisePage] = useState(
+    typeof window !== 'undefined' && window.location.hash === '#exercises',
   );
+  useEffect(() => {
+    const sync = () => setExercisePage(window.location.hash === '#exercises');
+    window.addEventListener('hashchange', sync);
+    return () => window.removeEventListener('hashchange', sync);
+  }, []);
+  const state = useCircuitStore(useShallow(({ workspaces: _workspaces, ...state }) => state));
   const power = useCircuitStore((s) => s.workspaces[s.mode].power);
   const [alarm] = useState(() => new SoundAlert());
   const [audioReady, setAudioReady] = useState(false);
   const faultMode = useCircuitStore((s) =>
     modes.find(
-      ({ id }) =>
-        s.workspaces[id].power.on &&
-        s.workspaces[id].simulation.status === 'error',
+      ({ id }) => s.workspaces[id].power.on && s.workspaces[id].simulation.status === 'error',
     ),
   );
   const faultShorted = useCircuitStore((s) =>
@@ -58,11 +60,10 @@ export function App() {
     const syncAlarm = () => {
       const current = useCircuitStore.getState();
       const relays = new Set(
-        current.workspaces.sequence.simulation.energizedComponents.filter(
-          (id) =>
-            current.workspaces.sequence.components.some(
-              (c) => c.id === id && c.assetId === 'relay-socket',
-            ),
+        current.workspaces.sequence.simulation.energizedComponents.filter((id) =>
+          current.workspaces.sequence.components.some(
+            (c) => c.id === id && c.assetId === 'relay-socket',
+          ),
         ),
       );
       if (
@@ -74,15 +75,11 @@ export function App() {
       alarm.setActive(
         modes.some(
           ({ id }) =>
-            current.workspaces[id].power.on &&
-            current.workspaces[id].simulation.isShorted === true,
+            current.workspaces[id].power.on && current.workspaces[id].simulation.isShorted === true,
         ),
       );
     };
-    const clock = window.setInterval(
-      () => useCircuitStore.getState().tick(Date.now()),
-      40,
-    );
+    const clock = window.setInterval(() => useCircuitStore.getState().tick(Date.now()), 40);
     syncAlarm();
     const unsubscribe = useCircuitStore.subscribe(syncAlarm);
     const endInteraction = () => useCircuitStore.getState().endInteraction();
@@ -99,13 +96,14 @@ export function App() {
       alarm.dispose();
     };
   }, [alarm]);
-  if(exercisePage)return <Suspense fallback={<p>연습문제를 불러오는 중입니다.</p>}><ExercisesPage/></Suspense>;
+  if (exercisePage)
+    return (
+      <Suspense fallback={<p>연습문제를 불러오는 중입니다.</p>}>
+        <ExercisesPage />
+      </Suspense>
+    );
   return (
-    <div
-      className="circuit-app"
-      onPointerDownCapture={unlockAlarm}
-      onKeyDownCapture={unlockAlarm}
-    >
+    <div className="circuit-app" onPointerDownCapture={unlockAlarm} onKeyDownCapture={unlockAlarm}>
       <ScopeAcquisition />
       <a className="skip-workspace" href="#circuit-workspace">
         실습 영역으로 이동
@@ -137,12 +135,7 @@ export function App() {
                 tabIndex={state.mode === id ? 0 : -1}
                 onClick={() => state.setMode(id)}
                 onKeyDown={(event) => {
-                  if (
-                    !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(
-                      event.key,
-                    )
-                  )
-                    return;
+                  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
                   event.preventDefault();
                   const next: CircuitMode =
                     event.key === 'Home'
@@ -185,11 +178,7 @@ export function App() {
             <b>{power.on ? 'ON' : 'OFF'}</b>
           </button>
           <span className="tool-separator" aria-hidden="true" />
-          <div
-            className="wire-color-picker"
-            role="group"
-            aria-label="전선 색상"
-          >
+          <div className="wire-color-picker" role="group" aria-label="전선 색상">
             <span>
               <Cable size={16} />
               전선 색상
@@ -229,9 +218,7 @@ export function App() {
               <select
                 aria-label="Cable type"
                 value={state.wireKind}
-                onChange={(e) =>
-                  state.setWireKind(e.target.value as 'jumper' | 'clip')
-                }
+                onChange={(e) => state.setWireKind(e.target.value as 'jumper' | 'clip')}
               >
                 <option value="jumper">점퍼선</option>
                 <option value="clip">악어클립</option>
@@ -259,13 +246,9 @@ export function App() {
             <strong>{faultMode.label} · 보호 정지</strong>
             <span>전원을 끄거나 오류 배선을 제거하세요.</span>
             {faultMode.id !== state.mode && (
-              <button onClick={() => state.setMode(faultMode.id)}>
-                해당 회로 보기
-              </button>
+              <button onClick={() => state.setMode(faultMode.id)}>해당 회로 보기</button>
             )}
-            {faultShorted && !audioReady && (
-              <button onClick={unlockAlarm}>경고음 활성화</button>
-            )}
+            {faultShorted && !audioReady && <button onClick={unlockAlarm}>경고음 활성화</button>}
           </div>
         )}
       </header>
@@ -282,7 +265,15 @@ export function App() {
             <PhotoInspector />
           </div>
         </div>
-        <Suspense fallback={<section id="learning-center" className="learning-center">학습 센터를 불러오는 중입니다.</section>}><LearningCenter /></Suspense>
+        <Suspense
+          fallback={
+            <section id="learning-center" className="learning-center">
+              학습 센터를 불러오는 중입니다.
+            </section>
+          }
+        >
+          <LearningCenter />
+        </Suspense>
       </main>
       <footer className="circuit-footer">
         <span>

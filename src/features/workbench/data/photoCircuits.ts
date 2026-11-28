@@ -30,12 +30,8 @@ export const createPhotoWorkspace = (mode: CircuitMode): CircuitWorkspace => {
   const workspace: CircuitWorkspace = {
     components:
       mode === 'sequence'
-        ? [
-            makeComponent('panel-board', 'seq-board', 0, 0),
-          ]
-        : [
-            makeComponent('breadboard', 'dig-board', 0, 110),
-          ],
+        ? [makeComponent('panel-board', 'seq-board', 0, 0)]
+        : [makeComponent('breadboard', 'dig-board', 0, 110)],
     wires: [],
     power: { on: false, voltage: mode === 'sequence' ? 24 : 5 },
     simulation: {

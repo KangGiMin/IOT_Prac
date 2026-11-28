@@ -11,54 +11,46 @@ const workspaces = () => ({
 });
 
 describe('component IDs that match Object.prototype properties', () => {
-  it.each(ids)(
-    'round-trips and lights an LED named %s with a numeric current',
-    (id) => {
-      const w = workspaces();
-      w.digital.components.find((c) => c.id === 'output-led')!.id = id;
-      for (const wire of w.digital.wires)
-        for (const endpoint of [wire.from, wire.to])
-          if (endpoint.componentId === 'output-led') endpoint.componentId = id;
-      const loaded = importCircuitFile(exportCircuitFile('digital', w))
-        .workspaces.digital;
+  it.each(ids)('round-trips and lights an LED named %s with a numeric current', (id) => {
+    const w = workspaces();
+    w.digital.components.find((c) => c.id === 'output-led')!.id = id;
+    for (const wire of w.digital.wires)
+      for (const endpoint of [wire.from, wire.to])
+        if (endpoint.componentId === 'output-led') endpoint.componentId = id;
+    const loaded = importCircuitFile(exportCircuitFile('digital', w)).workspaces.digital;
+    const result = solveCircuit({
+      ...loaded,
+      mode: 'digital',
+      power: { ...loaded.power, on: true },
+    });
+    expect(result.faults).toEqual([]);
+    expect(result.energizedComponents).toContain(id);
+    expect(result.componentCurrents[id]).toBeCloseTo(3 / 350);
+    expect(Object.getPrototypeOf(result.componentCurrents)).toBeNull();
+    const off = solveCircuit({
+      ...loaded,
+      mode: 'digital',
+      power: { ...loaded.power, on: false },
+      previous: result,
+    });
+    expect(off.componentCurrents[id]).toBeUndefined();
+  });
+
+  it.each(ids)('never invents a timer state for an unwired timer named %s', (id) => {
+    const w = workspaces();
+    w.sequence.components.push(makeComponent('timer-at8n', id, 0, 0));
+    const loaded = importCircuitFile(exportCircuitFile('sequence', w)).workspaces.sequence;
+    for (const on of [false, true]) {
       const result = solveCircuit({
         ...loaded,
-        mode: 'digital',
-        power: { ...loaded.power, on: true },
+        mode: 'sequence',
+        power: { ...loaded.power, on },
+        previous: loaded.simulation,
       });
-      expect(result.faults).toEqual([]);
-      expect(result.energizedComponents).toContain(id);
-      expect(result.componentCurrents[id]).toBeCloseTo(3 / 350);
-      expect(Object.getPrototypeOf(result.componentCurrents)).toBeNull();
-      const off = solveCircuit({
-        ...loaded,
-        mode: 'digital',
-        power: { ...loaded.power, on: false },
-        previous: result,
-      });
-      expect(off.componentCurrents[id]).toBeUndefined();
-    },
-  );
-
-  it.each(ids)(
-    'never invents a timer state for an unwired timer named %s',
-    (id) => {
-      const w = workspaces();
-      w.sequence.components.push(makeComponent('timer-at8n', id, 0, 0));
-      const loaded = importCircuitFile(exportCircuitFile('sequence', w))
-        .workspaces.sequence;
-      for (const on of [false, true]) {
-        const result = solveCircuit({
-          ...loaded,
-          mode: 'sequence',
-          power: { ...loaded.power, on },
-          previous: loaded.simulation,
-        });
-        expect(result.timerStates?.[id]).toBeUndefined();
-        expect(result.energizedComponents).not.toContain(id);
-      }
-    },
-  );
+      expect(result.timerStates?.[id]).toBeUndefined();
+      expect(result.energizedComponents).not.toContain(id);
+    }
+  });
 
   it.each(ids)(
     'times and resets a powered timer named %s, including JSON-cloned previous results',
@@ -79,8 +71,7 @@ describe('component IDs that match Object.prototype properties', () => {
           color: '#303b48',
         },
       );
-      const loaded = importCircuitFile(exportCircuitFile('sequence', w))
-        .workspaces.sequence;
+      const loaded = importCircuitFile(exportCircuitFile('sequence', w)).workspaces.sequence;
       const request = {
         ...loaded,
         mode: 'sequence' as const,

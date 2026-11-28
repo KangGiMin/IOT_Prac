@@ -38,8 +38,7 @@ export interface PercentRect extends PercentPoint {
   width: number;
   height: number;
 }
-export type PinRole =
-  'terminal' | 'positive' | 'ground' | 'input' | 'output' | 'passive';
+export type PinRole = 'terminal' | 'positive' | 'ground' | 'input' | 'output' | 'passive';
 export type LogicLevel = 0 | 1 | 'floating' | 'unknown';
 /** PNG terminal hotspot. Wire endpoints refer to its id, never a copied coordinate. */
 export interface PhotoPinDefinition {
@@ -73,10 +72,28 @@ export type OverlayDefinition =
     };
 /** Interactive controls share the exact same percentage space as terminal pins. */
 export type ControlDefinition =
-  | { id:string; label:string; kind:'scope-action'; bounds:PercentRect; action:import('../features/scope/scopeActions').ScopePhotoAction }
-  | { id:string; label:string; kind:'scope-dial'; bounds:PercentRect; field:'timeDiv'|'voltsDiv'|'offset'|'triggerLevel'|'delayDiv' }
-  | { id:string; label:string; kind:'scope-key'; bounds:PercentRect; index:number }
-  | { id:string; label:string; kind:'supply-control'; bounds:PercentRect; field:'ch2Voltage'|'ch1Limit'|'ch2Limit'|'series'|'parallel'|'auxiliaryVoltage' }
+  | {
+      id: string;
+      label: string;
+      kind: 'scope-action';
+      bounds: PercentRect;
+      action: import('../features/scope/scopeActions').ScopePhotoAction;
+    }
+  | {
+      id: string;
+      label: string;
+      kind: 'scope-dial';
+      bounds: PercentRect;
+      field: 'timeDiv' | 'voltsDiv' | 'offset' | 'triggerLevel' | 'delayDiv';
+    }
+  | { id: string; label: string; kind: 'scope-key'; bounds: PercentRect; index: number }
+  | {
+      id: string;
+      label: string;
+      kind: 'supply-control';
+      bounds: PercentRect;
+      field: 'ch2Voltage' | 'ch1Limit' | 'ch2Limit' | 'series' | 'parallel' | 'auxiliaryVoltage';
+    }
   | {
       id: string;
       label: string;

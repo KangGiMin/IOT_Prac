@@ -5,12 +5,7 @@ import { createPreset } from '../features/workbench/data/presets';
 import { makeComponent } from '../features/workbench/data/photoCircuits';
 import type { CircuitWire } from '../types/circuit';
 
-const wire = (
-  from: string,
-  fp: string,
-  to: string,
-  tp: string,
-): CircuitWire => ({
+const wire = (from: string, fp: string, to: string, tp: string): CircuitWire => ({
   id: `${from}-${fp}-${to}-${tp}`,
   from: { componentId: from, pinId: fp },
   to: { componentId: to, pinId: tp },
@@ -54,25 +49,19 @@ describe('compact runtime breadboard topology', () => {
     [false, true],
     [true, false],
     [true, true],
-  ])(
-    'preserves NAND simulation with inputs %s/%s and an inserted chip',
-    (a, b) => {
-      const w = createPreset('nand').workspace;
-      w.components.find((c) => c.id === 'input-a')!.settings.switchOn = a;
-      w.components.find((c) => c.id === 'input-b')!.settings.switchOn = b;
-      equivalent({ ...w, mode: 'digital', power: { ...w.power, on: true } });
-    },
-  );
+  ])('preserves NAND simulation with inputs %s/%s and an inserted chip', (a, b) => {
+    const w = createPreset('nand').workspace;
+    w.components.find((c) => c.id === 'input-a')!.settings.switchOn = a;
+    w.components.find((c) => c.id === 'input-b')!.settings.switchOn = b;
+    equivalent({ ...w, mode: 'digital', power: { ...w.power, on: true } });
+  });
 
   it('preserves direct-short and output-conflict diagnostics', () => {
     const w = createPreset('nand').workspace;
     equivalent({
       ...w,
       mode: 'digital',
-      wires: [
-        ...w.wires,
-        wire('board', 'top-plus-10', 'board', 'top-minus-10'),
-      ],
+      wires: [...w.wires, wire('board', 'top-plus-10', 'board', 'top-minus-10')],
       power: { ...w.power, on: true },
     });
     equivalent({
@@ -93,10 +82,7 @@ describe('compact runtime breadboard topology', () => {
       mode: 'digital',
       components,
       power: { on: true, voltage: 5 },
-      wires: [
-        wire('ps', 'plus', 'left', 'a1'),
-        wire('ps', 'minus', 'left', 'top-minus-1'),
-      ],
+      wires: [wire('ps', 'plus', 'left', 'a1'), wire('ps', 'minus', 'left', 'top-minus-1')],
     });
     expect(result.pinValues['left:e1'].voltage).toBe(5);
     expect(result.pinValues['left:top-minus-63'].voltage).toBe(0);

@@ -56,7 +56,7 @@
   color: var(--theme-muted);
   font-size: 15px;
 }
-.lesson-tabs button[aria-selected="true"] {
+.lesson-tabs button[aria-selected='true'] {
   background: #147c68;
   color: white;
 }
@@ -75,19 +75,19 @@
   color: var(--theme-text);
   background: var(--theme-surface);
 }
-.learning-center input[type="range"] {
+.learning-center input[type='range'] {
   padding: 0;
   min-height: 36px;
   width: 100%;
   accent-color: var(--theme-accent);
 }
-.learning-center input[type="checkbox"] {
+.learning-center input[type='checkbox'] {
   accent-color: var(--theme-accent);
   width: 17px;
   height: 17px;
   flex-shrink: 0;
 }
-.learning-center button:not([role="tab"]):not(.kmap-cell):not(.timing-bit) {
+.learning-center button:not([role='tab']):not(.kmap-cell):not(.timing-bit) {
   padding: 9px 13px;
   border-radius: 6px;
   border: 1px solid var(--theme-border);
@@ -100,7 +100,7 @@
   color: white !important;
   border-color: #147c68 !important;
 }
-.learning-center button[aria-pressed="true"] {
+.learning-center button[aria-pressed='true'] {
   box-shadow: 0 0 0 2px var(--theme-accent);
 }
 .learning-center :is(h3, h4, h5) {
@@ -205,7 +205,7 @@
   border-radius: 6px;
   margin-top: 10px;
 }
-:root[data-theme="dark"] .lesson-warning {
+:root[data-theme='dark'] .lesson-warning {
   color: #ffd197;
   background: #443621;
 }
@@ -220,7 +220,7 @@
 }
 .lesson-formula {
   font:
-    600 20px/1.8 "Segoe UI",
+    600 20px/1.8 'Segoe UI',
     sans-serif;
 }
 .lesson-reading {

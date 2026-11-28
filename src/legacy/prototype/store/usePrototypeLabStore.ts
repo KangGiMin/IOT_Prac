@@ -1,13 +1,7 @@
 import { create } from 'zustand';
 import { addEdge, applyEdgeChanges, applyNodeChanges } from '@xyflow/react';
 import type { Connection, EdgeChange, NodeChange } from '@xyflow/react';
-import type {
-  CatalogItem,
-  Circuit,
-  CircuitLabId,
-  ComponentNode,
-  LabId,
-} from '../types';
+import type { CatalogItem, Circuit, CircuitLabId, ComponentNode, LabId } from '../types';
 import { createInitialCircuits } from '../data/initialCircuits';
 
 interface PrototypeLabState {
@@ -21,10 +15,7 @@ interface PrototypeLabState {
   setGuideOpen: (open: boolean) => void;
   setGuideTab: (tab: 'guide' | 'timing') => void;
   addComponent: (lab: CircuitLabId, item: CatalogItem) => void;
-  changeNodes: (
-    lab: CircuitLabId,
-    changes: NodeChange<ComponentNode>[],
-  ) => void;
+  changeNodes: (lab: CircuitLabId, changes: NodeChange<ComponentNode>[]) => void;
   changeEdges: (lab: CircuitLabId, changes: EdgeChange[]) => void;
   connect: (lab: CircuitLabId, connection: Connection) => void;
   resetWiring: () => void;
@@ -73,16 +64,12 @@ export const usePrototypeLabStore = create<PrototypeLabState>()((set) => ({
         : changes;
       const nodes = applyNodeChanges(allowed, s.circuits[lab].nodes);
       const ids = new Set(nodes.map((n) => n.id));
-      const edges = s.circuits[lab].edges.filter(
-        (e) => ids.has(e.source) && ids.has(e.target),
-      );
+      const edges = s.circuits[lab].edges.filter((e) => ids.has(e.source) && ids.has(e.target));
       return { circuits: { ...s.circuits, [lab]: { nodes, edges } } };
     }),
   changeEdges: (lab, changes) =>
     set((s) => {
-      const allowed = s.powerOn
-        ? changes.filter((c) => c.type === 'select')
-        : changes;
+      const allowed = s.powerOn ? changes.filter((c) => c.type === 'select') : changes;
       return {
         circuits: {
           ...s.circuits,

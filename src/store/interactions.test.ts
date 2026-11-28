@@ -25,9 +25,7 @@ beforeEach(() => {
 
 const workspace = () => useCircuitStore.getState().workspaces.sequence;
 const chip = () =>
-  useCircuitStore
-    .getState()
-    .workspaces.digital.components.find((c) => c.id === 'ic')!;
+  useCircuitStore.getState().workspaces.digital.components.find((c) => c.id === 'ic')!;
 const net = (componentId: string, pinId: string) =>
   useCircuitStore
     .getState()
@@ -49,9 +47,7 @@ describe('movement completion', () => {
     expect(newHole).not.toEqual(oldHole);
     expect(net('ic', '1').pins).toContainEqual(newHole);
     expect(net('ic', '1').pins).not.toContainEqual(oldHole);
-    expect(useCircuitStore.getState().histories.digital.past).toHaveLength(
-      count + 1,
-    );
+    expect(useCircuitStore.getState().histories.digital.past).toHaveLength(count + 1);
     s.undo();
     expect(chip()).toEqual(before);
     expect(net('ic', '1').pins).toContainEqual(oldHole);
@@ -75,9 +71,7 @@ describe('movement completion', () => {
     s.beginDrag('body');
     s.moveComponent('body', { x: 1500, y: 900 });
     s.finishDrag('body', 'sequence');
-    expect(
-      workspace().components.find((c) => c.id === 'body')!.mountedSocketId,
-    ).toBeUndefined();
+    expect(workspace().components.find((c) => c.id === 'body')!.mountedSocketId).toBeUndefined();
     s.togglePower();
     s.updateSettings('start', { pressed: true });
     expect(workspace().simulation.energizedComponents).not.toContain('relay');
@@ -88,14 +82,8 @@ describe('interrupted interactions', () => {
   it('releases a momentary button and recalculates its circuit when leaving the mode', () => {
     const s = useCircuitStore.getState();
     s.updateSettings('seq-pb', { buttonMode: 'momentary' });
-    s.connect(
-      { componentId: 'seq-board', pinId: 'plus' },
-      { componentId: 'seq-pb', pinId: 'no1' },
-    );
-    s.connect(
-      { componentId: 'seq-pb', pinId: 'no2' },
-      { componentId: 'seq-lamp', pinId: 'plus' },
-    );
+    s.connect({ componentId: 'seq-board', pinId: 'plus' }, { componentId: 'seq-pb', pinId: 'no1' });
+    s.connect({ componentId: 'seq-pb', pinId: 'no2' }, { componentId: 'seq-lamp', pinId: 'plus' });
     s.connect(
       { componentId: 'seq-lamp', pinId: 'minus' },
       { componentId: 'seq-board', pinId: 'minus' },
@@ -104,13 +92,9 @@ describe('interrupted interactions', () => {
     s.updateSettings('seq-pb', { pressed: true });
     expect(workspace().simulation.energizedComponents).toContain('seq-lamp');
     s.setMode('digital');
-    expect(
-      workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed,
-    ).toBe(false);
+    expect(workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed).toBe(false);
     expect(workspace().power.on).toBe(true);
-    expect(workspace().simulation.energizedComponents).not.toContain(
-      'seq-lamp',
-    );
+    expect(workspace().simulation.energizedComponents).not.toContain('seq-lamp');
   });
 
   it('preserves detent buttons while releasing momentary buttons', () => {
@@ -119,12 +103,8 @@ describe('interrupted interactions', () => {
     s.updateSettings('start', { pressed: true });
     s.updateSettings('stop', { buttonMode: 'momentary', pressed: true });
     s.setMode('digital');
-    expect(
-      workspace().components.find((c) => c.id === 'start')!.settings.pressed,
-    ).toBe(true);
-    expect(
-      workspace().components.find((c) => c.id === 'stop')!.settings.pressed,
-    ).toBe(false);
+    expect(workspace().components.find((c) => c.id === 'start')!.settings.pressed).toBe(true);
+    expect(workspace().components.find((c) => c.id === 'stop')!.settings.pressed).toBe(false);
   });
 
   it('commits an interrupted drag in its original mode without losing undo or redo', () => {
@@ -139,9 +119,7 @@ describe('interrupted interactions', () => {
     expect(useCircuitStore.getState().histories.sequence.past).toHaveLength(1);
     s.addComponent('led-red');
     s.undo();
-    expect(
-      useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(6);
+    expect(useCircuitStore.getState().workspaces.digital.components).toHaveLength(6);
     s.setMode('sequence');
     s.undo();
     expect(workspace().components).toEqual(before);
@@ -189,9 +167,7 @@ describe('interrupted interactions', () => {
     expect(useCircuitStore.getState().dragHistory).toBeNull();
     expect(useCircuitStore.getState().histories.sequence.past).toHaveLength(2);
     s.undo();
-    expect(
-      workspace().components.find((c) => c.id === 'seq-pb')!.position.x,
-    ).toBe(250);
+    expect(workspace().components.find((c) => c.id === 'seq-pb')!.position.x).toBe(250);
   });
 
   it('ends focus-loss interactions idempotently without adding empty undo entries', () => {
@@ -201,9 +177,7 @@ describe('interrupted interactions', () => {
     s.moveComponent('seq-lamp', { x: 700, y: 300 });
     s.endInteraction();
     expect(useCircuitStore.getState().dragHistory).toBeNull();
-    expect(
-      workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed,
-    ).toBe(false);
+    expect(workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed).toBe(false);
     const settled = useCircuitStore.getState();
     s.endInteraction();
     expect(useCircuitStore.getState()).toBe(settled);
@@ -217,9 +191,7 @@ describe('interrupted interactions', () => {
     s.toggleCalibration();
     expect(useCircuitStore.getState().calibration).toBe(true);
     expect(useCircuitStore.getState().dragHistory).toBeNull();
-    expect(
-      workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed,
-    ).toBe(false);
+    expect(workspace().components.find((c) => c.id === 'seq-pb')!.settings.pressed).toBe(false);
   });
 
   it('finishes a drag before reset so the moved layout can be restored', () => {
@@ -230,8 +202,6 @@ describe('interrupted interactions', () => {
     expect(useCircuitStore.getState().dragHistory).toBeNull();
     expect(useCircuitStore.getState().histories.sequence.past).toHaveLength(2);
     s.undo();
-    expect(
-      workspace().components.find((c) => c.id === 'seq-pb')!.position.x,
-    ).toBe(250);
+    expect(workspace().components.find((c) => c.id === 'seq-pb')!.position.x).toBe(250);
   });
 });

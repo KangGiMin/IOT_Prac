@@ -75,7 +75,10 @@ describe('Web Audio short alarm', () => {
   it('keeps a continuous buzzer on until the circuit de-energizes it', () => {
     vi.useFakeTimers();
     const { context, oscillator, gain } = fakeAudio();
-    const buzzer = new SoundAlert({ continuous: true, createContext: () => context as unknown as AudioContext });
+    const buzzer = new SoundAlert({
+      continuous: true,
+      createContext: () => context as unknown as AudioContext,
+    });
     buzzer.setActive(true);
     expect(gain.gain.setValueAtTime.mock.calls).toEqual([[ALERT_PATTERN.volume, 10]]);
     expect(vi.getTimerCount()).toBe(0);
@@ -128,10 +131,7 @@ describe('Web Audio short alarm', () => {
     vi.useFakeTimers();
     const first = fakeAudio(),
       second = fakeAudio();
-    const factory = vi
-      .fn()
-      .mockReturnValueOnce(first.context)
-      .mockReturnValueOnce(second.context);
+    const factory = vi.fn().mockReturnValueOnce(first.context).mockReturnValueOnce(second.context);
     const alarm = new SoundAlert({ createContext: factory });
     alarm.start();
     alarm.dispose();

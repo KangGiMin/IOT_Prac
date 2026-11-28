@@ -1,11 +1,7 @@
 import { pinTooltip } from '../../../config/pinTooltip';
 import { SupplyReadout } from './SupplyReadout';
 import { ScopeScreen } from './ScopeScreen';
-import {
-  pinsFor,
-  insertedPins,
-  breadboardPinById,
-} from '../../../config/digitalPins';
+import { pinsFor, insertedPins, breadboardPinById } from '../../../config/digitalPins';
 import { sequenceGeometry } from '../../../config/sequencePins';
 import { memo, useCallback, useEffect, useState, useMemo } from 'react';
 import { Handle, Position, useUpdateNodeInternals } from '@xyflow/react';
@@ -30,10 +26,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
   const component = data.component;
   const baseAsset = componentAssets[component.assetId];
   const asset = useMemo(
-    () =>
-      component.displaySize
-        ? { ...baseAsset, size: component.displaySize }
-        : baseAsset,
+    () => (component.displaySize ? { ...baseAsset, size: component.displaySize } : baseAsset),
     [baseAsset, component.displaySize],
   );
   const pins = useMemo(
@@ -46,9 +39,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
   );
   const boardComponent = useCircuitStore((s) =>
     component.insertion
-      ? s.workspaces[s.mode].components.find(
-          (c) => c.id === component.insertion!.boardId,
-        )
+      ? s.workspaces[s.mode].components.find((c) => c.id === component.insertion!.boardId)
       : undefined,
   );
   const wires = useCircuitStore((s) => s.workspaces[s.mode].wires);
@@ -71,8 +62,8 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
     if (!hole || !boardComponent || dragging) return pin.position;
     const point = breadboardPoint(boardComponent, hole.position);
     return {
-      x: (point.x - component.position.x - imageBounds.x) / imageBounds.width * 100,
-      y: (point.y - component.position.y - imageBounds.y) / imageBounds.height * 100,
+      x: ((point.x - component.position.x - imageBounds.x) / imageBounds.width) * 100,
+      y: ((point.y - component.position.y - imageBounds.y) / imageBounds.height) * 100,
     };
   };
   const calibration = useCircuitStore((s) => s.calibration);
@@ -88,17 +79,12 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
   );
   const faulted = useCircuitStore(
     (s) =>
-      s.workspaces[s.mode].simulation.faults?.some((fault) =>
-        fault.componentIds.includes(id),
-      ) ?? false,
+      s.workspaces[s.mode].simulation.faults?.some((fault) => fault.componentIds.includes(id)) ??
+      false,
   );
   const wiringMode = useCircuitStore((s) => s.wiringMode);
-  const timer = useCircuitStore(
-    (s) => s.workspaces[s.mode].simulation.timerStates?.[id],
-  );
-  const halted = useCircuitStore(
-    (s) => s.workspaces[s.mode].simulation.status === 'error',
-  );
+  const timer = useCircuitStore((s) => s.workspaces[s.mode].simulation.timerStates?.[id]);
+  const halted = useCircuitStore((s) => s.workspaces[s.mode].simulation.status === 'error');
   const updateInternals = useUpdateNodeInternals();
   const [bounds, setBounds] = useState({ x: 0, y: 0, ...asset.size });
   const [natural, setNatural] = useState<Size | null>(null);
@@ -113,12 +99,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
     [asset],
   );
   useEffect(
-    () =>
-      setBounds(
-        natural
-          ? containBounds(asset.size, natural)
-          : { x: 0, y: 0, ...asset.size },
-      ),
+    () => setBounds(natural ? containBounds(asset.size, natural) : { x: 0, y: 0, ...asset.size }),
     [asset, natural],
   );
   useEffect(
@@ -141,21 +122,28 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
       }}
       style={asset.size}
     >
-      {photo ? <div className="plugged-part-photo">
-        <AssetImage asset={asset} style={{
-          height: photo.height,
-          objectFit: 'fill',
-          transformOrigin: '0 0',
-          transform: `matrix(1, ${photo.shear}, 0, 1, 0, ${photo.offset})`,
-        }} />
-      </div> : <AssetImage
-        asset={asset}
-        onLoad={imageLoaded}
-        onFallback={() => {
-          setNatural(null);
-          setBounds({ x: 0, y: 0, ...asset.size });
-        }}
-      />}
+      {photo ? (
+        <div className="plugged-part-photo">
+          <AssetImage
+            asset={asset}
+            style={{
+              height: photo.height,
+              objectFit: 'fill',
+              transformOrigin: '0 0',
+              transform: `matrix(1, ${photo.shear}, 0, 1, 0, ${photo.offset})`,
+            }}
+          />
+        </div>
+      ) : (
+        <AssetImage
+          asset={asset}
+          onLoad={imageLoaded}
+          onFallback={() => {
+            setNatural(null);
+            setBounds({ x: 0, y: 0, ...asset.size });
+          }}
+        />
+      )}
       <div
         className={`asset-interactions ${calibration ? 'nodrag nopan' : ''}`}
         style={{
@@ -210,8 +198,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
           if (overlay.kind === 'needle') {
             const angle =
               overlay.minAngle +
-              (component.settings.timerSeconds / 10) *
-                (overlay.maxAngle - overlay.minAngle);
+              (component.settings.timerSeconds / 10) * (overlay.maxAngle - overlay.minAngle);
             return (
               <div
                 key={overlay.id}
@@ -232,7 +219,8 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
             height: `${overlay.bounds.height}%`,
           };
           if (overlay.kind === 'glow') {
-            const centerX = imageBounds.width * (overlay.bounds.x + overlay.bounds.width / 2) / 100;
+            const centerX =
+              (imageBounds.width * (overlay.bounds.x + overlay.bounds.width / 2)) / 100;
             return (
               <div
                 key={overlay.id}
@@ -247,14 +235,16 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
                 style={{
                   ...style,
                   top: photo
-                    ? photo.offset + photo.shear * centerX + photo.height * overlay.bounds.y / 100
+                    ? photo.offset + photo.shear * centerX + (photo.height * overlay.bounds.y) / 100
                     : style.top,
-                  height: photo ? photo.height * overlay.bounds.height / 100 : style.height,
+                  height: photo ? (photo.height * overlay.bounds.height) / 100 : style.height,
                   opacity: (
                     overlay.id === 'cc' || overlay.id === 'cc-ch2' || overlay.id === 'overload'
-                      ? powered && (halted || workspace?.simulation.limitedOutputs?.includes(
-                        `${id}:${overlay.id === 'cc' ? 'plus' : overlay.id === 'cc-ch2' ? 'ch2-plus' : '5v-plus'}`,
-                      ))
+                      ? powered &&
+                        (halted ||
+                          workspace?.simulation.limitedOutputs?.includes(
+                            `${id}:${overlay.id === 'cc' ? 'plus' : overlay.id === 'cc-ch2' ? 'ch2-plus' : '5v-plus'}`,
+                          ))
                       : powered &&
                         !halted &&
                         (component.assetId !== 'power-supply' ||
@@ -268,7 +258,9 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
                     ? 0.9
                     : 0,
                   background: `radial-gradient(ellipse, white 0%, ${overlay.color} 35%, transparent 75%)`,
-                  boxShadow: photo ? `0 0 4px 2px ${overlay.color}` : `0 0 28px 14px ${overlay.color}`,
+                  boxShadow: photo
+                    ? `0 0 4px 2px ${overlay.color}`
+                    : `0 0 28px 14px ${overlay.color}`,
                   filter: photo ? 'blur(1px)' : undefined,
                 }}
               />
@@ -276,41 +268,25 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
           }
           if (overlay.format === 'scope')
             return (
-              <div
-                key={overlay.id}
-                className="scope-overlay nodrag nopan"
-                style={style}
-              >
+              <div key={overlay.id} className="scope-overlay nodrag nopan" style={style}>
                 <ScopeScreen id={id} />
               </div>
             );
           if (overlay.format === 'supply')
             return (
-              <div
-                key={overlay.id}
-                className="lcd-overlay supply"
-                style={style}
-              >
+              <div key={overlay.id} className="lcd-overlay supply" style={style}>
                 <SupplyReadout component={component} workspace={workspace!} />
               </div>
             );
           return (
-            <div
-              key={overlay.id}
-              className={`lcd-overlay ${overlay.format}`}
-              style={style}
-            >
+            <div key={overlay.id} className={`lcd-overlay ${overlay.format}`} style={style}>
               {String(overlay.format) === 'supply' ? (
                 <>
                   <strong>
-                    {halted ? '0.0' : component.settings.voltage.toFixed(1)}{' '}
-                    <small>V</small>
+                    {halted ? '0.0' : component.settings.voltage.toFixed(1)} <small>V</small>
                   </strong>
                   <b className="supply-current">
-                    {(
-                      workspace?.simulation.sourceCurrents?.[id + ':plus'] ?? 0
-                    ).toFixed(2)}{' '}
-                    A
+                    {(workspace?.simulation.sourceCurrents?.[id + ':plus'] ?? 0).toFixed(2)} A
                   </b>
                   <span>
                     {halted
@@ -358,11 +334,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
               <span className="terminal-hardware" aria-hidden="true">
                 <span className="terminal-screw" />
                 <small>
-                  {asset.id === 'panel-board'
-                    ? pin.id === 'plus'
-                      ? '+24V'
-                      : '0V'
-                    : pin.id}
+                  {asset.id === 'panel-board' ? (pin.id === 'plus' ? '+24V' : '0V') : pin.id}
                 </small>
               </span>
             )}
@@ -378,8 +350,7 @@ export const PhotoComponentNode = memo(function PhotoComponentNode({
           >
             <span />
             <code>
-              x: {sample.position.x.toFixed(2)}%, y:{' '}
-              {sample.position.y.toFixed(2)}%
+              x: {sample.position.x.toFixed(2)}%, y: {sample.position.y.toFixed(2)}%
             </code>
           </div>
         )}

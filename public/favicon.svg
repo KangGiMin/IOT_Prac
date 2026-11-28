@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <title>Circuit Lab</title>
-  <rect width="64" height="64" rx="15" fill="#147c68"/>
+  <rect width="64" height="64" rx="15" fill="#147c68" />
   <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
-    <rect x="22" y="22" width="20" height="20" rx="4"/>
-    <path d="M28 14v8m8-8v8M28 42v8m8-8v8M14 28h8m20 8h8M14 42v-6h8m20-8h8v-6"/>
+    <rect x="22" y="22" width="20" height="20" rx="4" />
+    <path d="M28 14v8m8-8v8M28 42v8m8-8v8M14 28h8m20 8h8M14 42v-6h8m20-8h8v-6" />
   </g>
   <g fill="#fff">
-    <circle cx="14" cy="46" r="4"/>
-    <circle cx="50" cy="18" r="4"/>
-    <circle cx="32" cy="32" r="3"/>
+    <circle cx="14" cy="46" r="4" />
+    <circle cx="50" cy="18" r="4" />
+    <circle cx="32" cy="32" r="3" />
   </g>
 </svg>

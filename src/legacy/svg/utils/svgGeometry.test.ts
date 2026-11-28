@@ -10,14 +10,8 @@ describe('SVG coordinates', () => {
       const before = { x: -325, y: 80, zoom: 0.7 };
       const cursor = { x: 460, y: 230 };
       const after = zoomAt(before, cursor, factor);
-      expect((cursor.x - after.x) / after.zoom).toBeCloseTo(
-        (cursor.x - before.x) / before.zoom,
-        9,
-      );
-      expect((cursor.y - after.y) / after.zoom).toBeCloseTo(
-        (cursor.y - before.y) / before.zoom,
-        9,
-      );
+      expect((cursor.x - after.x) / after.zoom).toBeCloseTo((cursor.x - before.x) / before.zoom, 9);
+      expect((cursor.y - after.y) / after.zoom).toBeCloseTo((cursor.y - before.y) / before.zoom, 9);
       expect(after.zoom).toBeGreaterThanOrEqual(0.25);
       expect(after.zoom).toBeLessThanOrEqual(3);
     }
@@ -41,9 +35,7 @@ describe('SVG coordinates', () => {
   });
   it('keeps every terminal inside its fixed viewBox and IDs unique', () => {
     for (const definition of Object.values(deviceDefinitions)) {
-      expect(new Set(definition.pins.map((p) => p.id)).size).toBe(
-        definition.pins.length,
-      );
+      expect(new Set(definition.pins.map((p) => p.id)).size).toBe(definition.pins.length);
       for (const pin of definition.pins) {
         expect(pin.position.x).toBeGreaterThanOrEqual(0);
         expect(pin.position.x).toBeLessThanOrEqual(definition.viewBox[2]);
@@ -71,15 +63,9 @@ describe('wiring topology', () => {
         to: { componentId: 'dig-board', pinId },
       },
     ];
-    expect(buildTopology(w.components, connect('e1')).shortCircuit.status).toBe(
-      'short',
-    );
-    expect(buildTopology(w.components, connect('a2')).shortCircuit.status).toBe(
-      'clear',
-    );
-    expect(buildTopology(w.components, connect('f1')).shortCircuit.status).toBe(
-      'clear',
-    );
+    expect(buildTopology(w.components, connect('e1')).shortCircuit.status).toBe('short');
+    expect(buildTopology(w.components, connect('a2')).shortCircuit.status).toBe('clear');
+    expect(buildTopology(w.components, connect('f1')).shortCircuit.status).toBe('clear');
   });
   it('does not treat a passive LED or lamp as a voltage source', () => {
     const w = createSvgWorkspace('digital');

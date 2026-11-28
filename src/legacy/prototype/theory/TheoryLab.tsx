@@ -1,8 +1,5 @@
 import { Activity, BookOpen, Grid2X2, Lightbulb } from 'lucide-react';
-import {
-  usePrototypeTheoryStore,
-  type Lesson,
-} from './store/usePrototypeTheoryStore';
+import { usePrototypeTheoryStore, type Lesson } from './store/usePrototypeTheoryStore';
 
 const lessons = [
   {
@@ -40,12 +37,7 @@ export function TimingChart() {
         aria-label="AND 게이트 예시 타임차트. A와 B가 모두 1인 구간에서 Y가 1입니다."
       >
         {[40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480].map((x) => (
-          <path
-            key={x}
-            d={`M${x} 10v135`}
-            stroke="#dce5e1"
-            strokeDasharray="3 4"
-          />
+          <path key={x} d={`M${x} 10v135`} stroke="#dce5e1" strokeDasharray="3 4" />
         ))}
         <g fill="#66766f" fontSize="13" fontFamily="monospace">
           <text x="5" y="36">
@@ -61,24 +53,9 @@ export function TimingChart() {
             time (t)
           </text>
         </g>
-        <path
-          d="M40 40h80V16h160v24h200"
-          fill="none"
-          stroke="#6696bf"
-          strokeWidth="2.5"
-        />
-        <path
-          d="M40 85h160V61h160v24h120"
-          fill="none"
-          stroke="#d29a53"
-          strokeWidth="2.5"
-        />
-        <path
-          d="M40 130h160v-24h80v24h200"
-          fill="none"
-          stroke="#138573"
-          strokeWidth="2.5"
-        />
+        <path d="M40 40h80V16h160v24h200" fill="none" stroke="#6696bf" strokeWidth="2.5" />
+        <path d="M40 85h160V61h160v24h120" fill="none" stroke="#d29a53" strokeWidth="2.5" />
+        <path d="M40 130h160v-24h80v24h200" fill="none" stroke="#138573" strokeWidth="2.5" />
       </svg>
       <small>AND 게이트 학습용 예시 · 실제 회로 계측값이 아닙니다.</small>
     </div>
@@ -92,9 +69,7 @@ export function TheoryLab() {
     <main className="theory-lab">
       <div className="eyebrow">LEARN THE FUNDAMENTALS</div>
       <h1>이론 & 계측기 학습</h1>
-      <p className="theory-intro">
-        회로를 연결하기 전에, 원리를 이해하는 시간.
-      </p>
+      <p className="theory-intro">회로를 연결하기 전에, 원리를 이해하는 시간.</p>
       <div className="lesson-tabs" role="tablist" aria-label="학습 주제">
         {lessons.map(({ id, title, subtitle, icon: Icon }) => (
           <button
@@ -108,11 +83,9 @@ export function TheoryLab() {
             onKeyDown={(event) => {
               const index = lessons.findIndex((item) => item.id === lesson);
               let target: Lesson | undefined;
-              if (event.key === 'ArrowRight')
-                target = lessons[(index + 1) % lessons.length].id;
+              if (event.key === 'ArrowRight') target = lessons[(index + 1) % lessons.length].id;
               if (event.key === 'ArrowLeft')
-                target =
-                  lessons[(index + lessons.length - 1) % lessons.length].id;
+                target = lessons[(index + lessons.length - 1) % lessons.length].id;
               if (target) {
                 event.preventDefault();
                 setLesson(target);
@@ -173,26 +146,18 @@ export function TheoryLab() {
               <p>1이 선택된 각 셀은 하나의 최소항을 나타냅니다.</p>
               <code>{expression(cells)}</code>
               <small>
-                현재는 최소항 합을 표시합니다. 그룹 묶기와 자동 최소화 엔진은
-                확장 영역입니다.
+                현재는 최소항 합을 표시합니다. 그룹 묶기와 자동 최소화 엔진은 확장 영역입니다.
               </small>
             </div>
           </div>
         ) : lesson === 'scope' ? (
           <>
-            <p>
-              가로축은 시간, 세로축은 전압입니다. 신호의 진폭과 주기를 읽는
-              방법을 익혀 보세요.
-            </p>
+            <p>가로축은 시간, 세로축은 전압입니다. 신호의 진폭과 주기를 읽는 방법을 익혀 보세요.</p>
             <div className="scope-display">
               <div>
                 CH 1 <span>예시 파형 · 1 V/div · 1 ms/div</span>
               </div>
-              <svg
-                viewBox="0 0 800 180"
-                role="img"
-                aria-label="주기적인 구형파 예시"
-              >
+              <svg viewBox="0 0 800 180" role="img" aria-label="주기적인 구형파 예시">
                 <path
                   d="M0 135h80V45h120v90h120V45h120v90h120V45h120v90h120"
                   fill="none"
@@ -208,8 +173,7 @@ export function TheoryLab() {
         ) : (
           <>
             <p>
-              AND 논리식 <code>Y = A · B</code>에서는 두 입력이 모두 1일 때만
-              출력이 1입니다.
+              AND 논리식 <code>Y = A · B</code>에서는 두 입력이 모두 1일 때만 출력이 1입니다.
             </p>
             <TimingChart />
             <div className="truth-table">

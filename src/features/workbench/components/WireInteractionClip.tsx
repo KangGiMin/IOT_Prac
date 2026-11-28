@@ -23,18 +23,10 @@ export function WireInteractionClip({ id }: { id: string }) {
         });
       }
     }
-    for (const control of document.querySelectorAll(
-      '.photo-node .device-control',
-    )) {
+    for (const control of document.querySelectorAll('.photo-node .device-control')) {
       const rect = control.getBoundingClientRect();
-      const from = screenToFlowPosition(
-        { x: rect.left, y: rect.top },
-        { snapToGrid: false },
-      );
-      const to = screenToFlowPosition(
-        { x: rect.right, y: rect.bottom },
-        { snapToGrid: false },
-      );
+      const from = screenToFlowPosition({ x: rect.left, y: rect.top }, { snapToGrid: false });
+      const to = screenToFlowPosition({ x: rect.right, y: rect.bottom }, { snapToGrid: false });
       regions.push({
         x: from.x,
         y: from.y,

@@ -37,9 +37,7 @@ describe('photo circuit editing', () => {
     const store = useCircuitStore.getState();
     store.updateSettings('seq-timer', { timerSeconds: 500 });
     expect(
-      useCircuitStore
-        .getState()
-        .workspaces.sequence.components.find((c) => c.id === 'seq-timer')
+      useCircuitStore.getState().workspaces.sequence.components.find((c) => c.id === 'seq-timer')
         ?.settings.timerSeconds,
     ).toBe(10);
     store.setMode('digital');
@@ -67,9 +65,7 @@ describe('photo circuit editing', () => {
     store.connect(from, from);
     store.connect(from, { ...to, pinId: 'not-a-pin' });
     store.connect(from, { ...to, componentId: 'not-a-component' });
-    expect(useCircuitStore.getState().workspaces.sequence.wires).toHaveLength(
-      0,
-    );
+    expect(useCircuitStore.getState().workspaces.sequence.wires).toHaveLength(0);
   });
   it('removes incident wires when deleting a device', () => {
     const store = useCircuitStore.getState();
@@ -113,18 +109,12 @@ describe('photo circuit editing', () => {
     const sequence = useCircuitStore.getState().workspaces.sequence;
     store.setMode('digital');
     store.addComponent('led-red');
-    expect(
-      useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(7);
+    expect(useCircuitStore.getState().workspaces.digital.components).toHaveLength(7);
     store.reset();
-    expect(
-      useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(1);
+    expect(useCircuitStore.getState().workspaces.digital.components).toHaveLength(1);
     expect(useCircuitStore.getState().workspaces.sequence).toBe(sequence);
     store.addComponent('pilot-lamp');
-    expect(
-      useCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(1);
+    expect(useCircuitStore.getState().workspaces.digital.components).toHaveLength(1);
   });
   it('halts live outputs on a real short, allows repair while tripped, and recovers immediately', () => {
     const store = useCircuitStore.getState();
@@ -132,9 +122,7 @@ describe('photo circuit editing', () => {
       { componentId: 'seq-board', pinId: 'plus' },
       { componentId: 'seq-board', pinId: 'minus' },
     );
-    expect(
-      useCircuitStore.getState().workspaces.sequence.simulation.isShorted,
-    ).toBe(true);
+    expect(useCircuitStore.getState().workspaces.sequence.simulation.isShorted).toBe(true);
     store.togglePower();
     let workspace = useCircuitStore.getState().workspaces.sequence;
     expect(workspace.power.on).toBe(true);
@@ -146,9 +134,7 @@ describe('photo circuit editing', () => {
     expect(workspace.simulation.isShorted).toBe(false);
     expect(workspace.simulation.status).toBe('running');
     store.togglePower();
-    expect(
-      useCircuitStore.getState().workspaces.sequence.simulation.status,
-    ).toBe('ready');
+    expect(useCircuitStore.getState().workspaces.sequence.simulation.status).toBe('ready');
   });
   it('re-evaluates contact closure immediately and retains diagnostics after switching power off', () => {
     const store = useCircuitStore.getState();
@@ -161,13 +147,9 @@ describe('photo circuit editing', () => {
       { componentId: 'seq-pb', pinId: 'no2' },
     );
     store.togglePower();
-    expect(
-      useCircuitStore.getState().workspaces.sequence.simulation.isShorted,
-    ).toBe(false);
+    expect(useCircuitStore.getState().workspaces.sequence.simulation.isShorted).toBe(false);
     store.updateSettings('seq-pb', { pressed: true });
-    expect(
-      useCircuitStore.getState().workspaces.sequence.simulation.isShorted,
-    ).toBe(true);
+    expect(useCircuitStore.getState().workspaces.sequence.simulation.isShorted).toBe(true);
     store.togglePower();
     const workspace = useCircuitStore.getState().workspaces.sequence;
     expect(workspace.power.on).toBe(false);

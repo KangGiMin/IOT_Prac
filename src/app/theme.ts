@@ -9,9 +9,7 @@ export function isThemePreference(value: unknown): value is ThemePreference {
 }
 
 /** Storage can be unavailable in private browsing or embedded pages. */
-export function readThemePreference(
-  browser?: Pick<Window, 'localStorage'>,
-): ThemePreference {
+export function readThemePreference(browser?: Pick<Window, 'localStorage'>): ThemePreference {
   try {
     const saved = browser?.localStorage.getItem(THEME_STORAGE_KEY);
     return isThemePreference(saved) ? saved : 'system';
@@ -31,10 +29,7 @@ export function saveThemePreference(
   }
 }
 
-export function resolveTheme(
-  preference: ThemePreference,
-  systemDark: boolean,
-): 'light' | 'dark' {
+export function resolveTheme(preference: ThemePreference, systemDark: boolean): 'light' | 'dark' {
   return preference === 'system' ? (systemDark ? 'dark' : 'light') : preference;
 }
 
@@ -61,12 +56,7 @@ export function useTheme() {
   );
 
   useEffect(
-    () =>
-      watchTheme(
-        preference,
-        document.documentElement,
-        window.matchMedia(SYSTEM_THEME_QUERY),
-      ),
+    () => watchTheme(preference, document.documentElement, window.matchMedia(SYSTEM_THEME_QUERY)),
     [preference],
   );
   useEffect(() => {

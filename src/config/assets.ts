@@ -25,8 +25,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'sequence',
     label: '시퀀스 실습 보드',
     model: 'TRAINING PANEL',
-    description:
-      '24V 실습 전원과 부품 장착 레일을 제공하는 시퀀스 제어 판넬입니다.',
+    description: '24V 실습 전원과 부품 장착 레일을 제공하는 시퀀스 제어 판넬입니다.',
     ...image('panel-board.png'),
     size: { width: 1120, height: 640 },
     category: 'board',
@@ -37,8 +36,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'sequence',
     label: '표시 램프',
     model: 'Sysi N-2260-06 · 24V',
-    description:
-      '24V 전원이 흐르는 폐회로에서 켜지는 표시 램프입니다. +와 − 단자를 연결하세요.',
+    description: '24V 전원이 흐르는 폐회로에서 켜지는 표시 램프입니다. +와 − 단자를 연결하세요.',
     ...image('pilot-lamp.png'),
     size: { width: 160, height: 200 },
     category: 'control',
@@ -107,8 +105,7 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'sequence',
     label: '타이머 릴레이',
     model: 'Autonics AT8N · A ON-DELAY',
-    description:
-      '후면 소켓 전원 2−/7+, COM 1/8, NO 3/6, NC 4/5. A모드 On-Delay.',
+    description: '후면 소켓 전원 2−/7+, COM 1/8, NO 3/6, NC 4/5. A모드 On-Delay.',
     ...image('timer-at8n.png'),
     size: { width: 180, height: 200 },
     category: 'control',
@@ -154,7 +151,8 @@ export const componentAssets: Record<AssetId, ComponentAsset> = {
     mode: 'digital',
     label: '오실로스코프',
     model: 'RIGOL DS5152C',
-    description: '회로 프로브와 내장 아날로그 발생기 입력을 측정합니다. 사진의 다이얼에 커서를 놓고 휠을 돌리거나 드래그해 값을 바꾸세요.',
+    description:
+      '회로 프로브와 내장 아날로그 발생기 입력을 측정합니다. 사진의 다이얼에 커서를 놓고 휠을 돌리거나 드래그해 값을 바꾸세요.',
     ...image('oscilloscope.png'),
     size: { width: 330, height: 247.5 },
     category: 'instrument',

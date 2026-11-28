@@ -3,10 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ListChecks } from 'lucide-react';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 import { logicMissions } from '../data/logicMissions';
-import {
-  gradeLogicMission,
-  type MissionGrade,
-} from '../../../engine/missionGrader';
+import { gradeLogicMission, type MissionGrade } from '../../../engine/missionGrader';
 import { LogicSymbol } from './LogicSymbol';
 export const LogicMissions = memo(function LogicMissions() {
   const [selected, setSelected] = useState(logicMissions[0].id);
@@ -49,9 +46,7 @@ export const LogicMissions = memo(function LogicMissions() {
         <ListChecks size={17} />
         <h2>7대 논리회로 실습 미션</h2>
       </div>
-      <p className="panel-description">
-        미션을 선택하고 실제 LED 동작을 검증하세요.
-      </p>
+      <p className="panel-description">미션을 선택하고 실제 LED 동작을 검증하세요.</p>
       <div className="gate-picker" role="group" aria-label="논리회로 선택">
         {logicMissions.map((item) => (
           <button
@@ -75,10 +70,7 @@ export const LogicMissions = memo(function LogicMissions() {
       <details className="mission-hint" key={selected}>
         <summary>배선 힌트 펼치기</summary>
         <p>{mission.hint}</p>
-        <p>
-          입력 스위치의 1번=0V, 2번=+5V, COM=입력입니다. LED는 330Ω과 직렬로
-          연결하세요.
-        </p>
+        <p>입력 스위치의 1번=0V, 2번=+5V, COM=입력입니다. LED는 330Ω과 직렬로 연결하세요.</p>
       </details>
       {state.mode === 'digital' ? (
         <>
@@ -143,18 +135,14 @@ export const LogicMissions = memo(function LogicMissions() {
             회로 검증하기
           </button>
           <p className="mission-stage-note">
-            복사한 회로에 테스트 전원을 공급합니다. 현재 전원·스위치 상태는
-            유지합니다.{' '}
+            복사한 회로에 테스트 전원을 공급합니다. 현재 전원·스위치 상태는 유지합니다.{' '}
             {mission.inputs === 1
               ? 'NOT는 입력 0과 1, 두 행을 검사합니다.'
               : '00·01·10·11 네 행을 검사합니다.'}
           </p>
         </>
       ) : (
-        <button
-          className="component-control"
-          onClick={() => state.setMode('digital')}
-        >
+        <button className="component-control" onClick={() => state.setMode('digital')}>
           디지털 회로에서 실습하기
         </button>
       )}
@@ -175,9 +163,7 @@ export const LogicMissions = memo(function LogicMissions() {
             return (
               <tr
                 key={`${row.a}-${row.b ?? ''}`}
-                className={
-                  grade ? (grade.passed ? 'grade-pass' : 'grade-fail') : ''
-                }
+                className={grade ? (grade.passed ? 'grade-pass' : 'grade-fail') : ''}
               >
                 <td>{row.a}</td>
                 {mission.inputs === 2 && <td>{row.b}</td>}
@@ -195,8 +181,7 @@ export const LogicMissions = memo(function LogicMissions() {
         {result ? (
           <>
             <p className="mission-grade-score">
-              {result.score}점 ·{' '}
-              {result.passed ? '모든 입력 조합 성공' : '배선을 확인하세요'}
+              {result.score}점 · {result.passed ? '모든 입력 조합 성공' : '배선을 확인하세요'}
             </p>
             {result.hints.length > 0 && (
               <ul className="mission-grade-hints">

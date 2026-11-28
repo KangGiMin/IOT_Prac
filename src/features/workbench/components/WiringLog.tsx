@@ -15,11 +15,7 @@ function breadboardTerminalLabel(pinId: string) {
 
   const [, section, polarity, number] = rail;
   const position =
-    section === 'top'
-      ? '상단'
-      : section === 'bottom'
-        ? '하단'
-        : `중간 ${section.slice(-1)}`;
+    section === 'top' ? '상단' : section === 'bottom' ? '하단' : `중간 ${section.slice(-1)}`;
   return `${position} ${polarity === 'plus' ? '+' : '−'} 레일 ${number}번`;
 }
 
@@ -33,22 +29,23 @@ export const WiringLog = memo(function WiringLog({ mode }: { mode: CircuitMode }
     })),
   );
   const faultWireIds = useCircuitStore(
-    useShallow((s) =>
-      s.workspaces[mode].simulation.faults?.flatMap((fault) => fault.wireIds) ?? [],
+    useShallow(
+      (s) => s.workspaces[mode].simulation.faults?.flatMap((fault) => fault.wireIds) ?? [],
     ),
   );
   const relatedWires = useMemo(() => new Set(faultWireIds), [faultWireIds]);
   const [recentFault, setRecentFault] = useState<Set<string>>();
   useEffect(
-    () => useCircuitStore.subscribe((state, previous) => {
-      const workspace = state.workspaces[mode];
-      const before = previous.workspaces[mode];
-      if (workspace.wires !== before.wires) setRecentFault(undefined);
-      if (!workspace.power.on || workspace.simulation === before.simulation) return;
-      const ids = workspace.simulation.faults?.flatMap((fault) => fault.wireIds);
-      // A test can clear the fault as soon as the user changes the inputs back.
-      if (ids?.length) setRecentFault(new Set(ids));
-    }),
+    () =>
+      useCircuitStore.subscribe((state, previous) => {
+        const workspace = state.workspaces[mode];
+        const before = previous.workspaces[mode];
+        if (workspace.wires !== before.wires) setRecentFault(undefined);
+        if (!workspace.power.on || workspace.simulation === before.simulation) return;
+        const ids = workspace.simulation.faults?.flatMap((fault) => fault.wireIds);
+        // A test can clear the fault as soon as the user changes the inputs back.
+        if (ids?.length) setRecentFault(new Set(ids));
+      }),
     [mode],
   );
 
@@ -91,10 +88,7 @@ export const WiringLog = memo(function WiringLog({ mode }: { mode: CircuitMode }
   }, [components, wires]);
 
   return (
-    <section
-      className="wiring-log"
-      aria-labelledby="wiring-log-title"
-    >
+    <section className="wiring-log" aria-labelledby="wiring-log-title">
       <div className="wiring-log-heading">
         <List size={17} aria-hidden="true" />
         <h2 id="wiring-log-title">배선 로그</h2>

@@ -3,11 +3,7 @@ import { breadboardPinById, insertedPins } from '../../../config/digitalPins';
 import type { CircuitComponent } from '../../../types/circuit';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 import { useLearningCenter } from '../../learning/useLearningCenter';
-export function DigitalControls({
-  component: c,
-}: {
-  component: CircuitComponent;
-}) {
+export function DigitalControls({ component: c }: { component: CircuitComponent }) {
   const s = useCircuitStore(),
     locked = s.calibration || s.workspaces[s.mode].power.on;
   if (c.assetId === 'ic-dip14')
@@ -38,9 +34,7 @@ export function DigitalControls({
               type="checkbox"
               disabled={locked}
               checked={c.settings.openCollector ?? false}
-              onChange={(e) =>
-                s.updateSettings(c.id, { openCollector: e.target.checked })
-              }
+              onChange={(e) => s.updateSettings(c.id, { openCollector: e.target.checked })}
             />{' '}
             오픈컬렉터 모드
           </label>
@@ -52,31 +46,38 @@ export function DigitalControls({
         </p>
         {icModel(c) === '7406' && (
           <p className="panel-description">
-            기본 NOT는 학습용 능동 HIGH 출력입니다. 실제 오픈컬렉터 모드에서는
-            HIGH를 만들 외부 풀업 저항이 필요합니다.
+            기본 NOT는 학습용 능동 HIGH 출력입니다. 실제 오픈컬렉터 모드에서는 HIGH를 만들 외부 풀업
+            저항이 필요합니다.
           </p>
         )}
       </>
     );
   if (c.insertion?.row) {
-    const holes = Object.values(insertedPins(c)).map(({ pinId }) => breadboardPinById.get(pinId)?.label ?? pinId);
+    const holes = Object.values(insertedPins(c)).map(
+      ({ pinId }) => breadboardPinById.get(pinId)?.label ?? pinId,
+    );
     return <p className="panel-description">브레드보드 장착 · {holes.join(' · ')}</p>;
   }
   if (c.assetId === 'oscilloscope')
     return (
       <>
-      <button
-        className="component-control"
-        disabled={s.calibration || c.settings.scopePowered === false}
-        onClick={() =>
-          s.updateSettings(c.id, {
-            scopeRunning: c.settings.scopeRunning === false,
-          })
-        }
-      >
-        {c.settings.scopeRunning === false ? 'RUN' : 'STOP'}
-      </button>
-      <button className="component-control" onClick={()=>useLearningCenter.getState().openScope(c.id)}>확장 계측·사용법 열기</button>
+        <button
+          className="component-control"
+          disabled={s.calibration || c.settings.scopePowered === false}
+          onClick={() =>
+            s.updateSettings(c.id, {
+              scopeRunning: c.settings.scopeRunning === false,
+            })
+          }
+        >
+          {c.settings.scopeRunning === false ? 'RUN' : 'STOP'}
+        </button>
+        <button
+          className="component-control"
+          onClick={() => useLearningCenter.getState().openScope(c.id)}
+        >
+          확장 계측·사용법 열기
+        </button>
       </>
     );
   if (c.assetId === 'power-supply')

@@ -4,16 +4,7 @@ import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { pinsFor } from '../../../config/digitalPins';
 import { icPresentation } from '../../../config/ttlModels';
-import {
-  Check,
-  Copy,
-  Crosshair,
-  Info,
-  MousePointer2,
-  Settings2,
-  Trash2,
-  Zap,
-} from 'lucide-react';
+import { Check, Copy, Crosshair, Info, MousePointer2, Settings2, Trash2, Zap } from 'lucide-react';
 import { componentAssets } from '../../../config/assets';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 import { formatCoordinates } from '../utils/geometry';
@@ -23,23 +14,16 @@ import { CircuitFaultPanel } from './CircuitFaultPanel';
 import { pinKey } from '../../../engine/circuitSolver';
 
 export function PhotoInspector() {
-  const state = useCircuitStore(
-    useShallow(({ workspaces: _workspaces, ...state }) => state),
-  );
+  const state = useCircuitStore(useShallow(({ workspaces: _workspaces, ...state }) => state));
   const workspace = useCircuitStore((s) => s.workspaces[s.mode]);
   const [openPinList, setOpenPinList] = useState<string | null>(null);
   const component = workspace.components.find((c) => c.id === state.selectedId);
   const asset = component && componentAssets[component.assetId];
-  const presentation =
-    component?.assetId === 'ic-dip14' ? icPresentation(component) : asset;
-  const pins =
-    component && asset?.mode === 'digital'
-      ? pinsFor(component)
-      : (asset?.pins ?? []);
+  const presentation = component?.assetId === 'ic-dip14' ? icPresentation(component) : asset;
+  const pins = component && asset?.mode === 'digital' ? pinsFor(component) : (asset?.pins ?? []);
   const wire = workspace.wires.find((w) => w.id === state.selectedWireId);
   const locked =
-    (workspace.power.on && workspace.simulation.status !== 'error') ||
-    state.calibration;
+    (workspace.power.on && workspace.simulation.status !== 'error') || state.calibration;
   return (
     <aside className="photo-inspector" aria-label="부품 제어와 실습 상태">
       <KeyboardWiring key={state.mode} />
@@ -68,8 +52,7 @@ export function PhotoInspector() {
               <div>
                 <dt>위치</dt>
                 <dd>
-                  {Math.round(component.position.x)},{' '}
-                  {Math.round(component.position.y)}
+                  {Math.round(component.position.x)}, {Math.round(component.position.y)}
                 </dd>
               </div>
             </dl>
@@ -78,9 +61,7 @@ export function PhotoInspector() {
                 className="calibration-pin-list"
                 key={component.id}
                 open={openPinList === component.id}
-                onToggle={(e) =>
-                  setOpenPinList(e.currentTarget.open ? component.id : null)
-                }
+                onToggle={(e) => setOpenPinList(e.currentTarget.open ? component.id : null)}
               >
                 <summary>단자 전압 / 논리값</summary>
                 <div>
@@ -102,9 +83,7 @@ export function PhotoInspector() {
                           <tr key={pin.id}>
                             <td>{pin.label}</td>
                             <td>
-                              {value?.voltage == null
-                                ? '—'
-                                : `${value.voltage.toFixed(2)} V`}
+                              {value?.voltage == null ? '—' : `${value.voltage.toFixed(2)} V`}
                             </td>
                             <td>{value?.logic ?? 'floating'}</td>
                           </tr>
@@ -137,9 +116,7 @@ export function PhotoInspector() {
                       ))}
                     </tbody>
                   </table>
-                  {!asset.pins.length && (
-                    <p>이 이미지에는 배선 단자가 없습니다.</p>
-                  )}
+                  {!asset.pins.length && <p>이 이미지에는 배선 단자가 없습니다.</p>}
                 </div>
               </details>
             )}
@@ -170,43 +147,32 @@ export function PhotoInspector() {
                 </p>
               </>
             )}
-            {asset.id === 'pb-switch' &&
-              component.settings.buttonMode !== 'detent' && (
-                <button
-                  className={`component-control ${component.settings.pressed ? 'active' : ''}`}
-                  disabled={state.calibration}
-                  onPointerDown={(e) => {
-                    e.currentTarget.setPointerCapture(e.pointerId);
+            {asset.id === 'pb-switch' && component.settings.buttonMode !== 'detent' && (
+              <button
+                className={`component-control ${component.settings.pressed ? 'active' : ''}`}
+                disabled={state.calibration}
+                onPointerDown={(e) => {
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  state.updateSettings(component.id, { pressed: true });
+                }}
+                onPointerUp={() => state.updateSettings(component.id, { pressed: false })}
+                onPointerCancel={() => state.updateSettings(component.id, { pressed: false })}
+                onLostPointerCapture={() => state.updateSettings(component.id, { pressed: false })}
+                onKeyDown={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
                     state.updateSettings(component.id, { pressed: true });
-                  }}
-                  onPointerUp={() =>
-                    state.updateSettings(component.id, { pressed: false })
                   }
-                  onPointerCancel={() =>
-                    state.updateSettings(component.id, { pressed: false })
-                  }
-                  onLostPointerCapture={() =>
-                    state.updateSettings(component.id, { pressed: false })
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === ' ' || e.key === 'Enter') {
-                      e.preventDefault();
-                      state.updateSettings(component.id, { pressed: true });
-                    }
-                  }}
-                  onKeyUp={(e) => {
-                    if (e.key === ' ' || e.key === 'Enter')
-                      state.updateSettings(component.id, { pressed: false });
-                  }}
-                  onBlur={() =>
-                    state.updateSettings(component.id, { pressed: false })
-                  }
-                >
-                  {component.settings.pressed
-                    ? '누름 상태 · 접점 전환'
-                    : '누르고 있는 동안 동작'}
-                </button>
-              )}
+                }}
+                onKeyUp={(e) => {
+                  if (e.key === ' ' || e.key === 'Enter')
+                    state.updateSettings(component.id, { pressed: false });
+                }}
+                onBlur={() => state.updateSettings(component.id, { pressed: false })}
+              >
+                {component.settings.pressed ? '누름 상태 · 접점 전환' : '누르고 있는 동안 동작'}
+              </button>
+            )}
             {asset.id === 'switch-3pin' && (
               <button
                 className="component-control"
@@ -218,35 +184,31 @@ export function PhotoInspector() {
                   })
                 }
               >
-                스위치{' '}
-                {component.settings.switchOn ? 'ON · COM → 2' : 'OFF · COM → 1'}
+                스위치 {component.settings.switchOn ? 'ON · COM → 2' : 'OFF · COM → 1'}
               </button>
             )}
-            {asset.id === 'pb-switch' &&
-              component.settings.buttonMode === 'detent' && (
-                <button
-                  className="component-control"
-                  disabled={state.calibration}
-                  aria-pressed={component.settings.pressed}
-                  aria-label="푸시버튼 ON/OFF"
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && event.repeat)
-                      event.preventDefault();
-                  }}
-                  onClick={() =>
-                    state.updateSettings(component.id, {
-                      pressed: !component.settings.pressed,
-                    })
-                  }
-                >
-                  푸시버튼 {component.settings.pressed ? 'ON' : 'OFF'}
-                </button>
-              )}
+            {asset.id === 'pb-switch' && component.settings.buttonMode === 'detent' && (
+              <button
+                className="component-control"
+                disabled={state.calibration}
+                aria-pressed={component.settings.pressed}
+                aria-label="푸시버튼 ON/OFF"
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && event.repeat) event.preventDefault();
+                }}
+                onClick={() =>
+                  state.updateSettings(component.id, {
+                    pressed: !component.settings.pressed,
+                  })
+                }
+              >
+                푸시버튼 {component.settings.pressed ? 'ON' : 'OFF'}
+              </button>
+            )}
             {asset.id === 'timer-at8n' && (
               <label className="setting-field">
                 <span>
-                  설정 시간{' '}
-                  <b>{component.settings.timerSeconds.toFixed(1)} s</b>
+                  설정 시간 <b>{component.settings.timerSeconds.toFixed(1)} s</b>
                 </span>
                 <input
                   type="range"
@@ -285,11 +247,7 @@ export function PhotoInspector() {
                 />
               </label>
             )}
-            <button
-              className="delete-component"
-              disabled={locked}
-              onClick={state.deleteSelection}
-            >
+            <button className="delete-component" disabled={locked} onClick={state.deleteSelection}>
               <Trash2 size={14} />
               부품 삭제
             </button>
@@ -299,11 +257,7 @@ export function PhotoInspector() {
             <span style={{ background: wire.color }} />
             <strong>배선 선택됨</strong>
             <p>Delete 키 또는 버튼으로 삭제하세요.</p>
-            <button
-              className="delete-component"
-              disabled={locked}
-              onClick={state.deleteSelection}
-            >
+            <button className="delete-component" disabled={locked} onClick={state.deleteSelection}>
               <Trash2 size={14} />
               배선 삭제
             </button>
@@ -335,8 +289,7 @@ export function PhotoInspector() {
             <>
               <strong>{componentAssets[state.sample.assetId].label}</strong>
               <p className="coordinate-percent">
-                x: {state.sample.position.x.toFixed(2)}%, y:{' '}
-                {state.sample.position.y.toFixed(2)}%
+                x: {state.sample.position.x.toFixed(2)}%, y: {state.sample.position.y.toFixed(2)}%
               </p>
               <input
                 aria-label="보정 좌표"
@@ -350,16 +303,12 @@ export function PhotoInspector() {
                   const sample = state.sample;
                   if (!sample) return;
                   try {
-                    await navigator.clipboard.writeText(
-                      formatCoordinates(sample.position),
-                    );
+                    await navigator.clipboard.writeText(formatCoordinates(sample.position));
                     if (useCircuitStore.getState().sample === sample)
                       state.setSample({ ...sample, copied: true });
                   } catch {
                     document
-                      .querySelector<HTMLInputElement>(
-                        'input[aria-label="보정 좌표"]',
-                      )
+                      .querySelector<HTMLInputElement>('input[aria-label="보정 좌표"]')
                       ?.select();
                   }
                 }}
@@ -375,9 +324,8 @@ export function PhotoInspector() {
             <div className="coordinate-waiting">{`{ x: —, y: — }`}</div>
           )}
           <small>
-            src/config/assets.ts의 pins[].position 또는 controls[].bounds에
-            반영하세요. 레터박스 여백은 제외하고 PNG 안의 투명 여백은
-            포함합니다.
+            src/config/assets.ts의 pins[].position 또는 controls[].bounds에 반영하세요. 레터박스
+            여백은 제외하고 PNG 안의 투명 여백은 포함합니다.
           </small>
         </section>
       )}
@@ -388,18 +336,12 @@ export function PhotoInspector() {
           <h2>상태 알림</h2>
         </div>
         <div className="system-status">
-          <span
-            className={workspace.power.on ? 'status-dot on' : 'status-dot'}
-          />
+          <span className={workspace.power.on ? 'status-dot on' : 'status-dot'} />
           메인 전원<strong>{workspace.power.on ? 'ON' : 'OFF'}</strong>
         </div>
         <div className="short-status">
           <span>쇼트 검사</span>
-          <strong>
-            {workspace.simulation.isShorted
-              ? '쇼트 / 오배선 감지'
-              : '단락 없음'}
-          </strong>
+          <strong>{workspace.simulation.isShorted ? '쇼트 / 오배선 감지' : '단락 없음'}</strong>
         </div>
         <p className="live-notice" role="status">
           {state.notice}
@@ -407,14 +349,12 @@ export function PhotoInspector() {
         <div className="simulation-note">
           <Info size={14} />
           <p>
-            도선·접점·DC 부하와 TTL 6종를 해석합니다. LED·램프·코일은 학습용
-            근사 모델이며, 계측기는 학습용 DC 근사 모델입니다.
+            도선·접점·DC 부하와 TTL 6종를 해석합니다. LED·램프·코일은 학습용 근사 모델이며, 계측기는
+            학습용 DC 근사 모델입니다.
           </p>
         </div>
       </section>
-      <div className="inspector-bottom">
-        반복해서 연결하고, 원리를 익히세요.
-      </div>
+      <div className="inspector-bottom">반복해서 연결하고, 원리를 익히세요.</div>
     </aside>
   );
 }

@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { solveCircuit, ttlLevel, UnionFind } from './circuitSolver';
 import type { CircuitSolverInput, CircuitSolverResult } from './circuitSolver';
-import type {
-  AssetId,
-  CircuitComponent,
-  CircuitMode,
-  CircuitWire,
-} from '../types/circuit';
+import type { AssetId, CircuitComponent, CircuitMode, CircuitWire } from '../types/circuit';
 
 const component = (assetId: AssetId, id: string): CircuitComponent => ({
   id,
@@ -32,16 +27,11 @@ const input = (
   power: { on: true, voltage: mode === 'sequence' ? 24 : 5 },
 });
 const net = (r: CircuitSolverResult, id: string, pin: string) =>
-  r.nets.find((n) =>
-    n.pins.some((p) => p.componentId === id && p.pinId === pin),
-  )!;
+  r.nets.find((n) => n.pins.some((p) => p.componentId === id && p.pinId === pin))!;
 const codes = (r: CircuitSolverResult) => r.faults.map((f) => f.code);
 const ps = () => component('power-supply', 'ps');
 const ic = () => component('ic-dip14', 'ic');
-const supplyIc = () => [
-  wire('ps', 'plus', 'ic', '14'),
-  wire('ps', 'minus', 'ic', '7'),
-];
+const supplyIc = () => [wire('ps', 'plus', 'ic', '14'), wire('ps', 'minus', 'ic', '7')];
 
 describe('equipotential nets', () => {
   it('compresses a long union chain without losing members', () => {
@@ -61,12 +51,8 @@ describe('equipotential nets', () => {
     expect(net(r, 'bb', 'a1').id).not.toBe(net(r, 'bb', 'f1').id);
     expect(net(r, 'bb', 'a1').id).not.toBe(net(r, 'other', 'a1').id);
     expect(net(r, 'bb', 'top-plus-1').id).toBe(net(r, 'bb', 'top-plus-30').id);
-    expect(net(r, 'bb', 'top-plus-1').id).not.toBe(
-      net(r, 'bb', 'top-minus-1').id,
-    );
-    expect(net(r, 'bb', 'top-plus-1').id).not.toBe(
-      net(r, 'bb', 'bottom-plus-1').id,
-    );
+    expect(net(r, 'bb', 'top-plus-1').id).not.toBe(net(r, 'bb', 'top-minus-1').id);
+    expect(net(r, 'bb', 'top-plus-1').id).not.toBe(net(r, 'bb', 'bottom-plus-1').id);
     expect(net(r, 'bb', 'e1').voltage).toBe(5);
   });
   it('never unions the ends of a resistor/lamp/coil and keeps chassis ground separate', () => {
@@ -101,9 +87,7 @@ describe('shorts and wiring faults', () => {
     expect(codes(r)).toContain('POWER_SHORT');
     expect(r.faults[0].wireIds).toHaveLength(2);
     expect(r.energizedComponents).toEqual([]);
-    expect(
-      Object.values(r.pinValues).every((value) => value.voltage === null),
-    ).toBe(true);
+    expect(Object.values(r.pinValues).every((value) => value.voltage === null)).toBe(true);
   });
   it('a load elsewhere does not hide a source bypass', () => {
     const r = solveCircuit(
@@ -151,33 +135,27 @@ describe('shorts and wiring faults', () => {
     expect(r.isShorted).toBe(true);
     expect(r.energizedComponents).toEqual([]);
   });
-  it.each(['anode', 'cathode'] as const)(
-    'accepts a 330-ohm resistor on the %s leg',
-    (leg) => {
-      const wires =
-        leg === 'anode'
-          ? [
-              wire('ps', 'plus', 'r', '1'),
-              wire('r', '2', 'led', 'anode'),
-              wire('led', 'cathode', 'ps', 'minus'),
-            ]
-          : [
-              wire('ps', 'plus', 'led', 'anode'),
-              wire('led', 'cathode', 'r', '1'),
-              wire('r', '2', 'ps', 'minus'),
-            ];
-      const r = solveCircuit(
-        input(
-          [ps(), component('led-red', 'led'), component('resistor-330', 'r')],
-          wires,
-        ),
-      );
-      expect(r.isShorted).toBe(false);
-      expect(r.faults).toEqual([]);
-      expect(r.energizedComponents).toContain('led');
-      expect(r.componentCurrents.led).toBeCloseTo(3 / 350, 5);
-    },
-  );
+  it.each(['anode', 'cathode'] as const)('accepts a 330-ohm resistor on the %s leg', (leg) => {
+    const wires =
+      leg === 'anode'
+        ? [
+            wire('ps', 'plus', 'r', '1'),
+            wire('r', '2', 'led', 'anode'),
+            wire('led', 'cathode', 'ps', 'minus'),
+          ]
+        : [
+            wire('ps', 'plus', 'led', 'anode'),
+            wire('led', 'cathode', 'r', '1'),
+            wire('r', '2', 'ps', 'minus'),
+          ];
+    const r = solveCircuit(
+      input([ps(), component('led-red', 'led'), component('resistor-330', 'r')], wires),
+    );
+    expect(r.isShorted).toBe(false);
+    expect(r.faults).toEqual([]);
+    expect(r.energizedComponents).toContain('led');
+    expect(r.componentCurrents.led).toBeCloseTo(3 / 350, 5);
+  });
   it('detects a bypass around an otherwise correctly installed 330-ohm resistor', () => {
     const r = solveCircuit(
       input(
@@ -194,20 +172,14 @@ describe('shorts and wiring faults', () => {
   });
   it('does not report an open LED leg or reverse-biased LED as a forward supply short', () => {
     const open = solveCircuit(
-      input(
-        [ps(), component('led-red', 'led')],
-        [wire('ps', 'plus', 'led', 'anode')],
-      ),
+      input([ps(), component('led-red', 'led')], [wire('ps', 'plus', 'led', 'anode')]),
     );
     expect(open.isShorted).toBe(false);
     expect(open.energizedComponents).toEqual([]);
     const reverse = solveCircuit(
       input(
         [ps(), component('led-red', 'led')],
-        [
-          wire('ps', 'minus', 'led', 'anode'),
-          wire('ps', 'plus', 'led', 'cathode'),
-        ],
+        [wire('ps', 'minus', 'led', 'anode'), wire('ps', 'plus', 'led', 'cathode')],
       ),
     );
     expect(reverse.isShorted).toBe(false);
@@ -224,10 +196,7 @@ describe('shorts and wiring faults', () => {
     expect(codes(r)).toContain('OUTPUT_CONFLICT');
   });
   it('detects outputs from different ICs and clears the fault after the wire is removed', () => {
-    const request = input(
-      [ic(), component('ic-dip14', 'ic2')],
-      [wire('ic', '3', 'ic2', '11')],
-    );
+    const request = input([ic(), component('ic-dip14', 'ic2')], [wire('ic', '3', 'ic2', '11')]);
     expect(solveCircuit(request).isShorted).toBe(true);
     request.wires = [];
     expect(solveCircuit(request).isShorted).toBe(false);
@@ -271,10 +240,7 @@ describe('real-time TTL and sequence operation', () => {
     expect(r.pinValues['ic:6'].logic).toBe(1);
     expect(r.pinValues['ic:8'].logic).toBe('floating');
     const unpowered = solveCircuit(
-      input(
-        [ps(), ic()],
-        [wire('ps', 'plus', 'ic', '1'), wire('ps', 'plus', 'ic', '14')],
-      ),
+      input([ps(), ic()], [wire('ps', 'plus', 'ic', '1'), wire('ps', 'plus', 'ic', '14')]),
     );
     expect(unpowered.pinValues['ic:3'].voltage).toBeNull();
     expect(unpowered.energizedComponents).not.toContain('ic');
@@ -286,11 +252,7 @@ describe('real-time TTL and sequence operation', () => {
     const r = solveCircuit(
       input(
         [ps(), ic()],
-        [
-          ...supplyIc(),
-          wire('ps', 'minus', 'ic', '1'),
-          wire('ic', '3', 'ps', 'minus'),
-        ],
+        [...supplyIc(), wire('ps', 'minus', 'ic', '1'), wire('ic', '3', 'ps', 'minus')],
       ),
     );
     expect(codes(r)).toContain('OUTPUT_CONFLICT');
@@ -323,9 +285,7 @@ describe('real-time TTL and sequence operation', () => {
     const off = solveCircuit(request);
     expect(off.energizedComponents).toEqual([]);
     expect(off.componentCurrents).toEqual({});
-    expect(Object.values(off.pinValues).every((p) => p.voltage === null)).toBe(
-      true,
-    );
+    expect(Object.values(off.pinValues).every((p) => p.voltage === null)).toBe(true);
   });
   it('detects a button-closing short immediately', () => {
     const pb = component('pb-switch', 'pb');

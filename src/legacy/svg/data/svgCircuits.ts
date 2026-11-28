@@ -1,9 +1,5 @@
 import { deviceDefinitions } from '../devices/definitions';
-import type {
-  AssetId,
-  CircuitComponent,
-  CircuitMode,
-} from '../../../types/circuit';
+import type { AssetId, CircuitComponent, CircuitMode } from '../../../types/circuit';
 import type { SvgWorkspace } from '../types.ts';
 export function makeSvgComponent(
   assetId: AssetId,

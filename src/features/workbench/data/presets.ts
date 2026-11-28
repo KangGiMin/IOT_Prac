@@ -16,12 +16,7 @@ export function createPreset(id: PresetId): {
   const mode = id === 'self-hold' ? 'sequence' : 'digital';
   let components: CircuitComponent[] = [];
   const wires: CircuitWire[] = [];
-  const add = (
-    asset: Parameters<typeof makeComponent>[0],
-    name: string,
-    x: number,
-    y: number,
-  ) => {
+  const add = (asset: Parameters<typeof makeComponent>[0], name: string, x: number, y: number) => {
     const c = makeComponent(asset, name, x, y);
     components.push(c);
     return c;

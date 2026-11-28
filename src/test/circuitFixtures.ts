@@ -1,7 +1,4 @@
-import {
-  createPhotoWorkspace,
-  makeComponent,
-} from '../features/workbench/data/photoCircuits';
+import { createPhotoWorkspace, makeComponent } from '../features/workbench/data/photoCircuits';
 import { componentAssets } from '../config/assets';
 import { MAX_CIRCUIT_COMPONENTS } from '../engine/circuitFile';
 import type { CircuitMode, CircuitWire } from '../types/circuit';

@@ -10,13 +10,9 @@ import { AssetImage } from './AssetImage';
 export function PhotoPalette() {
   const [query, setQuery] = useState('');
   const [jumperFailed, setJumperFailed] = useState(false);
-  const jumperSelected = useCircuitStore(
-    (s) => s.wireKind === 'jumper' && s.wiringMode,
-  );
+  const jumperSelected = useCircuitStore((s) => s.wireKind === 'jumper' && s.wiringMode);
   const mode = useCircuitStore((s) => s.mode);
-  const locked = useCircuitStore(
-    (s) => s.workspaces[s.mode].power.on || s.calibration,
-  );
+  const locked = useCircuitStore((s) => s.workspaces[s.mode].power.on || s.calibration);
   const items = Object.values(componentAssets)
     .flatMap<ComponentAsset & { ic?: IcModel }>((a) =>
       a.id === 'ic-dip14'
@@ -29,18 +25,14 @@ export function PhotoPalette() {
         : [{ ...a, ic: undefined }],
     )
     .filter(
-      (a) =>
-        a.mode === mode &&
-        `${a.label} ${a.model}`.toLowerCase().includes(query.toLowerCase()),
+      (a) => a.mode === mode && `${a.label} ${a.model}`.toLowerCase().includes(query.toLowerCase()),
     );
   return (
     <aside className="photo-palette" aria-label="부품 팔레트">
       <div className="panel-heading">
         <Layers size={17} />
         <h2>부품 라이브러리</h2>
-        <span>
-          {Object.values(componentAssets).filter((a) => a.mode === mode).length}
-        </span>
+        <span>{Object.values(componentAssets).filter((a) => a.mode === mode).length}</span>
       </div>
       <p className="panel-description">클릭하거나 보드로 드래그하세요</p>
       <label className="palette-search">
@@ -65,15 +57,10 @@ export function PhotoPalette() {
             disabled={locked}
             title={`${asset.label} 추가`}
             aria-label={`${asset.label} 추가`}
-            onClick={() =>
-              useCircuitStore
-                .getState()
-                .addComponent(asset.id, undefined, asset.ic)
-            }
+            onClick={() => useCircuitStore.getState().addComponent(asset.id, undefined, asset.ic)}
             onDragStart={(e) => {
               e.dataTransfer.setData('application/x-circuit-asset', asset.id);
-              if (asset.ic)
-                e.dataTransfer.setData('application/x-ic-model', asset.ic);
+              if (asset.ic) e.dataTransfer.setData('application/x-ic-model', asset.ic);
               e.dataTransfer.effectAllowed = 'copy';
             }}
           >
@@ -90,9 +77,7 @@ export function PhotoPalette() {
             <Plus size={14} />
           </button>
         ))}
-        {items.length === 0 && (
-          <p className="palette-empty">검색 결과가 없습니다.</p>
-        )}
+        {items.length === 0 && <p className="palette-empty">검색 결과가 없습니다.</p>}
       </div>
       {mode === 'digital' && (
         <section className="wire-photo-tools">

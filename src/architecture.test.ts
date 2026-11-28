@@ -34,9 +34,7 @@ describe('current and retained implementation boundaries', () => {
         if (
           ts.isStringLiteral(node) &&
           node.text.startsWith('.') &&
-          resolve(dirname(file), node.text).startsWith(
-            join(src, 'legacy') + sep,
-          )
+          resolve(dirname(file), node.text).startsWith(join(src, 'legacy') + sep)
         )
           violations.push(`${file}: ${node.text}`);
         ts.forEachChild(node, visit);
@@ -71,27 +69,20 @@ describe('current and retained implementation boundaries', () => {
     const declaration = source.statements
       .filter(ts.isVariableStatement)
       .flatMap((n) => n.declarationList.declarations)
-      .find(
-        (n) => ts.isIdentifier(n.name) && n.name.text === 'componentAssets',
-      )!;
+      .find((n) => ts.isIdentifier(n.name) && n.name.text === 'componentAssets')!;
     expect(ts.isObjectLiteralExpression(declaration.initializer!)).toBe(true);
     const assets = declaration.initializer as ts.ObjectLiteralExpression;
     for (const entry of assets.properties) {
-      const object = (entry as ts.PropertyAssignment)
-        .initializer as ts.ObjectLiteralExpression;
+      const object = (entry as ts.PropertyAssignment).initializer as ts.ObjectLiteralExpression;
       expect(
         object.properties
           .filter(ts.isPropertyAssignment)
-          .some((p) =>
-            ['pins', 'controls', 'overlays'].includes(p.name.getText(source)),
-          ),
+          .some((p) => ['pins', 'controls', 'overlays'].includes(p.name.getText(source))),
       ).toBe(false);
       expect(
         object.properties
           .filter(ts.isSpreadAssignment)
-          .filter((p) =>
-            /^(sequencePins|digitalPins)\[/.test(p.expression.getText(source)),
-          ),
+          .filter((p) => /^(sequencePins|digitalPins)\[/.test(p.expression.getText(source))),
       ).toHaveLength(1);
     }
     expect(source.text).not.toMatch(/Object\.assign\(\s*componentAssets/);

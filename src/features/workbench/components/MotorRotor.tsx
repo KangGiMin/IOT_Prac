@@ -18,7 +18,12 @@ export function MotorRotor({ reverse = false }: { reverse?: boolean }) {
       viewBox={`0 0 ${width} ${height}`}
     >
       <defs>
-        <image id={id + '-photo'} href={componentAssets['motor-unit'].src} width={width} height={height} />
+        <image
+          id={id + '-photo'}
+          href={componentAssets['motor-unit'].src}
+          width={width}
+          height={height}
+        />
         <linearGradient id={id + '-face'} x1="0" y1="0" x2="1" y2="1">
           <stop stopColor="#e2e5ed" />
           <stop offset=".58" stopColor="#dee2eb" />
@@ -61,7 +66,9 @@ export function MotorRotor({ reverse = false }: { reverse?: boolean }) {
         <use href={ref('photo')} clipPath={clip('fixed-details')} />
       </g>
       <g className="motor-blades" style={{ transformOrigin: `${shaft.x}px ${shaft.y}px` }}>
-        <g transform={`translate(${shaft.x} ${shaft.y}) scale(.84) translate(${-shaft.x} ${-shaft.y})`}>
+        <g
+          transform={`translate(${shaft.x} ${shaft.y}) scale(.84) translate(${-shaft.x} ${-shaft.y})`}
+        >
           <use href={ref('photo')} clipPath={clip('original-blades')} />
         </g>
       </g>

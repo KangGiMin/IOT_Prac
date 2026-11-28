@@ -4,12 +4,7 @@ export function LogicSymbol({ gate }: { gate: LogicGate }) {
     exclusive = gate === 'XOR' || gate === 'XNOR',
     or = ['OR', 'NOR', 'XOR', 'XNOR'].includes(gate);
   return (
-    <svg
-      className="logic-symbol"
-      viewBox="0 0 160 80"
-      role="img"
-      aria-label={`${gate} 논리 기호`}
-    >
+    <svg className="logic-symbol" viewBox="0 0 160 80" role="img" aria-label={`${gate} 논리 기호`}>
       <g fill="#eff8f2" stroke="#397b5a" strokeWidth="2" strokeLinecap="round">
         {gate === 'NOT' ? (
           <>

@@ -1,12 +1,5 @@
 import type { CircuitComponent, LogicLevel } from '../types/circuit';
-export const IC_MODELS = [
-  '7400',
-  '7402',
-  '7406',
-  '7408',
-  '7411',
-  '7486',
-] as const;
+export const IC_MODELS = ['7400', '7402', '7406', '7408', '7411', '7486'] as const;
 export type IcModel = (typeof IC_MODELS)[number];
 export interface Gate {
   inputs: readonly string[];
@@ -18,10 +11,7 @@ const quad: readonly Gate[] = [
   { inputs: ['9', '10'], output: '8' },
   { inputs: ['12', '13'], output: '11' },
 ];
-export const TTL_MODELS: Record<
-  IcModel,
-  { name: string; gates: readonly Gate[] }
-> = {
+export const TTL_MODELS: Record<IcModel, { name: string; gates: readonly Gate[] }> = {
   '7400': { name: 'NAND', gates: quad },
   '7402': {
     name: 'NOR',
@@ -55,9 +45,7 @@ export const TTL_MODELS: Record<
   '7486': { name: 'XOR', gates: quad },
 };
 export const icModel = (c: CircuitComponent): IcModel =>
-  c.settings.icModel && IC_MODELS.includes(c.settings.icModel)
-    ? c.settings.icModel
-    : '7400';
+  c.settings.icModel && IC_MODELS.includes(c.settings.icModel) ? c.settings.icModel : '7400';
 export const isOpenCollector = (c: CircuitComponent) =>
   icModel(c) === '7406' && c.settings.openCollector === true;
 /** Presentation and simulation share the same model and pin-map definitions. */
@@ -74,22 +62,13 @@ export function icPresentation(c: CircuitComponent) {
   };
 }
 export function gateValue(model: IcModel, values: LogicLevel[]): LogicLevel {
-  if (model === '7406')
-    return values[0] === 0 ? 1 : values[0] === 1 ? 0 : 'unknown';
+  if (model === '7406') return values[0] === 0 ? 1 : values[0] === 1 ? 0 : 'unknown';
   if (model === '7486')
     return values.every((v) => v === 0 || v === 1)
       ? ((values.reduce<number>((a, b) => a + Number(b), 0) % 2) as 0 | 1)
       : 'unknown';
   if (model === '7402')
-    return values.includes(1)
-      ? 0
-      : values.every((v) => v === 0)
-        ? 1
-        : 'unknown';
-  const and: LogicLevel = values.includes(0)
-    ? 0
-    : values.every((v) => v === 1)
-      ? 1
-      : 'unknown';
+    return values.includes(1) ? 0 : values.every((v) => v === 0) ? 1 : 'unknown';
+  const and: LogicLevel = values.includes(0) ? 0 : values.every((v) => v === 1) ? 1 : 'unknown';
   return model === '7400' ? (and === 0 ? 1 : and === 1 ? 0 : 'unknown') : and;
 }

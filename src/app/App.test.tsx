@@ -7,12 +7,9 @@ import { createPopulatedWorkspace as createPhotoWorkspace } from '../test/popula
 // Static markup has no subscriptions. Read the configured test workspace instead
 // of Zustand's immutable server-initial snapshot; production hooks stay intact.
 vi.mock('../store/usePhotoCircuitStore', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('../store/usePhotoCircuitStore')>();
+  const actual = await importOriginal<typeof import('../store/usePhotoCircuitStore')>();
   const store = actual.useCircuitStore;
-  const readSnapshot = ((
-    selector?: (state: ReturnType<typeof store.getState>) => unknown,
-  ) =>
+  const readSnapshot = ((selector?: (state: ReturnType<typeof store.getState>) => unknown) =>
     selector ? selector(store.getState()) : store.getState()) as typeof store;
   return { ...actual, useCircuitStore: Object.assign(readSnapshot, store) };
 });
@@ -84,15 +81,11 @@ describe('PNG workbench layout', () => {
       s.select('dig-ic');
       s.updateSettings('dig-ic', { icModel: spec.model });
       const html = renderToStaticMarkup(<App />);
-      const description = html.match(
-        /<p class="selected-description">([^<]+)<\/p>/,
-      )![1];
+      const description = html.match(/<p class="selected-description">([^<]+)<\/p>/)![1];
       expect(description).toContain(spec.gates);
       expect(description).toContain(`출력 ${spec.outputs}번`);
       expect(description).toContain(spec.map);
-      expect(html).toContain(
-        `<span>${spec.model} · ${spec.name} · DIP-14</span>`,
-      );
+      expect(html).toContain(`<span>${spec.model} · ${spec.name} · DIP-14</span>`);
       if (spec.model !== '7400') expect(description).not.toContain('NAND');
     },
   );
@@ -102,9 +95,7 @@ describe('PNG workbench layout', () => {
     expect(html).toContain('aria-label="화면 테마"');
     expect(html).toContain('<option value="light">라이트 모드</option>');
     expect(html).toContain('<option value="dark">다크 모드</option>');
-    expect(html).toContain(
-      '<option value="system" selected="">시스템 설정</option>',
-    );
+    expect(html).toContain('<option value="system" selected="">시스템 설정</option>');
   });
   it('offers six TTL models and changes the scope control between RUN and STOP', () => {
     const s = useCircuitStore.getState();

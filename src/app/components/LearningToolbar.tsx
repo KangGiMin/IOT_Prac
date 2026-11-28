@@ -1,23 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useCircuitStore } from '../../store/usePhotoCircuitStore';
-import {
-  exportCircuitFile,
-  MAX_CIRCUIT_FILE_BYTES,
-} from '../../engine/circuitFile';
+import { exportCircuitFile, MAX_CIRCUIT_FILE_BYTES } from '../../engine/circuitFile';
 import { exercises } from '../../features/exercises/model';
 export function LearningToolbar() {
-  const state = useCircuitStore(
-      useShallow(({ workspaces: _workspaces, ...state }) => state),
-    ),
+  const state = useCircuitStore(useShallow(({ workspaces: _workspaces, ...state }) => state)),
     fileInput = useRef<HTMLInputElement>(null),
     history = state.histories[state.mode];
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (
         event.target instanceof HTMLElement &&
-        (event.target.closest('input,textarea,select') ||
-          event.target.isContentEditable)
+        (event.target.closest('input,textarea,select') || event.target.isContentEditable)
       )
         return;
       const s = useCircuitStore.getState(),
@@ -41,9 +35,7 @@ export function LearningToolbar() {
     try {
       const s = useCircuitStore.getState(),
         source = exportCircuitFile(s.mode, s.workspaces),
-        url = URL.createObjectURL(
-          new Blob([source], { type: 'application/json' }),
-        );
+        url = URL.createObjectURL(new Blob([source], { type: 'application/json' }));
       const a = document.createElement('a');
       a.href = url;
       a.download = 'iot-circuit-lab.json';
@@ -59,8 +51,12 @@ export function LearningToolbar() {
   };
   return (
     <div className="learning-toolbar" role="group" aria-label="학습 편의 기능">
-      <a className="learning-center-shortcut" href="#learning-center">계측·논리 학습 센터</a>
-      <a className="learning-center-shortcut" href="#exercises">연습문제 · 수업 도면 {exercises.length}선</a>
+      <a className="learning-center-shortcut" href="#learning-center">
+        계측·논리 학습 센터
+      </a>
+      <a className="learning-center-shortcut" href="#exercises">
+        연습문제 · 수업 도면 {exercises.length}선
+      </a>
       <button
         disabled={!history.past.length || !!state.dragHistory}
         onClick={state.undo}
@@ -76,9 +72,7 @@ export function LearningToolbar() {
         다시 실행 <kbd>Ctrl+Y</kbd>
       </button>
       <button onClick={save}>회로 JSON 저장</button>
-      <button onClick={() => fileInput.current?.click()}>
-        회로 JSON 불러오기
-      </button>
+      <button onClick={() => fileInput.current?.click()}>회로 JSON 불러오기</button>
       <input
         ref={fileInput}
         className="sr-only"

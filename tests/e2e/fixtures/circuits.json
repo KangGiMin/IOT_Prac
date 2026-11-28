@@ -3,92 +3,474 @@
     "mode": "sequence",
     "workspace": {
       "components": [
-        {"id":"board","assetId":"panel-board","label":"시퀀스 실습 보드","position":{"x":0,"y":0},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"stop","assetId":"pb-switch","label":"STOP · NC","position":{"x":90,"y":210},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"start","assetId":"pb-switch","label":"START · NO","position":{"x":280,"y":210},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"relay","assetId":"relay-socket","label":"릴레이 본체","position":{"x":490,"y":210},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"body","assetId":"relay-body","label":"릴레이 소켓","position":{"x":618.7499015872443,"y":272.788919987721},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5},"mountedSocketId":"relay","displaySize":{"width":43.22216002455805,"height":43.22216002455805}},
-        {"id":"lamp","assetId":"pilot-lamp","label":"표시 램프","position":{"x":800,"y":210},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}}
+        {
+          "id": "board",
+          "assetId": "panel-board",
+          "label": "시퀀스 실습 보드",
+          "position": { "x": 0, "y": 0 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "stop",
+          "assetId": "pb-switch",
+          "label": "STOP · NC",
+          "position": { "x": 90, "y": 210 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "start",
+          "assetId": "pb-switch",
+          "label": "START · NO",
+          "position": { "x": 280, "y": 210 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "relay",
+          "assetId": "relay-socket",
+          "label": "릴레이 본체",
+          "position": { "x": 490, "y": 210 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "body",
+          "assetId": "relay-body",
+          "label": "릴레이 소켓",
+          "position": { "x": 618.7499015872443, "y": 272.788919987721 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 },
+          "mountedSocketId": "relay",
+          "displaySize": { "width": 43.22216002455805, "height": 43.22216002455805 }
+        },
+        {
+          "id": "lamp",
+          "assetId": "pilot-lamp",
+          "label": "표시 램프",
+          "position": { "x": 800, "y": 210 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        }
       ],
       "wires": [
-        {"id":"preset-wire-0","from":{"componentId":"board","pinId":"plus"},"to":{"componentId":"stop","pinId":"nc1"},"color":"#dc4c4c"},
-        {"id":"preset-wire-1","from":{"componentId":"stop","pinId":"nc2"},"to":{"componentId":"start","pinId":"no1"},"color":"#dc4c4c"},
-        {"id":"preset-wire-2","from":{"componentId":"start","pinId":"no2"},"to":{"componentId":"relay","pinId":"14"},"color":"#dc4c4c"},
-        {"id":"preset-wire-3","from":{"componentId":"stop","pinId":"nc2"},"to":{"componentId":"relay","pinId":"5"},"color":"#dc4c4c"},
-        {"id":"preset-wire-4","from":{"componentId":"relay","pinId":"9"},"to":{"componentId":"relay","pinId":"14"},"color":"#dc4c4c"},
-        {"id":"preset-wire-5","from":{"componentId":"relay","pinId":"13"},"to":{"componentId":"board","pinId":"minus"},"color":"#303b48"},
-        {"id":"preset-wire-6","from":{"componentId":"relay","pinId":"14"},"to":{"componentId":"lamp","pinId":"plus"},"color":"#dc4c4c"},
-        {"id":"preset-wire-7","from":{"componentId":"lamp","pinId":"minus"},"to":{"componentId":"board","pinId":"minus"},"color":"#303b48"}
+        {
+          "id": "preset-wire-0",
+          "from": { "componentId": "board", "pinId": "plus" },
+          "to": { "componentId": "stop", "pinId": "nc1" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-1",
+          "from": { "componentId": "stop", "pinId": "nc2" },
+          "to": { "componentId": "start", "pinId": "no1" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-2",
+          "from": { "componentId": "start", "pinId": "no2" },
+          "to": { "componentId": "relay", "pinId": "14" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-3",
+          "from": { "componentId": "stop", "pinId": "nc2" },
+          "to": { "componentId": "relay", "pinId": "5" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-4",
+          "from": { "componentId": "relay", "pinId": "9" },
+          "to": { "componentId": "relay", "pinId": "14" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-5",
+          "from": { "componentId": "relay", "pinId": "13" },
+          "to": { "componentId": "board", "pinId": "minus" },
+          "color": "#303b48"
+        },
+        {
+          "id": "preset-wire-6",
+          "from": { "componentId": "relay", "pinId": "14" },
+          "to": { "componentId": "lamp", "pinId": "plus" },
+          "color": "#dc4c4c"
+        },
+        {
+          "id": "preset-wire-7",
+          "from": { "componentId": "lamp", "pinId": "minus" },
+          "to": { "componentId": "board", "pinId": "minus" },
+          "color": "#303b48"
+        }
       ],
-      "power": {"on":false,"voltage":24}
+      "power": { "on": false, "voltage": 24 }
     }
   },
   "nand": {
     "mode": "digital",
     "workspace": {
       "components": [
-        {"id":"board","assetId":"breadboard","label":"브레드보드","position":{"x":0,"y":140},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"power","assetId":"power-supply","label":"DC 파워서플라이","position":{"x":740,"y":80},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"scope","assetId":"oscilloscope","label":"오실로스코프","position":{"x":740,"y":340},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"ic","assetId":"ic-dip14","label":"TTL IC · DIP-14","position":{"x":313.66994890987945,"y":311.8652616549755},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5,"icModel":"7400"},"insertion":{"boardId":"board","bank":1,"column":19},"displaySize":{"width":59.77841145369215,"height":51.44639642435904}},
-        {"id":"input-a","assetId":"switch-3pin","label":"입력 A","position":{"x":100,"y":10},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"input-b","assetId":"switch-3pin","label":"입력 B","position":{"x":260,"y":10},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"resistor","assetId":"resistor-330","label":"저항 330Ω","position":{"x":430,"y":340},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"output-led","assetId":"led-red","label":"출력 Y","position":{"x":560,"y":330},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}}
+        {
+          "id": "board",
+          "assetId": "breadboard",
+          "label": "브레드보드",
+          "position": { "x": 0, "y": 140 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "power",
+          "assetId": "power-supply",
+          "label": "DC 파워서플라이",
+          "position": { "x": 740, "y": 80 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "scope",
+          "assetId": "oscilloscope",
+          "label": "오실로스코프",
+          "position": { "x": 740, "y": 340 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "ic",
+          "assetId": "ic-dip14",
+          "label": "TTL IC · DIP-14",
+          "position": { "x": 313.66994890987945, "y": 311.8652616549755 },
+          "settings": {
+            "pressed": false,
+            "switchOn": false,
+            "timerSeconds": 3,
+            "voltage": 5,
+            "icModel": "7400"
+          },
+          "insertion": { "boardId": "board", "bank": 1, "column": 19 },
+          "displaySize": { "width": 59.77841145369215, "height": 51.44639642435904 }
+        },
+        {
+          "id": "input-a",
+          "assetId": "switch-3pin",
+          "label": "입력 A",
+          "position": { "x": 100, "y": 10 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "input-b",
+          "assetId": "switch-3pin",
+          "label": "입력 B",
+          "position": { "x": 260, "y": 10 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "resistor",
+          "assetId": "resistor-330",
+          "label": "저항 330Ω",
+          "position": { "x": 430, "y": 340 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "output-led",
+          "assetId": "led-red",
+          "label": "출력 Y",
+          "position": { "x": 560, "y": 330 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        }
       ],
       "wires": [
-        {"id":"preset-wire-0","from":{"componentId":"power","pinId":"plus"},"to":{"componentId":"board","pinId":"top-plus-1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-1","from":{"componentId":"power","pinId":"minus"},"to":{"componentId":"board","pinId":"top-minus-1"},"color":"#303b48","kind":"jumper"},
-        {"id":"preset-wire-2","from":{"componentId":"input-a","pinId":"1"},"to":{"componentId":"board","pinId":"top-minus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-3","from":{"componentId":"input-a","pinId":"2"},"to":{"componentId":"board","pinId":"top-plus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-4","from":{"componentId":"input-a","pinId":"com"},"to":{"componentId":"ic","pinId":"1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-5","from":{"componentId":"input-b","pinId":"1"},"to":{"componentId":"board","pinId":"top-minus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-6","from":{"componentId":"input-b","pinId":"2"},"to":{"componentId":"board","pinId":"top-plus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-7","from":{"componentId":"input-b","pinId":"com"},"to":{"componentId":"ic","pinId":"2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-8","from":{"componentId":"ic","pinId":"14"},"to":{"componentId":"board","pinId":"top-plus-3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-9","from":{"componentId":"ic","pinId":"7"},"to":{"componentId":"board","pinId":"top-minus-3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-10","from":{"componentId":"ic","pinId":"3"},"to":{"componentId":"resistor","pinId":"1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-11","from":{"componentId":"resistor","pinId":"2"},"to":{"componentId":"output-led","pinId":"anode"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-12","from":{"componentId":"output-led","pinId":"cathode"},"to":{"componentId":"board","pinId":"top-minus-4"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-13","from":{"componentId":"scope","pinId":"ch1"},"to":{"componentId":"input-a","pinId":"com"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-14","from":{"componentId":"scope","pinId":"ch2"},"to":{"componentId":"ic","pinId":"3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-15","from":{"componentId":"scope","pinId":"ref"},"to":{"componentId":"board","pinId":"top-minus-5"},"color":"#dc4c4c","kind":"jumper"}
+        {
+          "id": "preset-wire-0",
+          "from": { "componentId": "power", "pinId": "plus" },
+          "to": { "componentId": "board", "pinId": "top-plus-1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-1",
+          "from": { "componentId": "power", "pinId": "minus" },
+          "to": { "componentId": "board", "pinId": "top-minus-1" },
+          "color": "#303b48",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-2",
+          "from": { "componentId": "input-a", "pinId": "1" },
+          "to": { "componentId": "board", "pinId": "top-minus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-3",
+          "from": { "componentId": "input-a", "pinId": "2" },
+          "to": { "componentId": "board", "pinId": "top-plus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-4",
+          "from": { "componentId": "input-a", "pinId": "com" },
+          "to": { "componentId": "ic", "pinId": "1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-5",
+          "from": { "componentId": "input-b", "pinId": "1" },
+          "to": { "componentId": "board", "pinId": "top-minus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-6",
+          "from": { "componentId": "input-b", "pinId": "2" },
+          "to": { "componentId": "board", "pinId": "top-plus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-7",
+          "from": { "componentId": "input-b", "pinId": "com" },
+          "to": { "componentId": "ic", "pinId": "2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-8",
+          "from": { "componentId": "ic", "pinId": "14" },
+          "to": { "componentId": "board", "pinId": "top-plus-3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-9",
+          "from": { "componentId": "ic", "pinId": "7" },
+          "to": { "componentId": "board", "pinId": "top-minus-3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-10",
+          "from": { "componentId": "ic", "pinId": "3" },
+          "to": { "componentId": "resistor", "pinId": "1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-11",
+          "from": { "componentId": "resistor", "pinId": "2" },
+          "to": { "componentId": "output-led", "pinId": "anode" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-12",
+          "from": { "componentId": "output-led", "pinId": "cathode" },
+          "to": { "componentId": "board", "pinId": "top-minus-4" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-13",
+          "from": { "componentId": "scope", "pinId": "ch1" },
+          "to": { "componentId": "input-a", "pinId": "com" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-14",
+          "from": { "componentId": "scope", "pinId": "ch2" },
+          "to": { "componentId": "ic", "pinId": "3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-15",
+          "from": { "componentId": "scope", "pinId": "ref" },
+          "to": { "componentId": "board", "pinId": "top-minus-5" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        }
       ],
-      "power": {"on":false,"voltage":5}
+      "power": { "on": false, "voltage": 5 }
     }
   },
   "nor": {
     "mode": "digital",
     "workspace": {
       "components": [
-        {"id":"board","assetId":"breadboard","label":"브레드보드","position":{"x":0,"y":140},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"power","assetId":"power-supply","label":"DC 파워서플라이","position":{"x":740,"y":80},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"scope","assetId":"oscilloscope","label":"오실로스코프","position":{"x":740,"y":340},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"ic","assetId":"ic-dip14","label":"TTL IC · DIP-14","position":{"x":313.66994890987945,"y":311.8652616549755},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5,"icModel":"7402"},"insertion":{"boardId":"board","bank":1,"column":19},"displaySize":{"width":59.77841145369215,"height":51.44639642435904}},
-        {"id":"input-a","assetId":"switch-3pin","label":"입력 A","position":{"x":100,"y":10},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"input-b","assetId":"switch-3pin","label":"입력 B","position":{"x":260,"y":10},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"resistor","assetId":"resistor-330","label":"저항 330Ω","position":{"x":430,"y":340},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}},
-        {"id":"output-led","assetId":"led-red","label":"출력 Y","position":{"x":560,"y":330},"settings":{"pressed":false,"switchOn":false,"timerSeconds":3,"voltage":5}}
+        {
+          "id": "board",
+          "assetId": "breadboard",
+          "label": "브레드보드",
+          "position": { "x": 0, "y": 140 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "power",
+          "assetId": "power-supply",
+          "label": "DC 파워서플라이",
+          "position": { "x": 740, "y": 80 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "scope",
+          "assetId": "oscilloscope",
+          "label": "오실로스코프",
+          "position": { "x": 740, "y": 340 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "ic",
+          "assetId": "ic-dip14",
+          "label": "TTL IC · DIP-14",
+          "position": { "x": 313.66994890987945, "y": 311.8652616549755 },
+          "settings": {
+            "pressed": false,
+            "switchOn": false,
+            "timerSeconds": 3,
+            "voltage": 5,
+            "icModel": "7402"
+          },
+          "insertion": { "boardId": "board", "bank": 1, "column": 19 },
+          "displaySize": { "width": 59.77841145369215, "height": 51.44639642435904 }
+        },
+        {
+          "id": "input-a",
+          "assetId": "switch-3pin",
+          "label": "입력 A",
+          "position": { "x": 100, "y": 10 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "input-b",
+          "assetId": "switch-3pin",
+          "label": "입력 B",
+          "position": { "x": 260, "y": 10 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "resistor",
+          "assetId": "resistor-330",
+          "label": "저항 330Ω",
+          "position": { "x": 430, "y": 340 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        },
+        {
+          "id": "output-led",
+          "assetId": "led-red",
+          "label": "출력 Y",
+          "position": { "x": 560, "y": 330 },
+          "settings": { "pressed": false, "switchOn": false, "timerSeconds": 3, "voltage": 5 }
+        }
       ],
       "wires": [
-        {"id":"preset-wire-0","from":{"componentId":"power","pinId":"plus"},"to":{"componentId":"board","pinId":"top-plus-1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-1","from":{"componentId":"power","pinId":"minus"},"to":{"componentId":"board","pinId":"top-minus-1"},"color":"#303b48","kind":"jumper"},
-        {"id":"preset-wire-2","from":{"componentId":"input-a","pinId":"1"},"to":{"componentId":"board","pinId":"top-minus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-3","from":{"componentId":"input-a","pinId":"2"},"to":{"componentId":"board","pinId":"top-plus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-4","from":{"componentId":"input-a","pinId":"com"},"to":{"componentId":"ic","pinId":"2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-5","from":{"componentId":"input-b","pinId":"1"},"to":{"componentId":"board","pinId":"top-minus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-6","from":{"componentId":"input-b","pinId":"2"},"to":{"componentId":"board","pinId":"top-plus-2"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-7","from":{"componentId":"input-b","pinId":"com"},"to":{"componentId":"ic","pinId":"3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-8","from":{"componentId":"ic","pinId":"14"},"to":{"componentId":"board","pinId":"top-plus-3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-9","from":{"componentId":"ic","pinId":"7"},"to":{"componentId":"board","pinId":"top-minus-3"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-10","from":{"componentId":"ic","pinId":"1"},"to":{"componentId":"resistor","pinId":"1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-11","from":{"componentId":"resistor","pinId":"2"},"to":{"componentId":"output-led","pinId":"anode"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-12","from":{"componentId":"output-led","pinId":"cathode"},"to":{"componentId":"board","pinId":"top-minus-4"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-13","from":{"componentId":"scope","pinId":"ch1"},"to":{"componentId":"input-a","pinId":"com"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-14","from":{"componentId":"scope","pinId":"ch2"},"to":{"componentId":"ic","pinId":"1"},"color":"#dc4c4c","kind":"jumper"},
-        {"id":"preset-wire-15","from":{"componentId":"scope","pinId":"ref"},"to":{"componentId":"board","pinId":"top-minus-5"},"color":"#dc4c4c","kind":"jumper"}
+        {
+          "id": "preset-wire-0",
+          "from": { "componentId": "power", "pinId": "plus" },
+          "to": { "componentId": "board", "pinId": "top-plus-1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-1",
+          "from": { "componentId": "power", "pinId": "minus" },
+          "to": { "componentId": "board", "pinId": "top-minus-1" },
+          "color": "#303b48",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-2",
+          "from": { "componentId": "input-a", "pinId": "1" },
+          "to": { "componentId": "board", "pinId": "top-minus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-3",
+          "from": { "componentId": "input-a", "pinId": "2" },
+          "to": { "componentId": "board", "pinId": "top-plus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-4",
+          "from": { "componentId": "input-a", "pinId": "com" },
+          "to": { "componentId": "ic", "pinId": "2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-5",
+          "from": { "componentId": "input-b", "pinId": "1" },
+          "to": { "componentId": "board", "pinId": "top-minus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-6",
+          "from": { "componentId": "input-b", "pinId": "2" },
+          "to": { "componentId": "board", "pinId": "top-plus-2" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-7",
+          "from": { "componentId": "input-b", "pinId": "com" },
+          "to": { "componentId": "ic", "pinId": "3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-8",
+          "from": { "componentId": "ic", "pinId": "14" },
+          "to": { "componentId": "board", "pinId": "top-plus-3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-9",
+          "from": { "componentId": "ic", "pinId": "7" },
+          "to": { "componentId": "board", "pinId": "top-minus-3" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-10",
+          "from": { "componentId": "ic", "pinId": "1" },
+          "to": { "componentId": "resistor", "pinId": "1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-11",
+          "from": { "componentId": "resistor", "pinId": "2" },
+          "to": { "componentId": "output-led", "pinId": "anode" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-12",
+          "from": { "componentId": "output-led", "pinId": "cathode" },
+          "to": { "componentId": "board", "pinId": "top-minus-4" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-13",
+          "from": { "componentId": "scope", "pinId": "ch1" },
+          "to": { "componentId": "input-a", "pinId": "com" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-14",
+          "from": { "componentId": "scope", "pinId": "ch2" },
+          "to": { "componentId": "ic", "pinId": "1" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        },
+        {
+          "id": "preset-wire-15",
+          "from": { "componentId": "scope", "pinId": "ref" },
+          "to": { "componentId": "board", "pinId": "top-minus-5" },
+          "color": "#dc4c4c",
+          "kind": "jumper"
+        }
       ],
-      "power": {"on":false,"voltage":5}
+      "power": { "on": false, "voltage": 5 }
     }
   }
 }

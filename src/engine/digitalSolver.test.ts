@@ -50,16 +50,24 @@ describe('plug-in parts and front-panel supply settings', () => {
       const frame = componentAssets[part.assetId].size;
       return { ...part, position: { x: hole.x - frame.width / 2, y: hole.y - frame.height / 2 } };
     };
-    let components = placeDigital([ps, board, dropAt(resistor, 'a13'), dropAt(switchPart, 'd12')], 'r');
+    let components = placeDigital(
+      [ps, board, dropAt(resistor, 'a13'), dropAt(switchPart, 'd12')],
+      'r',
+    );
     components = placeDigital(components, 's');
     expect(insertedPins(components[2])).toMatchObject({
-      '1': { pinId: 'a11' }, '2': { pinId: 'a15' },
+      '1': { pinId: 'a11' },
+      '2': { pinId: 'a15' },
     });
     expect(insertedPins(components[3])).toMatchObject({
-      '1': { pinId: 'd11' }, com: { pinId: 'd12' }, '2': { pinId: 'd13' },
+      '1': { pinId: 'd11' },
+      com: { pinId: 'd12' },
+      '2': { pinId: 'd13' },
     });
     const request: CircuitSolverInput = {
-      ...input('7400'), components, compactBreadboards: true,
+      ...input('7400'),
+      components,
+      compactBreadboards: true,
       wires: [wire('ps', 'plus', 'board', 'c12'), wire('ps', 'minus', 'board', 'b15')],
     };
     expect(solveCircuit(request).componentCurrents?.r).toBeCloseTo(5 / 330);
@@ -70,14 +78,20 @@ describe('plug-in parts and front-panel supply settings', () => {
   it('regulates channel current, follows the auxiliary selector and tracks series/parallel channels', () => {
     const supply = make('power-supply', 'ps');
     const resistor = make('resistor-330', 'r');
-    supply.settings.supply = { ...getSupplySettings(), ch2Voltage: 8, ch2Limit: .01, auxiliaryVoltage: 3.3 };
+    supply.settings.supply = {
+      ...getSupplySettings(),
+      ch2Voltage: 8,
+      ch2Limit: 0.01,
+      auxiliaryVoltage: 3.3,
+    };
     const request: CircuitSolverInput = {
-      ...input('7400'), components: [supply, resistor],
+      ...input('7400'),
+      components: [supply, resistor],
       wires: [wire('ps', 'ch2-plus', 'r', '1'), wire('ps', 'ch2-minus', 'r', '2')],
     };
     const limited = solveCircuit(request);
     expect(limited.pinValues['ps:ch2-plus'].voltage).toBeCloseTo(3.3);
-    expect(limited.sourceCurrents?.['ps:ch2-plus']).toBeCloseTo(.01, 5);
+    expect(limited.sourceCurrents?.['ps:ch2-plus']).toBeCloseTo(0.01, 5);
     expect(limited.limitedOutputs).toContain('ps:ch2-plus');
     expect(limited.pinValues['ps:5v-plus'].voltage).toBe(3.3);
     supply.settings.supply = { ...supply.settings.supply, ch2Limit: 3, tracking: 'series' };
@@ -105,33 +119,27 @@ describe('six exact TTL pin maps and gate behavior', () => {
   };
   for (const model of IC_MODELS) {
     it(`${model} uses every specified input/output pin`, () =>
-      expect(
-        TTL_MODELS[model].gates.map((g) => g.inputs.join(',') + '>' + g.output),
-      ).toEqual(required[model]));
+      expect(TTL_MODELS[model].gates.map((g) => g.inputs.join(',') + '>' + g.output)).toEqual(
+        required[model],
+      ));
     TTL_MODELS[model].gates.forEach((gate, index) => {
       for (let bits = 0; bits < 2 ** gate.inputs.length; bits++)
         it(`${model} gate ${index + 1} truth vector ${bits}`, () => {
           const request = input(model),
             values = gate.inputs.map((_, i) => (bits >> i) & 1);
           gate.inputs.forEach((pin, i) =>
-            request.wires.push(
-              wire('ps', values[i] ? 'plus' : 'minus', 'ic', pin),
-            ),
+            request.wires.push(wire('ps', values[i] ? 'plus' : 'minus', 'ic', pin)),
           );
           const result = solveCircuit(request);
           expect(result.faults).toEqual([]);
-          expect(result.pinValues['ic:' + gate.output].logic).toBe(
-            expected(model, values),
-          );
+          expect(result.pinValues['ic:' + gate.output].logic).toBe(expected(model, values));
         });
     });
   }
   it('7402 flags output collisions on pins 1 and 4 instead of the NAND output map', () => {
     const request = input('7402');
     request.wires.push(wire('ic', '1', 'ic', '4'));
-    expect(solveCircuit(request).faults.map((f) => f.code)).toContain(
-      'OUTPUT_CONFLICT',
-    );
+    expect(solveCircuit(request).faults.map((f) => f.code)).toContain('OUTPUT_CONFLICT');
   });
   it('7411 pin 13 remains an input and pin 12 is its first output', () => {
     const request = input('7411');
@@ -152,9 +160,7 @@ describe('7406 open collector', () => {
     request.components.push(make('resistor-330', 'r'));
     request.wires.push(wire('ps', 'plus', 'r', '1'), wire('r', '2', 'ic', '2'));
     expect(solveCircuit(request).pinValues['ic:2'].logic).toBe(1);
-    request.wires = request.wires.filter(
-      (w) => w.to.pinId !== '1' || w.to.componentId !== 'ic',
-    );
+    request.wires = request.wires.filter((w) => w.to.pinId !== '1' || w.to.componentId !== 'ic');
     request.wires.push(wire('ps', 'plus', 'ic', '1'));
     const low = solveCircuit(request);
     expect(low.isShorted).toBe(false);
@@ -190,19 +196,14 @@ describe('digital board and instruments', () => {
     );
     const result = solveCircuit(request);
     expect(result.isShorted).toBe(false);
-    expect(result.sourceCurrents?.['ps:plus']).toBeCloseTo(
-      result.componentCurrents.led,
-      6,
-    );
+    expect(result.sourceCurrents?.['ps:plus']).toBeCloseTo(result.componentCurrents.led, 6);
   });
   it('keeps posts isolated and upper/lower banks separated', () => {
     const request = input('7400');
     request.components.push(make('breadboard', 'bb'));
     const result = solveCircuit(request),
       net = (pin: string) =>
-        result.nets.find((n) =>
-          n.pins.some((p) => p.componentId === 'bb' && p.pinId === pin),
-        )?.id;
+        result.nets.find((n) => n.pins.some((p) => p.componentId === 'bb' && p.pinId === pin))?.id;
     expect(net('post-gnd')).not.toBe(net('post-va'));
     expect(net('post-gnd')).not.toBe(net('top-minus-1'));
     expect(net('a1')).toBe(net('e1'));
@@ -210,11 +211,7 @@ describe('digital board and instruments', () => {
     expect(net('a1')).not.toBe(net('bank2-a1'));
     expect(
       digitalPins.breadboard.pins.every(
-        (p) =>
-          p.position.x >= 0 &&
-          p.position.x <= 100 &&
-          p.position.y >= 0 &&
-          p.position.y <= 100,
+        (p) => p.position.x >= 0 && p.position.x <= 100 && p.position.y >= 0 && p.position.y <= 100,
       ),
     ).toBe(true);
   });
@@ -237,22 +234,14 @@ describe('digital board and instruments', () => {
       );
       expect(net?.pins).toContainEqual(target);
     }
-    const moved = placeDigital(
-      [board, { ...chip, position: { x: 1000, y: 1000 } }],
-      'ic',
-    )[1];
+    const moved = placeDigital([board, { ...chip, position: { x: 1000, y: 1000 } }], 'ic')[1];
     expect(moved.insertion).toBeUndefined();
   });
   it('measures load current and cuts supply voltage/current on OUTPUT OFF or short', () => {
     const request = input('7400');
     request.components.push(make('resistor-330', 'r'));
-    request.wires.push(
-      wire('ps', 'plus', 'r', '1'),
-      wire('ps', 'minus', 'r', '2'),
-    );
-    expect(solveCircuit(request).sourceCurrents?.['ps:plus']).toBeCloseTo(
-      5 / 330,
-    );
+    request.wires.push(wire('ps', 'plus', 'r', '1'), wire('ps', 'minus', 'r', '2'));
+    expect(solveCircuit(request).sourceCurrents?.['ps:plus']).toBeCloseTo(5 / 330);
     request.components[0].settings.outputEnabled = false;
     const off = solveCircuit(request);
     expect(off.pinValues['ps:plus'].voltage).toBeNull();
@@ -272,10 +261,7 @@ describe('digital board and instruments', () => {
   it('samples scope probes from actual connected nodes and preserves floating gaps', () => {
     const request = input('7408');
     request.components.push(make('oscilloscope', 'scope'));
-    request.wires.push(
-      wire('ps', 'minus', 'scope', 'ch1'),
-      wire('ps', 'plus', 'scope', 'ch2'),
-    );
+    request.wires.push(wire('ps', 'minus', 'scope', 'ch1'), wire('ps', 'plus', 'scope', 'ch2'));
     const r = solveCircuit(request);
     expect(scopeLevel(r.pinValues['scope:ch1'].voltage)).toBe(0);
     expect(scopeLevel(r.pinValues['scope:ch2'].voltage)).toBe(5);

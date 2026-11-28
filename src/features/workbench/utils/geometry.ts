@@ -2,10 +2,7 @@ import type { PercentPoint, Size } from '../../../types/circuit';
 
 /** object-fit: contain geometry shared by pins and coordinate calibration. */
 export function containBounds(frame: Size, natural: Size) {
-  const ratio = Math.min(
-    frame.width / natural.width,
-    frame.height / natural.height,
-  );
+  const ratio = Math.min(frame.width / natural.width, frame.height / natural.height);
   const width = natural.width * ratio;
   const height = natural.height * ratio;
   return {
@@ -21,8 +18,7 @@ export function percentAt(
   clientY: number,
   rect: Pick<DOMRect, 'left' | 'top' | 'width' | 'height'>,
 ): PercentPoint {
-  const percent = (value: number) =>
-    Math.round(Math.max(0, Math.min(100, value)) * 100) / 100;
+  const percent = (value: number) => Math.round(Math.max(0, Math.min(100, value)) * 100) / 100;
   return {
     x: percent(((clientX - rect.left) / rect.width) * 100),
     y: percent(((clientY - rect.top) / rect.height) * 100),

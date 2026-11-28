@@ -22,27 +22,17 @@ describe('independent workspaces', () => {
     expect(after.breadboard).toBe(before.breadboard);
   });
   it('retains circuit edits across tab switches', () => {
-    usePrototypeLabStore
-      .getState()
-      .addComponent('sequence', catalog.sequence[0]);
+    usePrototypeLabStore.getState().addComponent('sequence', catalog.sequence[0]);
     usePrototypeLabStore.getState().setActiveLab('breadboard');
     usePrototypeLabStore.getState().setActiveLab('sequence');
-    expect(
-      usePrototypeLabStore.getState().circuits.sequence.nodes,
-    ).toHaveLength(6);
-    expect(
-      usePrototypeLabStore.getState().circuits.breadboard.nodes,
-    ).toHaveLength(1);
+    expect(usePrototypeLabStore.getState().circuits.sequence.nodes).toHaveLength(6);
+    expect(usePrototypeLabStore.getState().circuits.breadboard.nodes).toHaveLength(1);
   });
   it('removes incident wires when deleting a component', () => {
-    usePrototypeLabStore
-      .getState()
-      .changeNodes('sequence', [{ id: 'k1', type: 'remove' }]);
+    usePrototypeLabStore.getState().changeNodes('sequence', [{ id: 'k1', type: 'remove' }]);
     const circuit = usePrototypeLabStore.getState().circuits.sequence;
     expect(circuit.nodes.some((n) => n.id === 'k1')).toBe(false);
-    expect(
-      circuit.edges.some((e) => e.source === 'k1' || e.target === 'k1'),
-    ).toBe(false);
+    expect(circuit.edges.some((e) => e.source === 'k1' || e.target === 'k1')).toBe(false);
     expect(circuit.edges).toHaveLength(1);
   });
   it('locks editing at store level while power is on', () => {
@@ -68,15 +58,9 @@ describe('independent workspaces', () => {
     expect(usePrototypeLabStore.getState().circuits).toBe(before);
   });
   it('allocates unique reference labels after deletion and insertion', () => {
-    usePrototypeLabStore
-      .getState()
-      .changeNodes('sequence', [{ id: 'pb1', type: 'remove' }]);
-    usePrototypeLabStore
-      .getState()
-      .addComponent('sequence', catalog.sequence[1]);
-    const codes = usePrototypeLabStore
-      .getState()
-      .circuits.sequence.nodes.map((n) => n.data.code);
+    usePrototypeLabStore.getState().changeNodes('sequence', [{ id: 'pb1', type: 'remove' }]);
+    usePrototypeLabStore.getState().addComponent('sequence', catalog.sequence[1]);
+    const codes = usePrototypeLabStore.getState().circuits.sequence.nodes.map((n) => n.data.code);
     expect(new Set(codes).size).toBe(codes.length);
   });
 });

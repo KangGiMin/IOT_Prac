@@ -20,10 +20,7 @@ export interface CircuitFile {
   format: 'iot-circuit-lab';
   version: 1;
   activeMode: CircuitMode;
-  workspaces: Record<
-    CircuitMode,
-    Pick<CircuitWorkspace, 'components' | 'wires' | 'power'>
-  >;
+  workspaces: Record<CircuitMode, Pick<CircuitWorkspace, 'components' | 'wires' | 'power'>>;
 }
 const fail = (message: string): never => {
   throw new Error(message);
@@ -50,9 +47,7 @@ const boolean = (v: unknown) =>
   typeof v === 'boolean' ? v : fail('참/거짓 설정이 올바르지 않습니다.');
 const savedComponents = (w: CircuitWorkspace) =>
   w.components.map((c) =>
-    c.assetId === 'pb-switch' &&
-    c.settings.buttonMode !== 'detent' &&
-    c.settings.pressed
+    c.assetId === 'pb-switch' && c.settings.buttonMode !== 'detent' && c.settings.pressed
       ? { ...c, settings: { ...c.settings, pressed: false } }
       : c,
   );
@@ -90,8 +85,7 @@ export function circuitCapacityIssue(
   }
   // The longer active-mode name gives an upper bound. Check the compact form;
   // export falls back to it when indentation alone would exceed the limit.
-  return byteLength(JSON.stringify(fileData('sequence', workspaces))) >
-    MAX_CIRCUIT_FILE_BYTES
+  return byteLength(JSON.stringify(fileData('sequence', workspaces))) > MAX_CIRCUIT_FILE_BYTES
     ? '회로 파일은 1MB 이하여야 합니다. 부품이나 전선을 줄여 주세요.'
     : null;
 }
@@ -103,10 +97,7 @@ export function exportCircuitFile(
   if (issue) fail(issue);
   const data = fileData(mode, workspaces);
   const pretty = JSON.stringify(data, null, 2);
-  const source =
-    byteLength(pretty) <= MAX_CIRCUIT_FILE_BYTES
-      ? pretty
-      : JSON.stringify(data);
+  const source = byteLength(pretty) <= MAX_CIRCUIT_FILE_BYTES ? pretty : JSON.stringify(data);
   // Do not offer a download that the same format's validator cannot read.
   parseCircuitFile(source);
   return source;
@@ -127,8 +118,7 @@ function parseCircuitFile(source: string): {
   if (doc.format !== 'iot-circuit-lab' || doc.version !== 1)
     fail('지원하지 않는 회로 파일 형식 또는 버전입니다.');
   const mode = doc.activeMode;
-  if (mode !== 'sequence' && mode !== 'digital')
-    fail('실습 모드가 올바르지 않습니다.');
+  if (mode !== 'sequence' && mode !== 'digital') fail('실습 모드가 올바르지 않습니다.');
   const inputs = object(doc.workspaces),
     workspaces = {} as CircuitFile['workspaces'];
   for (const m of ['sequence', 'digital'] as const) {
@@ -139,9 +129,7 @@ function parseCircuitFile(source: string): {
       !Array.isArray(w.wires) ||
       w.wires.length > MAX_CIRCUIT_WIRES
     )
-      fail(
-        `부품은 ${MAX_CIRCUIT_COMPONENTS}개, 전선은 ${MAX_CIRCUIT_WIRES}개까지 지원합니다.`,
-      );
+      fail(`부품은 ${MAX_CIRCUIT_COMPONENTS}개, 전선은 ${MAX_CIRCUIT_WIRES}개까지 지원합니다.`);
     const componentInputs = w.components as unknown[],
       wireInputs = w.wires as unknown[];
     const ids = new Set<string>();
@@ -154,8 +142,7 @@ function parseCircuitFile(source: string): {
       if (typeof asset !== 'string' || !Object.hasOwn(componentAssets, asset))
         fail('알 수 없는 부품입니다.');
       const assetId = asset as CircuitComponent['assetId'];
-      if (componentAssets[assetId].mode !== m)
-        fail('다른 실습 모드의 부품이 포함되어 있습니다.');
+      if (componentAssets[assetId].mode !== m) fail('다른 실습 모드의 부품이 포함되어 있습니다.');
       const p = object(c.position),
         s = object(c.settings);
       const settings: CircuitComponent['settings'] = {
@@ -169,12 +156,7 @@ function parseCircuitFile(source: string): {
         settings.scope = parseScopeSettings(s.scope);
       }
       if (s.supply !== undefined) settings.supply = parseSupplySettings(s.supply);
-      for (const k of [
-        'openCollector',
-        'outputEnabled',
-        'scopeRunning',
-        'scopePowered',
-      ] as const)
+      for (const k of ['openCollector', 'outputEnabled', 'scopeRunning', 'scopePowered'] as const)
         if (s[k] !== undefined) settings[k] = boolean(s[k]);
       if (s.icModel !== undefined) {
         if (!IC_MODELS.includes(s.icModel as (typeof IC_MODELS)[number]))
@@ -186,8 +168,7 @@ function parseCircuitFile(source: string): {
           fail('버튼 동작이 올바르지 않습니다.');
         settings.buttonMode = s.buttonMode as 'momentary' | 'detent';
       }
-      if (assetId === 'pb-switch' && settings.buttonMode !== 'detent')
-        settings.pressed = false;
+      if (assetId === 'pb-switch' && settings.buttonMode !== 'detent') settings.pressed = false;
       const result: CircuitComponent = {
         id: cid,
         assetId,
@@ -195,8 +176,7 @@ function parseCircuitFile(source: string): {
         position: { x: number(p.x, -1e6, 1e6), y: number(p.y, -1e6, 1e6) },
         settings,
       };
-      if (c.mountedSocketId !== undefined)
-        result.mountedSocketId = id(c.mountedSocketId);
+      if (c.mountedSocketId !== undefined) result.mountedSocketId = id(c.mountedSocketId);
       if (c.insertion !== undefined) {
         const ins = object(c.insertion);
         const part = plugInPart(assetId);
@@ -210,10 +190,7 @@ function parseCircuitFile(source: string): {
           if (!breadboardRows.includes(row)) fail('브레드보드 삽입 행이 올바르지 않습니다.');
           result.insertion.row = row;
         }
-        if (
-          !Number.isInteger(result.insertion.bank) ||
-          !Number.isInteger(result.insertion.column)
-        )
+        if (!Number.isInteger(result.insertion.bank) || !Number.isInteger(result.insertion.column))
           fail('브레드보드 삽입 위치는 정수여야 합니다.');
       }
       if (c.displaySize !== undefined) {
@@ -231,9 +208,7 @@ function parseCircuitFile(source: string): {
       if (c.mountedSocketId) {
         if (
           c.assetId !== 'relay-body' ||
-          !components.some(
-            (s) => s.id === c.mountedSocketId && s.assetId === 'relay-socket',
-          ) ||
+          !components.some((s) => s.id === c.mountedSocketId && s.assetId === 'relay-socket') ||
           mounted.has(c.mountedSocketId)
         )
           fail('릴레이 장착 정보가 올바르지 않습니다.');
@@ -243,9 +218,7 @@ function parseCircuitFile(source: string): {
         const ins = c.insertion;
         if (
           (c.assetId !== 'ic-dip14' && !plugInPart(c.assetId)) ||
-          !components.some(
-            (b) => b.id === ins.boardId && b.assetId === 'breadboard',
-          )
+          !components.some((b) => b.id === ins.boardId && b.assetId === 'breadboard')
         )
           fail('브레드보드 삽입 대상이 올바르지 않습니다.');
         for (const { pinId } of Object.values(insertedPins(c))) {
@@ -267,10 +240,7 @@ function parseCircuitFile(source: string): {
           componentId = id(p.componentId),
           pinId = text(p.pinId);
         const c = components.find((c) => c.id === componentId);
-        if (
-          !c ||
-          !componentAssets[c.assetId].pins.some((pin) => pin.id === pinId)
-        )
+        if (!c || !componentAssets[c.assetId].pins.some((pin) => pin.id === pinId))
           fail('전선이 존재하지 않는 부품 또는 단자를 참조합니다.');
         return { componentId, pinId };
       };
@@ -279,11 +249,11 @@ function parseCircuitFile(source: string): {
         a = `${from.componentId}:${from.pinId}`,
         b = `${to.componentId}:${to.pinId}`,
         key = [a, b].sort().join('|');
-      if (a === b || connections.has(key))
-        fail('자기 연결 또는 중복 전선이 있습니다.');
+      if (a === b || connections.has(key)) fail('자기 연결 또는 중복 전선이 있습니다.');
       connections.add(key);
-      const color = wireColors.find(({ value }) => value === w.color)?.value
-        ?? fail('전선 색상이 올바르지 않습니다.');
+      const color =
+        wireColors.find(({ value }) => value === w.color)?.value ??
+        fail('전선 색상이 올바르지 않습니다.');
       if (w.kind !== undefined && w.kind !== 'clip' && w.kind !== 'jumper')
         fail('전선 종류가 올바르지 않습니다.');
       return {
@@ -314,7 +284,13 @@ export function importCircuitFile(source: string): {
   const data = parseCircuitFile(source);
   const hydrate = (mode: CircuitMode): CircuitWorkspace => {
     const saved = data.workspaces[mode];
-    const w = { ...saved, components: mode === 'sequence' ? alignMountedRelays(saved.components) : alignPlugInParts(saved.components) };
+    const w = {
+      ...saved,
+      components:
+        mode === 'sequence'
+          ? alignMountedRelays(saved.components)
+          : alignPlugInParts(saved.components),
+    };
     return {
       ...w,
       simulation: solveCircuit({ ...w, mode, compactBreadboards: true }),

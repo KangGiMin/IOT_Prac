@@ -1,9 +1,6 @@
 ﻿import { beforeEach, describe, expect, it } from 'vitest';
 import { useCircuitStore } from './usePhotoCircuitStore';
-import {
-  createPhotoWorkspace,
-  makeComponent,
-} from '../features/workbench/data/photoCircuits';
+import { createPhotoWorkspace, makeComponent } from '../features/workbench/data/photoCircuits';
 import { placeSequence } from '../features/workbench/utils/sequencePlacement';
 beforeEach(() =>
   useCircuitStore.setState({
@@ -43,9 +40,10 @@ describe('rail placement and installation', () => {
     useCircuitStore.getState().moveComponent('body', { x: 900, y: 900 });
     useCircuitStore.getState().finishDrag('body');
     expect(
-      useCircuitStore.getState().workspaces.sequence.components[1]
-        .mountedSocketId,
+      useCircuitStore.getState().workspaces.sequence.components[1].mountedSocketId,
     ).toBeUndefined();
-    expect(useCircuitStore.getState().workspaces.sequence.components[1].displaySize).toBeUndefined();
+    expect(
+      useCircuitStore.getState().workspaces.sequence.components[1].displaySize,
+    ).toBeUndefined();
   });
 });

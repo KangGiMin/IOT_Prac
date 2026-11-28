@@ -69,7 +69,9 @@
   stroke-width: 4;
 }
 .completed-drawing-terminal text {
-  font: 800 23px system-ui, sans-serif;
+  font:
+    800 23px system-ui,
+    sans-serif;
   fill: #045895;
   stroke: #fff;
   stroke-width: 4px;

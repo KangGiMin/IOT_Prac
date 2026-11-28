@@ -8,9 +8,7 @@ const server = await createServer({
   appType: 'custom',
 });
 try {
-  const { solveCircuit } = await server.ssrLoadModule(
-    '/src/engine/circuitSolver.ts',
-  );
+  const { solveCircuit } = await server.ssrLoadModule('/src/engine/circuitSolver.ts');
   const { makeComponent } = await server.ssrLoadModule(
     '/src/features/workbench/data/photoCircuits.ts',
   );

@@ -29,9 +29,7 @@ export function unionHitRects(rectangles: readonly HitRect[]): HitRect[] {
       if (event.start) active.add(event.index);
       else active.delete(event.index);
     }
-    const intervals = [...active]
-      .map((index) => rectangles[index])
-      .sort((a, b) => a.x - b.x);
+    const intervals = [...active].map((index) => rectangles[index]).sort((a, b) => a.x - b.x);
     let strip: HitRect | undefined;
     for (const r of intervals) {
       if (strip && r.x <= strip.x + strip.width) {

@@ -19,8 +19,12 @@ export function RelayScrewPhoto({
       {relay.pins.map((pin) => {
         const port = ports?.get(pin.id);
         const selected = !!port && highlighted.includes(port);
-        const number = pin.id === relay14.coil.plus ? `${pin.id}+`
-          : pin.id === relay14.coil.minus ? `${pin.id}−` : pin.id;
+        const number =
+          pin.id === relay14.coil.plus
+            ? `${pin.id}+`
+            : pin.id === relay14.coil.minus
+              ? `${pin.id}−`
+              : pin.id;
         return (
           <span
             key={pin.id}
@@ -29,10 +33,17 @@ export function RelayScrewPhoto({
             title={pin.label}
             style={{ left: `${pin.position.x}%`, top: `${pin.position.y}%` }}
           >
-            <span className={selected ? 'relay-screw-number is-active' : 'relay-screw-number'}>{number}</span>
+            <span className={selected ? 'relay-screw-number is-active' : 'relay-screw-number'}>
+              {number}
+            </span>
             {port && (
-              <Handle id={port} type="source" position={Position.Bottom}
-                isConnectable={false} className={selected ? 'is-highlighted' : undefined} />
+              <Handle
+                id={port}
+                type="source"
+                position={Position.Bottom}
+                isConnectable={false}
+                className={selected ? 'is-highlighted' : undefined}
+              />
             )}
           </span>
         );

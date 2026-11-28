@@ -52,15 +52,7 @@ for (let column = 1; column <= 30; column++) {
     ['bottom-minus', 268, 'ground'],
   ] as const) {
     breadboardPins.push(
-      pin(
-        `${id}-${column}`,
-        `${id} ${column}`,
-        47 + (column - 1) * 16,
-        y,
-        role,
-        'hole',
-        id,
-      ),
+      pin(`${id}-${column}`, `${id} ${column}`, 47 + (column - 1) * 16, y, role, 'hole', id),
     );
   }
 }
@@ -82,10 +74,7 @@ export const deviceDefinitions: Record<AssetId, ComponentDefinition> = {
     200,
     'control',
     ['sequence'],
-    [
-      pin('plus', '+', 58, 42, 'passive'),
-      pin('minus', '−', 102, 42, 'passive'),
-    ],
+    [pin('plus', '+', 58, 42, 'passive'), pin('minus', '−', 102, 42, 'passive')],
   ),
   'pb-switch': device(
     'pb-switch',
@@ -122,36 +111,26 @@ export const deviceDefinitions: Record<AssetId, ComponentDefinition> = {
       );
     }),
   ),
-  'relay-body': device(
-    'relay-body',
-    '투명 릴레이',
-    'DC 24V · 4PDT',
-    100,
-    140,
-    'control',
-    ['sequence'],
-  ),
+  'relay-body': device('relay-body', '투명 릴레이', 'DC 24V · 4PDT', 100, 140, 'control', [
+    'sequence',
+  ]),
   // Reserved here because AssetId is shared with the photo workbench.
-  'relay-unit-11p': device('relay-unit-11p', '8핀 온딜레이 타이머 유닛', 'TIMER UNIT (ON-DELAY)', 192, 256, 'control', []),
-  'motor-unit': device('motor-unit', '모터 유닛', 'N-2260-08', 184, 200, 'control', []),
-  'timer-at8n': device(
-    'timer-at8n',
-    '타이머 릴레이',
-    'AT8N · ON DELAY',
-    180,
-    200,
+  'relay-unit-11p': device(
+    'relay-unit-11p',
+    '8핀 온딜레이 타이머 유닛',
+    'TIMER UNIT (ON-DELAY)',
+    192,
+    256,
     'control',
-    ['sequence'],
+    [],
   ),
-  screwdriver: device(
-    'screwdriver',
-    '배선 드라이버',
-    'INSULATED DRIVER',
-    50,
-    200,
-    'tool',
-    ['sequence'],
-  ),
+  'motor-unit': device('motor-unit', '모터 유닛', 'N-2260-08', 184, 200, 'control', []),
+  'timer-at8n': device('timer-at8n', '타이머 릴레이', 'AT8N · ON DELAY', 180, 200, 'control', [
+    'sequence',
+  ]),
+  screwdriver: device('screwdriver', '배선 드라이버', 'INSULATED DRIVER', 50, 200, 'tool', [
+    'sequence',
+  ]),
   breadboard: device(
     'breadboard',
     '브레드보드',
@@ -210,10 +189,7 @@ export const deviceDefinitions: Record<AssetId, ComponentDefinition> = {
     65,
     'passive',
     ['digital'],
-    [
-      pin('1', '1', 12, 49, 'passive', 'lead'),
-      pin('2', '2', 133, 49, 'passive', 'lead'),
-    ],
+    [pin('1', '1', 12, 49, 'passive', 'lead'), pin('2', '2', 133, 49, 'passive', 'lead')],
   ),
   'ic-dip14': device(
     'ic-dip14',
@@ -229,13 +205,7 @@ export const deviceDefinitions: Record<AssetId, ComponentDefinition> = {
         i === 6 ? '7 GND' : i === 13 ? '14 VCC' : String(i + 1),
         i < 7 ? 24 + i * 27 : 186 - (i - 7) * 27,
         i < 7 ? 85 : 15,
-        i === 6
-          ? 'ground'
-          : i === 13
-            ? 'positive'
-            : [2, 5, 7, 10].includes(i)
-              ? 'output'
-              : 'input',
+        i === 6 ? 'ground' : i === 13 ? 'positive' : [2, 5, 7, 10].includes(i) ? 'output' : 'input',
         'lead',
       ),
     ),

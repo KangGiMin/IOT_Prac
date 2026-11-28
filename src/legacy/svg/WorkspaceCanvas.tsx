@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
-import {
-  LockKeyhole,
-  Maximize2,
-  Minus,
-  MousePointer2,
-  Plus,
-} from 'lucide-react';
+import { LockKeyhole, Maximize2, Minus, MousePointer2, Plus } from 'lucide-react';
 import { DeviceSvg } from './devices/DeviceSvg';
 import { deviceDefinitions } from './devices/definitions';
 import { useSvgCircuitStore } from './store/useSvgCircuitStore';
@@ -44,17 +38,11 @@ export function WorkspaceCanvas() {
   const [panning, setPanning] = useState(false);
   const gridId = useId().replace(/:/g, '') + '-grid';
   // Inverting actual SVG matrices also handles CSS scaling and browser zoom.
-  const pointAt = (
-    clientX: number,
-    clientY: number,
-    world = true,
-  ): Point | null => {
+  const pointAt = (clientX: number, clientY: number, world = true): Point | null => {
     const element = world ? worldRef.current : svgRef.current;
     const matrix = element?.getScreenCTM();
     if (!matrix) return null;
-    const point = new DOMPoint(clientX, clientY).matrixTransform(
-      matrix.inverse(),
-    );
+    const point = new DOMPoint(clientX, clientY).matrixTransform(matrix.inverse());
     return { x: point.x, y: point.y };
   };
   const fit = useCallback(() => {
@@ -67,22 +55,14 @@ export function WorkspaceCanvas() {
     const minX = Math.min(...items.map((c) => c.position.x));
     const minY = Math.min(...items.map((c) => c.position.y));
     const maxX = Math.max(
-      ...items.map(
-        (c) => c.position.x + deviceDefinitions[c.assetId].viewBox[2],
-      ),
+      ...items.map((c) => c.position.x + deviceDefinitions[c.assetId].viewBox[2]),
     );
     const maxY = Math.max(
-      ...items.map(
-        (c) => c.position.y + deviceDefinitions[c.assetId].viewBox[3],
-      ),
+      ...items.map((c) => c.position.y + deviceDefinitions[c.assetId].viewBox[3]),
     );
     const zoom = Math.max(
       0.25,
-      Math.min(
-        1.4,
-        (size.width - 80) / (maxX - minX),
-        (size.height - 110) / (maxY - minY),
-      ),
+      Math.min(1.4, (size.width - 80) / (maxX - minX), (size.height - 110) / (maxY - minY)),
     );
     current.setViewport({
       x: (size.width - (maxX - minX) * zoom) / 2 - minX * zoom,
@@ -102,12 +82,7 @@ export function WorkspaceCanvas() {
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (
-      size.width <= 1 ||
-      size.height <= 1 ||
-      initialized.current.has(state.mode)
-    )
-      return;
+    if (size.width <= 1 || size.height <= 1 || initialized.current.has(state.mode)) return;
     initialized.current.add(state.mode);
     fit();
   }, [state.mode, size, fit]);
@@ -124,13 +99,10 @@ export function WorkspaceCanvas() {
       event.preventDefault();
       const matrix = svg.getScreenCTM();
       if (!matrix) return;
-      const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(
-        matrix.inverse(),
-      );
+      const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(matrix.inverse());
       const s = useSvgCircuitStore.getState();
       const delta =
-        event.deltaY *
-        (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? size.height : 1);
+        event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? size.height : 1);
       s.setViewport(
         zoomAt(
           s.workspaces[s.mode].viewport,
@@ -145,18 +117,14 @@ export function WorkspaceCanvas() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const element = event.target as HTMLElement;
-      if (element.matches('input, textarea, select, [contenteditable="true"]'))
-        return;
+      if (element.matches('input, textarea, select, [contenteditable="true"]')) return;
       const s = useSvgCircuitStore.getState();
       if (event.key === 'Escape') {
         s.setPendingPin(null);
         gesture.current = null;
         setPanning(false);
       }
-      if (
-        event.code === 'Space' &&
-        svgRef.current?.contains(document.activeElement)
-      ) {
+      if (event.code === 'Space' && svgRef.current?.contains(document.activeElement)) {
         event.preventDefault();
         spaceDown.current = true;
       }
@@ -207,10 +175,7 @@ export function WorkspaceCanvas() {
     };
     setPanning(true);
   };
-  const onComponentDown = (
-    event: ReactPointerEvent,
-    component: CircuitComponent,
-  ) => {
+  const onComponentDown = (event: ReactPointerEvent, component: CircuitComponent) => {
     if (spaceDown.current || event.button === 1) return;
     if (event.button !== 0) return;
     event.stopPropagation();
@@ -264,11 +229,8 @@ export function WorkspaceCanvas() {
       svgRef.current.releasePointerCapture(event.pointerId);
   };
   const zoomButton = (factor: number) =>
-    state.setViewport(
-      zoomAt(viewport, { x: size.width / 2, y: size.height / 2 }, factor),
-    );
-  const pendingPosition =
-    state.pendingPin && pinPosition(components, state.pendingPin);
+    state.setViewport(zoomAt(viewport, { x: size.width / 2, y: size.height / 2 }, factor));
+  const pendingPosition = state.pendingPin && pinPosition(components, state.pendingPin);
   // Boards render first, regardless of addition order. Pin targets render above wires.
   const ordered = [...components].sort(
     (a, b) =>
@@ -296,12 +258,7 @@ export function WorkspaceCanvas() {
       >
         <title>IoT 전기·전자 회로 SVG 작업대</title>
         <defs>
-          <pattern
-            id={gridId}
-            width="24"
-            height="24"
-            patternUnits="userSpaceOnUse"
-          >
+          <pattern id={gridId} width="24" height="24" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="1" fill="#d1d9e0" />
           </pattern>
         </defs>
@@ -343,9 +300,7 @@ export function WorkspaceCanvas() {
                   <DeviceSvg
                     assetId={component.assetId}
                     settings={component.settings}
-                    energized={workspace.simulation.energizedComponents.includes(
-                      component.id,
-                    )}
+                    energized={workspace.simulation.energizedComponents.includes(component.id)}
                   />
                   {state.selectedId === component.id && (
                     <rect
@@ -439,10 +394,8 @@ export function WorkspaceCanvas() {
             {ordered.map((component) =>
               deviceDefinitions[component.assetId].pins.map((pin) => {
                 const ref = { componentId: component.id, pinId: pin.id };
-                const pending =
-                  state.pendingPin && samePin(state.pendingPin, ref);
-                const radius =
-                  pin.style === 'hole' ? 4.8 : pin.style === 'lead' ? 6 : 10;
+                const pending = state.pendingPin && samePin(state.pendingPin, ref);
+                const radius = pin.style === 'hole' ? 4.8 : pin.style === 'lead' ? 6 : 10;
                 return (
                   <circle
                     key={`${component.id}:${pin.id}`}

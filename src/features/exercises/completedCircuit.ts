@@ -34,49 +34,81 @@ export function buildCompletedWorkbench(exercise: Exercise) {
   const supply: WorkbenchDevice = {
     id: 'supply',
     kind: 'supply',
-    rows: [{
-      id: 'power',
-      label: '전원 단자',
-      terminals: [{ id: '24V', label: '+24V' }, { id: '0V', label: '0V' }],
-    }],
+    rows: [
+      {
+        id: 'power',
+        label: '전원 단자',
+        terminals: [
+          { id: '24V', label: '+24V' },
+          { id: '0V', label: '0V' },
+        ],
+      },
+    ],
   };
   const devices = new Map<string, WorkbenchDevice>();
   for (const part of circuit.parts) {
     if (part.kind === 'contact') continue;
     if (part.kind === 'relay') {
       const ports = relay.portsByScrew.get(part.id)!;
-      const screwPorts = new Map(sequencePins['relay-socket'].pins.map(({ id }) =>
-        [id, ports.get(id) ?? `${part.id}:unused:${id}`],
-      ));
+      const screwPorts = new Map(
+        sequencePins['relay-socket'].pins.map(({ id }) => [
+          id,
+          ports.get(id) ?? `${part.id}:unused:${id}`,
+        ]),
+      );
       devices.set(part.id, {
         id: part.id,
         kind: 'relay',
         screwPorts,
         rows: [
-          { id: 'a', label: 'a · NO', terminals: relay14.poles.map(({ no }) => ({ id: screwPorts.get(no)!, label: no })) },
-          { id: 'b', label: 'b · NC', terminals: relay14.poles.map(({ nc }) => ({ id: screwPorts.get(nc)!, label: nc })) },
-          { id: 'coil', label: '코일', terminals: [
-            { id: screwPorts.get(relay14.coil.plus)!, label: `${relay14.coil.plus} +` },
-            { id: screwPorts.get(relay14.coil.minus)!, label: `${relay14.coil.minus} −` },
-          ] },
-          { id: 'c', label: 'c · 공통', terminals: relay14.poles.map(({ com }) => ({ id: screwPorts.get(com)!, label: com })) },
+          {
+            id: 'a',
+            label: 'a · NO',
+            terminals: relay14.poles.map(({ no }) => ({ id: screwPorts.get(no)!, label: no })),
+          },
+          {
+            id: 'b',
+            label: 'b · NC',
+            terminals: relay14.poles.map(({ nc }) => ({ id: screwPorts.get(nc)!, label: nc })),
+          },
+          {
+            id: 'coil',
+            label: '코일',
+            terminals: [
+              { id: screwPorts.get(relay14.coil.plus)!, label: `${relay14.coil.plus} +` },
+              { id: screwPorts.get(relay14.coil.minus)!, label: `${relay14.coil.minus} −` },
+            ],
+          },
+          {
+            id: 'c',
+            label: 'c · 공통',
+            terminals: relay14.poles.map(({ com }) => ({ id: screwPorts.get(com)!, label: com })),
+          },
         ],
       });
       continue;
     }
     const motor = part.kind === 'motor';
-    const labels = part.kind === 'timer' ? (part.timerMode ? ['A1 +', 'A2 −'] : ['7 +', '2 −'])
-        : motor ? ['왼쪽', '오른쪽'] : ['+', '−'];
+    const labels =
+      part.kind === 'timer'
+        ? part.timerMode
+          ? ['A1 +', 'A2 −']
+          : ['7 +', '2 −']
+        : motor
+          ? ['왼쪽', '오른쪽']
+          : ['+', '−'];
     devices.set(part.id, {
       id: part.id,
       kind: part.kind,
       seconds: part.seconds,
       timerMode: part.timerMode,
-      rows: [{
-        id: 'load',
-        label: part.kind === 'timer' ? '전원 단자' : '부하 단자',
-        terminals: labels.map((label, index) => ({ id: `${part.id}:${index + 1}`, label })),
-      }],
+      rows: [
+        {
+          id: 'load',
+          label: part.kind === 'timer' ? '전원 단자' : '부하 단자',
+          terminals: labels.map((label, index) => ({ id: `${part.id}:${index + 1}`, label })),
+        },
+      ],
     });
   }
 
@@ -115,9 +147,11 @@ export function buildCompletedWorkbench(exercise: Exercise) {
   const loads = [...devices.values()].filter((device) => device.kind !== 'button');
   const placed = [supply, ...buttons, ...loads];
   const deviceByTerminal = new Map(
-    placed.flatMap((device) => device.rows.flatMap((row) =>
-      row.terminals.map((terminal) => [terminal.id, device.id] as const),
-    )),
+    placed.flatMap((device) =>
+      device.rows.flatMap((row) =>
+        row.terminals.map((terminal) => [terminal.id, device.id] as const),
+      ),
+    ),
   );
 
   return {

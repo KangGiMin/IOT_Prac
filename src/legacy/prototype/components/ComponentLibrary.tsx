@@ -10,9 +10,7 @@ export function ComponentLibrary({ lab }: { lab: CircuitLabId }) {
   const powerOn = usePrototypeLabStore((s) => s.powerOn);
   const addComponent = usePrototypeLabStore((s) => s.addComponent);
   const items = catalog[lab].filter((item) =>
-    `${item.label} ${item.detail} ${item.description}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
+    `${item.label} ${item.detail} ${item.description}`.toLowerCase().includes(query.toLowerCase()),
   );
   return (
     <aside className="component-library">
@@ -41,9 +39,7 @@ export function ComponentLibrary({ lab }: { lab: CircuitLabId }) {
             className="component-card"
             disabled={powerOn}
             onClick={() => addComponent(lab, item)}
-            title={
-              powerOn ? '전원을 끄고 부품을 추가하세요' : `${item.label} 추가`
-            }
+            title={powerOn ? '전원을 끄고 부품을 추가하세요' : `${item.label} 추가`}
           >
             <div className={`component-icon kind-${item.kind}`}>
               <ComponentSymbol kind={item.kind} />
@@ -55,9 +51,7 @@ export function ComponentLibrary({ lab }: { lab: CircuitLabId }) {
             <Plus size={15} className="add-icon" />
           </button>
         ))}
-        {items.length === 0 && (
-          <p className="empty-search">검색한 부품이 없습니다.</p>
-        )}
+        {items.length === 0 && <p className="empty-search">검색한 부품이 없습니다.</p>}
       </div>
       <div className="library-help">
         <BookOpen size={18} />
@@ -67,9 +61,7 @@ export function ComponentLibrary({ lab }: { lab: CircuitLabId }) {
           <br />
           나만의 회로를 구성해 보세요.
         </p>
-        <button
-          onClick={() => usePrototypeLabStore.getState().setGuideOpen(true)}
-        >
+        <button onClick={() => usePrototypeLabStore.getState().setGuideOpen(true)}>
           실습 가이드 보기
         </button>
       </div>

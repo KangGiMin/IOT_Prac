@@ -2,10 +2,7 @@ import { sequenceGeometry } from '../../../config/sequencePins';
 import { ScopePhotoControl } from '../../scope/ScopePhotoControl';
 import { InstrumentDial } from './InstrumentDial';
 import { SupplyPhotoControl } from './SupplyPhotoControl';
-import type {
-  CircuitComponent,
-  ControlDefinition,
-} from '../../../types/circuit';
+import type { CircuitComponent, ControlDefinition } from '../../../types/circuit';
 import { useCircuitStore } from '../../../store/usePhotoCircuitStore';
 
 /** Uses the same image-content rectangle as pins, regardless of image aspect ratio/zoom. */
@@ -30,8 +27,12 @@ export function PhotoControl({
   const pressed = (value: boolean) =>
     useCircuitStore.getState().updateSettings(component.id, { pressed: value });
 
-  if (control.kind === 'scope-action' || control.kind === 'scope-dial' || control.kind === 'scope-key')
-    return <ScopePhotoControl component={component} control={control} calibration={calibration}/>;
+  if (
+    control.kind === 'scope-action' ||
+    control.kind === 'scope-dial' ||
+    control.kind === 'scope-key'
+  )
+    return <ScopePhotoControl component={component} control={control} calibration={calibration} />;
   if (control.kind === 'supply-control')
     return <SupplyPhotoControl component={component} control={control} calibration={calibration} />;
 
@@ -47,12 +48,8 @@ export function PhotoControl({
           180) /
         Math.PI;
       const dial = ((((angle + 90 + 180) % 360) + 360) % 360) - 180;
-      const value =
-        Math.round(Math.max(0, Math.min(10, ((dial + 135) / 270) * 10)) * 10) /
-        10;
-      useCircuitStore
-        .getState()
-        .updateSettings(component.id, { timerSeconds: value });
+      const value = Math.round(Math.max(0, Math.min(10, ((dial + 135) / 270) * 10)) * 10) / 10;
+      useCircuitStore.getState().updateSettings(component.id, { timerSeconds: value });
     };
     return (
       <div
@@ -75,16 +72,7 @@ export function PhotoControl({
         }}
         onKeyDown={(e) => {
           if (calibration) return;
-          if (
-            [
-              'ArrowLeft',
-              'ArrowDown',
-              'ArrowRight',
-              'ArrowUp',
-              'Home',
-              'End',
-            ].includes(e.key)
-          ) {
+          if (['ArrowLeft', 'ArrowDown', 'ArrowRight', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
             e.preventDefault();
             useCircuitStore.getState().updateSettings(component.id, {
               timerSeconds:
@@ -104,12 +92,22 @@ export function PhotoControl({
   }
   if (control.kind === 'dial') {
     const value = component.settings[control.setting];
-    return <InstrumentDial style={style} label={control.label} disabled={calibration}
-      min={control.min} max={control.max} step={control.step} value={value}
-      valueText={`${value.toFixed(1)} ${control.unit}`} onChange={(next) => {
-        select();
-        useCircuitStore.getState().updateSettings(component.id, { [control.setting]: next });
-      }} />;
+    return (
+      <InstrumentDial
+        style={style}
+        label={control.label}
+        disabled={calibration}
+        min={control.min}
+        max={control.max}
+        step={control.step}
+        value={value}
+        valueText={`${value.toFixed(1)} ${control.unit}`}
+        onChange={(next) => {
+          select();
+          useCircuitStore.getState().updateSettings(component.id, { [control.setting]: next });
+        }}
+      />
+    );
   }
   if (control.kind === 'momentary') {
     const detent = component.settings.buttonMode === 'detent';
@@ -161,9 +159,7 @@ export function PhotoControl({
           if (!detent) pressed(false);
         }}
       >
-        <span>
-          {detent ? (isPressed ? 'ON' : 'OFF') : isPressed ? '누름' : '누르기'}
-        </span>
+        <span>{detent ? (isPressed ? 'ON' : 'OFF') : isPressed ? '누름' : '누르기'}</span>
       </button>
     );
   }
@@ -173,13 +169,17 @@ export function PhotoControl({
       ? supplyOutput
         ? component.settings.outputEnabled !== false
         : powered
-      : (component.settings[control.setting] ??
-        control.setting === 'scopeRunning');
+      : (component.settings[control.setting] ?? control.setting === 'scopeRunning');
   return (
     <button
       className={`device-control nodrag nopan ${active ? 'is-pressed' : ''}`}
       style={style}
-      disabled={calibration || (control.kind === 'toggle' && control.setting === 'scopeRunning' && component.settings.scopePowered === false)}
+      disabled={
+        calibration ||
+        (control.kind === 'toggle' &&
+          control.setting === 'scopeRunning' &&
+          component.settings.scopePowered === false)
+      }
       aria-label={control.label}
       aria-pressed={active}
       title={`${control.label}: ${active ? 'ON' : 'OFF'}`}

@@ -11,12 +11,7 @@ import type {
   Point,
   WireColor,
 } from '../../../types/circuit';
-import type {
-  CircuitLog,
-  MissionResult,
-  SvgWorkspace,
-  Viewport,
-} from '../types.ts';
+import type { CircuitLog, MissionResult, SvgWorkspace, Viewport } from '../types.ts';
 export interface SvgCircuitState {
   mode: CircuitMode;
   workspaces: Record<CircuitMode, SvgWorkspace>;
@@ -35,10 +30,7 @@ export interface SvgCircuitState {
   addComponent: (assetId: AssetId, position?: Point) => void;
   moveComponent: (id: string, position: Point) => void;
   renameComponent: (id: string, label: string) => void;
-  updateSettings: (
-    id: string,
-    settings: Partial<CircuitComponent['settings']>,
-  ) => void;
+  updateSettings: (id: string, settings: Partial<CircuitComponent['settings']>) => void;
   setPendingPin: (ref: PinRef | null) => void;
   connect: (from: PinRef, to: PinRef) => void;
   deleteSelection: () => void;
@@ -46,10 +38,7 @@ export interface SvgCircuitState {
   gradeMission: () => void;
   clearLogs: () => void;
 }
-const log = (
-  message: string,
-  level: CircuitLog['level'] = 'info',
-): CircuitLog => ({
+const log = (message: string, level: CircuitLog['level'] = 'info'): CircuitLog => ({
   id: crypto.randomUUID(),
   message,
   level,
@@ -58,13 +47,9 @@ const log = (
 const editLocked = (workspace: SvgWorkspace) =>
   workspace.power.on || workspace.simulation.status === 'running';
 function checked(workspace: SvgWorkspace): SvgWorkspace {
-  const { nodes, shortCircuit } = buildTopology(
-    workspace.components,
-    workspace.wires,
-  );
+  const { nodes, shortCircuit } = buildTopology(workspace.components, workspace.wires);
   const newlyShort =
-    shortCircuit.status === 'short' &&
-    workspace.simulation.shortCircuit.status !== 'short';
+    shortCircuit.status === 'short' && workspace.simulation.shortCircuit.status !== 'short';
   return {
     ...workspace,
     nodes,
@@ -100,13 +85,11 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
       notice: '실습 모드를 전환했습니다. 각 작업대의 상태는 유지됩니다.',
     }),
   select: (selectedId) => set({ selectedId, selectedWireId: null }),
-  selectWire: (selectedWireId) =>
-    set({ selectedWireId, selectedId: null, pendingPin: null }),
+  selectWire: (selectedWireId) => set({ selectedWireId, selectedId: null, pendingPin: null }),
   setWireColor: (wireColor) => set({ wireColor }),
   setViewport: (viewport) =>
     set((s) => {
-      if (![viewport.x, viewport.y, viewport.zoom].every(Number.isFinite))
-        return s;
+      if (![viewport.x, viewport.y, viewport.zoom].every(Number.isFinite)) return s;
       return {
         workspaces: {
           ...s.workspaces,
@@ -188,13 +171,7 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
         y: 80 + (w.components.length % 4) * 45,
       };
       if (![point.x, point.y].every(Number.isFinite)) return s;
-      const component = makeSvgComponent(
-        assetId,
-        id,
-        point.x,
-        point.y,
-        w.power.voltage,
-      );
+      const component = makeSvgComponent(assetId, id, point.x, point.y, w.power.voltage);
       return {
         workspaces: {
           ...s.workspaces,
@@ -208,16 +185,13 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
   moveComponent: (id, position) =>
     set((s) => {
       const w = s.workspaces[s.mode];
-      if (editLocked(w) || ![position.x, position.y].every(Number.isFinite))
-        return s;
+      if (editLocked(w) || ![position.x, position.y].every(Number.isFinite)) return s;
       return {
         workspaces: {
           ...s.workspaces,
           [s.mode]: {
             ...w,
-            components: w.components.map((c) =>
-              c.id === id ? { ...c, position } : c,
-            ),
+            components: w.components.map((c) => (c.id === id ? { ...c, position } : c)),
           },
         },
       };
@@ -248,9 +222,7 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
           ? Math.max(0, Math.min(10, safe.timerSeconds))
           : 3;
       if (safe.voltage !== undefined)
-        safe.voltage = Number.isFinite(safe.voltage)
-          ? Math.max(0, Math.min(30, safe.voltage))
-          : 5;
+        safe.voltage = Number.isFinite(safe.voltage) ? Math.max(0, Math.min(30, safe.voltage)) : 5;
       return {
         workspaces: {
           ...s.workspaces,
@@ -285,10 +257,7 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
         return { pendingPin: null, notice: '이미 연결된 단자입니다.' };
       const next = checked({
         ...w,
-        wires: [
-          ...w.wires,
-          { id: crypto.randomUUID(), from, to, color: s.wireColor },
-        ],
+        wires: [...w.wires, { id: crypto.randomUUID(), from, to, color: s.wireColor }],
       });
       return {
         workspaces: { ...s.workspaces, [s.mode]: next },
@@ -337,9 +306,7 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
     set((s) => {
       const w = checked(s.workspaces[s.mode]);
       const target = s.mode === 'sequence' ? 'pilot-lamp' : 'led-red';
-      const targetIds = w.components
-        .filter((c) => c.assetId === target)
-        .map((c) => c.id);
+      const targetIds = w.components.filter((c) => c.assetId === target).map((c) => c.id);
       const reachesSource = (componentId: string, pinId: string) =>
         w.nodes.some(
           (node) =>
@@ -347,24 +314,17 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
             node.pins.some(
               (ref) =>
                 ref.pinId === pinId &&
-                w.components.some(
-                  (c) =>
-                    c.id === ref.componentId && c.assetId === 'power-supply',
-                ),
+                w.components.some((c) => c.id === ref.componentId && c.assetId === 'power-supply'),
             ),
         );
       const checks = [
         {
           label: '전원과 표시 부품 배치',
-          passed:
-            !!targetIds.length &&
-            w.components.some((c) => c.assetId === 'power-supply'),
+          passed: !!targetIds.length && w.components.some((c) => c.assetId === 'power-supply'),
         },
         {
           label: '표시 부품에 + / − 노드 연결',
-          passed: targetIds.some(
-            (id) => reachesSource(id, 'plus') && reachesSource(id, 'minus'),
-          ),
+          passed: targetIds.some((id) => reachesSource(id, 'plus') && reachesSource(id, 'minus')),
         },
         {
           label: '전원 + / − 직접 단락 없음',
@@ -373,9 +333,7 @@ export const useSvgCircuitStore = create<SvgCircuitState>()((set) => ({
       ];
       const missionResult: MissionResult = {
         checks,
-        score: Math.round(
-          (checks.filter((check) => check.passed).length / checks.length) * 100,
-        ),
+        score: Math.round((checks.filter((check) => check.passed).length / checks.length) * 100),
         scope: 'wiring-only',
       };
       return {

@@ -1,9 +1,6 @@
 import { expect, it } from 'vitest';
 import { useCircuitStore } from './usePhotoCircuitStore';
-import {
-  createPhotoWorkspace,
-  makeComponent,
-} from '../features/workbench/data/photoCircuits';
+import { createPhotoWorkspace, makeComponent } from '../features/workbench/data/photoCircuits';
 import { exportCircuitFile } from '../engine/circuitFile';
 
 it('keeps import, evaluation, history replay and reset on the compact runtime path', () => {
@@ -26,9 +23,7 @@ it('keeps import, evaluation, history replay and reset on the compact runtime pa
   const s = useCircuitStore.getState();
   s.importJson(exportCircuitFile('digital', workspaces));
   const pins = () =>
-    Object.keys(
-      useCircuitStore.getState().workspaces.digital.simulation.pinValues,
-    );
+    Object.keys(useCircuitStore.getState().workspaces.digital.simulation.pinValues);
   expect(pins()).toHaveLength(0);
   s.togglePower();
   expect(pins()).toHaveLength(0);
@@ -39,7 +34,5 @@ it('keeps import, evaluation, history replay and reset on the compact runtime pa
   s.reset();
   expect(pins().some((key) => key.startsWith('dig-board:'))).toBe(false);
   s.loadPreset('nand');
-  expect(pins().filter((key) => key.startsWith('board:')).length).toBeLessThan(
-    300,
-  );
+  expect(pins().filter((key) => key.startsWith('board:')).length).toBeLessThan(300);
 });

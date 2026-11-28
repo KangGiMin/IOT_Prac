@@ -10,18 +10,10 @@ describe('user-supplied PNG contract', () => {
       for (const item of [...asset.pins, ...asset.controls])
         expect(item.label).not.toMatch(/[?\uFFFD]/);
     }
-    expect(componentAssets['pb-switch'].controls[0].label).toBe(
-      '푸시버튼 누르기',
-    );
-    expect(
-      componentAssets['pilot-lamp'].pins.find((p) => p.id === 'minus')!.label,
-    ).toBe('−');
-    expect(
-      componentAssets['relay-socket'].pins.find((p) => p.id === '13')!.label,
-    ).toContain('−');
-    expect(
-      componentAssets['timer-at8n'].pins.find((p) => p.id === '2')!.label,
-    ).toContain('−');
+    expect(componentAssets['pb-switch'].controls[0].label).toBe('푸시버튼 누르기');
+    expect(componentAssets['pilot-lamp'].pins.find((p) => p.id === 'minus')!.label).toBe('−');
+    expect(componentAssets['relay-socket'].pins.find((p) => p.id === '13')!.label).toContain('−');
+    expect(componentAssets['timer-at8n'].pins.find((p) => p.id === '2')!.label).toContain('−');
   });
   it('loads the exact filenames directly under assets, without mode subfolders', () => {
     const expected = [
@@ -43,13 +35,9 @@ describe('user-supplied PNG contract', () => {
       'switch-3pin.png',
     ];
     const assets = Object.values(componentAssets);
-    expect(assets.map((asset) => asset.fileName).sort()).toEqual(
-      expected.sort(),
-    );
+    expect(assets.map((asset) => asset.fileName).sort()).toEqual(expected.sort());
     for (const asset of assets)
-      expect(asset.src).toMatch(
-        new RegExp(`/assets/${asset.fileName.replace('.', '\\.')}$`),
-      );
+      expect(asset.src).toMatch(new RegExp(`/assets/${asset.fileName.replace('.', '\\.')}$`));
   });
   it('keeps every terminal/control inside the shared percentage coordinate space', () => {
     const point = (p: PercentPoint) => {
@@ -66,9 +54,7 @@ describe('user-supplied PNG contract', () => {
       expect(r.height).toBeGreaterThan(0);
     };
     for (const asset of Object.values(componentAssets)) {
-      expect(new Set(asset.pins.map((pin) => pin.id)).size).toBe(
-        asset.pins.length,
-      );
+      expect(new Set(asset.pins.map((pin) => pin.id)).size).toBe(asset.pins.length);
       asset.pins.forEach((pin) => point(pin.position));
       asset.controls.forEach((control) => rect(control.bounds));
       asset.overlays.forEach((overlay) => {

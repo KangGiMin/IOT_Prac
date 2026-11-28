@@ -1,7 +1,4 @@
-import {
-  createPreset,
-  type PresetId,
-} from '../features/workbench/data/presets';
+import { createPreset, type PresetId } from '../features/workbench/data/presets';
 import {
   circuitCapacityIssue,
   importCircuitFile,
@@ -14,10 +11,7 @@ import { placeSequence } from '../features/workbench/utils/sequencePlacement';
 import { create } from 'zustand';
 import { componentAssets } from '../config/assets';
 import { parseSupplySettings } from '../config/supplySettings';
-import {
-  createPhotoWorkspace,
-  makeComponent,
-} from '../features/workbench/data/photoCircuits';
+import { createPhotoWorkspace, makeComponent } from '../features/workbench/data/photoCircuits';
 import { solveCircuit } from '../engine/circuitSolver';
 import { parseScopeSettings } from '../features/scope/model';
 import type { ScopeSettings } from '../features/scope/model';
@@ -32,10 +26,7 @@ import type {
   WireColor,
 } from '../types/circuit';
 
-const evaluate = (
-  workspace: CircuitWorkspace,
-  mode: CircuitMode,
-): CircuitWorkspace => ({
+const evaluate = (workspace: CircuitWorkspace, mode: CircuitMode): CircuitWorkspace => ({
   ...workspace,
   simulation: solveCircuit({
     ...workspace,
@@ -48,8 +39,7 @@ const evaluate = (
 type Snapshot = Pick<CircuitWorkspace, 'components' | 'wires' | 'power'>;
 const snapshot = (w: CircuitWorkspace): Snapshot =>
   structuredClone({ components: w.components, wires: w.wires, power: w.power });
-const same = (a: Snapshot, b: Snapshot) =>
-  JSON.stringify(a) === JSON.stringify(b);
+const same = (a: Snapshot, b: Snapshot) => JSON.stringify(a) === JSON.stringify(b);
 interface CircuitState {
   updateScope: (id: string, settings: ScopeSettings, running?: boolean) => void;
   histories: Record<CircuitMode, { past: Snapshot[]; future: Snapshot[] }>;
@@ -84,10 +74,7 @@ interface CircuitState {
   setSample: (sample: CalibrationSample) => void;
   addComponent: (assetId: AssetId, position?: Point, model?: IcModel) => void;
   moveComponent: (id: string, position: Point) => void;
-  updateSettings: (
-    id: string,
-    settings: Partial<CircuitComponent['settings']>,
-  ) => void;
+  updateSettings: (id: string, settings: Partial<CircuitComponent['settings']>) => void;
   connect: (from: PinRef, to: PinRef) => void;
   deleteSelection: () => void;
   reset: () => void;
@@ -113,11 +100,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
     const edited = (['sequence', 'digital'] as const).some((mode) => {
       const a = before.workspaces[mode],
         b = next.workspaces[mode];
-      return (
-        a.components !== b.components ||
-        a.wires !== b.wires ||
-        a.power !== b.power
-      );
+      return a.components !== b.components || a.wires !== b.wires || a.power !== b.power;
     });
     if (edited) {
       const issue = circuitCapacityIssue(next.workspaces);
@@ -130,12 +113,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
     for (const mode of ['sequence', 'digital'] as const) {
       const a = before.workspaces[mode],
         b = next.workspaces[mode];
-      if (
-        a.components === b.components &&
-        a.wires === b.wires &&
-        a.power === b.power
-      )
-        continue;
+      if (a.components === b.components && a.wires === b.wires && a.power === b.power) continue;
       const old = snapshot(a),
         fresh = snapshot(b);
       if (same(old, fresh) || before.dragHistory?.mode === mode) continue;
@@ -191,9 +169,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
         if (
           !w.components.some(
             (c) =>
-              c.assetId === 'pb-switch' &&
-              c.settings.buttonMode !== 'detent' &&
-              c.settings.pressed,
+              c.assetId === 'pb-switch' && c.settings.buttonMode !== 'detent' && c.settings.pressed,
           )
         )
           continue;
@@ -220,12 +196,30 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
   return {
     updateScope: (id, settings, running) => {
       const validated = parseScopeSettings(settings);
-      set(s => {
+      set((s) => {
         if (s.calibration) return s;
         const w = s.workspaces.digital;
-        if (!w.components.some(c => c.id === id && c.assetId === 'oscilloscope')) return s;
-        return { workspaces: { ...s.workspaces, digital: { ...w, components: w.components.map(c => c.id === id
-          ? { ...c, settings: { ...c.settings, scope: validated, ...(running === undefined ? {} : { scopeRunning: running }) } } : c) } } };
+        if (!w.components.some((c) => c.id === id && c.assetId === 'oscilloscope')) return s;
+        return {
+          workspaces: {
+            ...s.workspaces,
+            digital: {
+              ...w,
+              components: w.components.map((c) =>
+                c.id === id
+                  ? {
+                      ...c,
+                      settings: {
+                        ...c.settings,
+                        scope: validated,
+                        ...(running === undefined ? {} : { scopeRunning: running }),
+                      },
+                    }
+                  : c,
+              ),
+            },
+          },
+        };
       });
     },
     histories: {
@@ -236,8 +230,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
     endInteraction,
     beginDrag: (id) => {
       const s = get();
-      if (s.calibration || s.workspaces[s.mode].power.on || s.dragHistory)
-        return;
+      if (s.calibration || s.workspaces[s.mode].power.on || s.dragHistory) return;
       rawSet({
         dragHistory: {
           mode: s.mode,
@@ -349,8 +342,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
       // Ignore late pointer/key events from a canvas that has been replaced.
       if (mode !== get().mode) return;
       if (group) {
-        if (group.mode !== mode || (group.id !== id && group.id !== 'palette'))
-          return;
+        if (group.mode !== mode || (group.id !== id && group.id !== 'palette')) return;
         completeDrag(id, dropPoint);
         return;
       }
@@ -402,12 +394,8 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
       completeDrag();
       set((s) => {
         const w = s.workspaces[s.mode];
-        if (s.calibration)
-          return { notice: '좌표 보정 모드를 끈 뒤 전원을 켜세요.' };
-        const next = evaluate(
-          { ...w, power: { ...w.power, on: !w.power.on } },
-          s.mode,
-        );
+        if (s.calibration) return { notice: '좌표 보정 모드를 끈 뒤 전원을 켜세요.' };
+        const next = evaluate({ ...w, power: { ...w.power, on: !w.power.on } }, s.mode);
         return {
           workspaces: { ...s.workspaces, [s.mode]: next },
           notice: w.power.on
@@ -444,12 +432,31 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
           };
         const id = crypto.randomUUID();
         const count = w.components.length;
-        const instrumentPosition = asset.category === 'instrument' ? {
-          x: Math.max(0, ...w.components.filter((c) => c.assetId === 'breadboard')
-            .map((c) => c.position.x + (c.displaySize ?? componentAssets.breadboard.size).width)) + 48,
-          y: Math.max(-28, ...w.components.filter((c) => componentAssets[c.assetId].category === 'instrument')
-            .map((c) => c.position.y + (c.displaySize ?? componentAssets[c.assetId].size).height)) + 48,
-        } : undefined;
+        const instrumentPosition =
+          asset.category === 'instrument'
+            ? {
+                x:
+                  Math.max(
+                    0,
+                    ...w.components
+                      .filter((c) => c.assetId === 'breadboard')
+                      .map(
+                        (c) =>
+                          c.position.x + (c.displaySize ?? componentAssets.breadboard.size).width,
+                      ),
+                  ) + 48,
+                y:
+                  Math.max(
+                    -28,
+                    ...w.components
+                      .filter((c) => componentAssets[c.assetId].category === 'instrument')
+                      .map(
+                        (c) =>
+                          c.position.y + (c.displaySize ?? componentAssets[c.assetId].size).height,
+                      ),
+                  ) + 48,
+              }
+            : undefined;
         const component = makeComponent(
           assetId,
           id,
@@ -460,10 +467,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
         return {
           workspaces: {
             ...s.workspaces,
-            [s.mode]: evaluate(
-              { ...w, components: [...w.components, component] },
-              s.mode,
-            ),
+            [s.mode]: evaluate({ ...w, components: [...w.components, component] }, s.mode),
           },
           selectedId: id,
           selectedWireId: null,
@@ -495,13 +499,11 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
                           x:
                             c.position.x +
                             position.x -
-                            (w.components.find((p) => p.id === id)?.position
-                              .x ?? position.x),
+                            (w.components.find((p) => p.id === id)?.position.x ?? position.x),
                           y:
                             c.position.y +
                             position.y -
-                            (w.components.find((p) => p.id === id)?.position
-                              .y ?? position.y),
+                            (w.components.find((p) => p.id === id)?.position.y ?? position.y),
                         },
                       }
                     : c,
@@ -515,11 +517,19 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
         const w = s.workspaces[s.mode];
         if (s.calibration) return s;
         const component = w.components.find((c) => c.id === id);
-        if (!component || (w.power.on && settings.voltage !== undefined && component.assetId !== 'power-supply')) return s;
+        if (
+          !component ||
+          (w.power.on && settings.voltage !== undefined && component.assetId !== 'power-supply')
+        )
+          return s;
         const safe = { ...settings };
         if (safe.supply !== undefined) {
           if (component.assetId !== 'power-supply') return s;
-          try { safe.supply = parseSupplySettings(safe.supply); } catch { return s; }
+          try {
+            safe.supply = parseSupplySettings(safe.supply);
+          } catch {
+            return s;
+          }
         }
         if (safe.voltage !== undefined) {
           if (!Number.isFinite(safe.voltage)) return s;
@@ -542,9 +552,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
                 ...w,
                 power,
                 components: w.components.map((c) =>
-                  c.id === id
-                    ? { ...c, settings: { ...c.settings, ...safe } }
-                    : c,
+                  c.id === id ? { ...c, settings: { ...c.settings, ...safe } } : c,
                 ),
               },
               s.mode,
@@ -563,9 +571,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
           return s;
         const valid = (ref: PinRef) => {
           const c = w.components.find((c) => c.id === ref.componentId);
-          return (
-            c && componentAssets[c.assetId].pins.some((p) => p.id === ref.pinId)
-          );
+          return c && componentAssets[c.assetId].pins.some((p) => p.id === ref.pinId);
         };
         if (!valid(from) || !valid(to)) return s;
         const same = (a: PinRef, b: PinRef) =>
@@ -601,15 +607,13 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
         return {
           workspaces: { ...s.workspaces, [s.mode]: next },
           notice:
-            next.simulation.shortCircuit.message ??
-            '배선을 연결하고 회로를 다시 해석했습니다.',
+            next.simulation.shortCircuit.message ?? '배선을 연결하고 회로를 다시 해석했습니다.',
         };
       }),
     deleteSelection: () =>
       set((s) => {
         const w = s.workspaces[s.mode];
-        if ((w.power.on && w.simulation.status !== 'error') || s.calibration)
-          return s;
+        if ((w.power.on && w.simulation.status !== 'error') || s.calibration) return s;
         const components = w.components
           .filter((c) => c.id !== s.selectedId)
           .map((c) =>
@@ -638,8 +642,7 @@ export const useCircuitStore = create<CircuitState>()((rawSet, get) => {
       }),
     reset: () => {
       const current = get();
-      if (current.workspaces[current.mode].power.on || current.calibration)
-        return;
+      if (current.workspaces[current.mode].power.on || current.calibration) return;
       endInteraction();
       set((s) => {
         if (s.workspaces[s.mode].power.on || s.calibration) return s;

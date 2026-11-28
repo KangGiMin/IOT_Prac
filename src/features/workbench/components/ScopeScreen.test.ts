@@ -4,8 +4,7 @@ import { appendScopeSample, type ScopeSample } from './ScopeScreen';
 describe('scope history compression', () => {
   it('draws a minute of steady DC from two endpoints instead of 1800 repeated samples', () => {
     const history: ScopeSample[] = [];
-    for (let t = 0; t <= 60000; t += 33)
-      appendScopeSample(history, { t, ch1: 0, ch2: 5 });
+    for (let t = 0; t <= 60000; t += 33) appendScopeSample(history, { t, ch1: 0, ch2: 5 });
     expect(history).toHaveLength(2);
     expect(history[0].t).toBe(0);
     expect(history[1].t).toBe(59994);
@@ -24,9 +23,7 @@ describe('scope history compression', () => {
       [null, null],
       [0, 5],
     ];
-    values.forEach(([ch1, ch2], t) =>
-      appendScopeSample(history, { t, ch1, ch2 }),
-    );
+    values.forEach(([ch1, ch2], t) => appendScopeSample(history, { t, ch1, ch2 }));
     expect(history).toEqual([
       { t: 0, ch1: 0, ch2: 0 },
       { t: 2, ch1: 0, ch2: 0 },

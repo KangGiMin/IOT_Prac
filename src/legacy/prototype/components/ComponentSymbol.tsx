@@ -19,9 +19,7 @@ export function ComponentSymbol({ kind }: { kind: ComponentKind }) {
       ) : kind === 'start' || kind === 'stop' ? (
         <>
           <path d="M5 36h23m24 0h23M28 29v14m24-14v14M40 8v12m-10-12h20" />
-          <path
-            d={kind === 'stop' ? 'M28 29h24M40 20v9' : 'M30 24h20M40 20v4'}
-          />
+          <path d={kind === 'stop' ? 'M28 29h24M40 20v9' : 'M30 24h20M40 20v4'} />
         </>
       ) : kind === 'relay' || kind === 'timer' ? (
         <>

@@ -16,10 +16,7 @@ const node = (
 });
 
 // Example topology for editing the UI; this is not an electrically validated circuit.
-export const createInitialCircuits = (): Record<
-  'sequence' | 'breadboard',
-  Circuit
-> => ({
+export const createInitialCircuits = (): Record<'sequence' | 'breadboard', Circuit> => ({
   sequence: {
     nodes: [
       node('ps1', 'supply', 'DC 전원 공급기', 'PS1', 'DC 24V', 35, 110),
@@ -54,9 +51,7 @@ export const createInitialCircuits = (): Record<
     ],
   },
   breadboard: {
-    nodes: [
-      node('u1', 'ic', '74LS08 AND', 'U1', 'QUAD AND · 14 PIN', 290, 140),
-    ],
+    nodes: [node('u1', 'ic', '74LS08 AND', 'U1', 'QUAD AND · 14 PIN', 290, 140)],
     edges: [],
   },
 });

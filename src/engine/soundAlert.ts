@@ -106,23 +106,14 @@ export class SoundAlert {
 
   private beginTone() {
     const context = this.context;
-    if (
-      !context ||
-      context.state !== 'running' ||
-      !this.wanted ||
-      this.oscillator
-    )
-      return;
+    if (!context || context.state !== 'running' || !this.wanted || this.oscillator) return;
     let oscillator: OscillatorNode | null = null,
       gain: GainNode | null = null;
     try {
       oscillator = context.createOscillator();
       gain = context.createGain();
       oscillator.type = 'square';
-      oscillator.frequency.setValueAtTime(
-        ALERT_PATTERN.frequency,
-        context.currentTime,
-      );
+      oscillator.frequency.setValueAtTime(ALERT_PATTERN.frequency, context.currentTime);
       gain.gain.setValueAtTime(this.continuous ? ALERT_PATTERN.volume : 0, context.currentTime);
       oscillator.connect(gain);
       gain.connect(context.destination);
@@ -200,7 +191,6 @@ export class SoundAlert {
     this.clicks.clear();
     const context = this.context;
     this.context = null;
-    if (context && context.state !== 'closed')
-      void context.close().catch(() => {});
+    if (context && context.state !== 'closed') void context.close().catch(() => {});
   }
 }

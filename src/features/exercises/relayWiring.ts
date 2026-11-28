@@ -18,8 +18,7 @@ function matchPoles(normallyOpen: Contact[], normallyClosed: Contact[]) {
   const pairs = new Map<Contact, Contact>();
   const match = (open: Contact, visited: Set<Contact>): boolean => {
     for (const closed of normallyClosed) {
-      if (visited.has(closed) || !closed.nets.some((net) => open.nets.includes(net)))
-        continue;
+      if (visited.has(closed) || !closed.nets.some((net) => open.nets.includes(net))) continue;
       visited.add(closed);
       const previous = pairs.get(closed);
       if (previous && !match(previous, visited)) continue;
@@ -62,8 +61,7 @@ export function relayWiring(circuit: ExerciseCircuit) {
     for (const part of circuit.parts.filter((part) => part.owner === id)) {
       const first = `${part.id}:1`;
       const second = `${part.id}:2`;
-      const ends: Lead = nets.find(first) <= nets.find(second)
-        ? [first, second] : [second, first];
+      const ends: Lead = nets.find(first) <= nets.find(second) ? [first, second] : [second, first];
       const endpoints: Lead = [nets.find(ends[0]), nets.find(ends[1])];
       const key = JSON.stringify(endpoints);
       const groups = part.nc ? closed : open;
@@ -83,7 +81,10 @@ export function relayWiring(circuit: ExerciseCircuit) {
     poles.forEach(({ a, b }, index) => {
       const pin = relay14.poles[index];
       const common = a?.nets.find((net) => b?.nets.includes(net)) ?? (a ?? b)!.nets[0];
-      for (const [contact, role, number] of [[a, 'a', pin.no], [b, 'b', pin.nc]] as const) {
+      for (const [contact, role, number] of [
+        [a, 'a', pin.no],
+        [b, 'b', pin.nc],
+      ] as const) {
         if (!contact) continue;
         const commonIndex = contact.nets[0] === common ? 0 : 1;
         for (const ends of contact.ports) {

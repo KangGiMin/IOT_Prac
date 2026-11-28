@@ -59,17 +59,8 @@ export function KeyboardWiring() {
       : !state.wiringMode
         ? '배선 모드를 켠 뒤 단자를 선택하세요.'
         : '';
-  const ready =
-    !!from &&
-    !!to &&
-    !!sourcePin &&
-    !!targetPin &&
-    !same &&
-    !connected &&
-    !lock;
-  const components = state.components.filter(
-    (c) => componentPins(c).length > 0,
-  );
+  const ready = !!from && !!to && !!sourcePin && !!targetPin && !same && !connected && !lock;
+  const components = state.components.filter((c) => componentPins(c).length > 0);
 
   return (
     <section
@@ -82,10 +73,7 @@ export function KeyboardWiring() {
         <Cable size={17} />
         <h2 id="keyboard-wiring-title">키보드 배선</h2>
       </div>
-      <details
-        open={open}
-        onToggle={(event) => setOpen(event.currentTarget.open)}
-      >
+      <details open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
         <summary>단자 선택으로 배선</summary>
         {open && (
           <form
@@ -100,8 +88,7 @@ export function KeyboardWiring() {
             aria-describedby="keyboard-wiring-help"
           >
             <p id="keyboard-wiring-help" className="panel-description">
-              Tab으로 항목을 이동하고 방향키로 부품과 단자를 선택한 뒤
-              연결하세요.
+              Tab으로 항목을 이동하고 방향키로 부품과 단자를 선택한 뒤 연결하세요.
             </p>
             <fieldset disabled={!!lock}>
               <legend className="sr-only">출발 및 도착 단자</legend>
@@ -173,22 +160,14 @@ export function KeyboardWiring() {
                   ))}
                 </select>
               </label>
-              <button
-                className="component-control"
-                type="submit"
-                disabled={!ready}
-              >
+              <button className="component-control" type="submit" disabled={!ready}>
                 배선 연결
               </button>
             </fieldset>
           </form>
         )}
       </details>
-      <p
-        role="status"
-        aria-label="키보드 배선 상태"
-        className="panel-description"
-      >
+      <p role="status" aria-label="키보드 배선 상태" className="panel-description">
         {lock ||
           (!from || !to || !sourcePin || !targetPin
             ? '출발·도착 부품과 단자를 선택하세요.'

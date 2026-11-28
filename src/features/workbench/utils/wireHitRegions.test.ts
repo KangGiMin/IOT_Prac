@@ -28,9 +28,7 @@ describe('wire selection exclusions', () => {
       for (let y = -2.5; y < 8; y++) {
         for (let x = -2.5; x < 8; x++) {
           const expected = rectangles.some((r) => contains(r, x, y));
-          expect(strips.filter((r) => contains(r, x, y)).length).toBe(
-            expected ? 1 : 0,
-          );
+          expect(strips.filter((r) => contains(r, x, y)).length).toBe(expected ? 1 : 0);
         }
       }
     },

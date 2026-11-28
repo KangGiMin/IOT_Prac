@@ -2,10 +2,7 @@ import { componentAssets } from '../../../config/assets';
 import { sequenceGeometry } from '../../../config/sequencePins';
 import type { CircuitComponent } from '../../../types/circuit';
 import { relayMountLayout } from './relayMount';
-export function placeSequence(
-  components: CircuitComponent[],
-  id: string,
-): CircuitComponent[] {
+export function placeSequence(components: CircuitComponent[], id: string): CircuitComponent[] {
   const item = components.find((c) => c.id === id);
   if (!item) return components;
   if (item.assetId === 'relay-body') {
@@ -15,11 +12,16 @@ export function placeSequence(
       y: item.position.y + size.height / 2,
     };
     const socket = components.find((c) => {
-      if (c.assetId !== 'relay-socket' ||
-          components.some((b) => b.id !== id && b.mountedSocketId === c.id)) return false;
+      if (
+        c.assetId !== 'relay-socket' ||
+        components.some((b) => b.id !== id && b.mountedSocketId === c.id)
+      )
+        return false;
       const { slot } = relayMountLayout(c);
-      return Math.abs(center.x - (slot.x + slot.width / 2)) < 85 &&
-        Math.abs(center.y - (slot.y + slot.height / 2)) < 90;
+      return (
+        Math.abs(center.x - (slot.x + slot.width / 2)) < 85 &&
+        Math.abs(center.y - (slot.y + slot.height / 2)) < 90
+      );
     });
     const layout = socket && relayMountLayout(socket);
     return components.map((c) =>
@@ -46,17 +48,21 @@ export function placeSequence(
   const board = components.find(
     (c) =>
       c.assetId === 'panel-board' &&
-      item.position.x + componentAssets[item.assetId].size.width / 2 >=
-        c.position.x &&
+      item.position.x + componentAssets[item.assetId].size.width / 2 >= c.position.x &&
       item.position.x <= c.position.x + 1120 &&
       item.position.y >= c.position.y - 100 &&
       item.position.y <= c.position.y + 640,
   );
   if (
     !board ||
-    !['pilot-lamp', 'motor-unit', 'pb-switch', 'relay-socket', 'relay-unit-11p', 'timer-at8n'].includes(
-      item.assetId,
-    )
+    ![
+      'pilot-lamp',
+      'motor-unit',
+      'pb-switch',
+      'relay-socket',
+      'relay-unit-11p',
+      'timer-at8n',
+    ].includes(item.assetId)
   )
     return components;
   const size = componentAssets[item.assetId].size;

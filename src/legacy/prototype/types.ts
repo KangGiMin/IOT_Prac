@@ -3,16 +3,7 @@ import type { Edge, Node } from '@xyflow/react';
 export type LabId = 'sequence' | 'breadboard' | 'theory';
 export type CircuitLabId = Exclude<LabId, 'theory'>;
 export type ComponentKind =
-  | 'supply'
-  | 'stop'
-  | 'start'
-  | 'relay'
-  | 'lamp'
-  | 'timer'
-  | 'ic'
-  | 'resistor'
-  | 'led'
-  | 'logic';
+  'supply' | 'stop' | 'start' | 'relay' | 'lamp' | 'timer' | 'ic' | 'resistor' | 'led' | 'logic';
 export type ComponentData = {
   kind: ComponentKind;
   label: string;

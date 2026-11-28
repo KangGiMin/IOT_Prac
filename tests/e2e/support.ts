@@ -1,11 +1,30 @@
 import { expect, test as base, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-export async function loadPopulatedWorkspace(page:Page){
- const make=(assetId:string,id:string,x:number,y:number)=>({assetId,id,label:id,position:{x,y},settings:{pressed:false,switchOn:false,timerSeconds:3,voltage:5}});
- const saved=await downloadCircuit(page);
- saved.workspaces.sequence.components=[make('panel-board','seq-board',0,0),make('pb-switch','seq-pb',95,210),make('relay-socket','seq-relay',320,210),make('pilot-lamp','seq-lamp',595,210),make('timer-at8n','seq-timer',825,210)];
- saved.workspaces.digital.components=[make('breadboard','dig-board',0,110),make('power-supply','dig-power',735,80),make('oscilloscope','dig-scope',735,335),make('ic-dip14','dig-ic',240,295),make('led-red','dig-led',100,270),make('resistor-330','dig-resistor',440,310)];
- await uploadCircuit(page,saved);
+export async function loadPopulatedWorkspace(page: Page) {
+  const make = (assetId: string, id: string, x: number, y: number) => ({
+    assetId,
+    id,
+    label: id,
+    position: { x, y },
+    settings: { pressed: false, switchOn: false, timerSeconds: 3, voltage: 5 },
+  });
+  const saved = await downloadCircuit(page);
+  saved.workspaces.sequence.components = [
+    make('panel-board', 'seq-board', 0, 0),
+    make('pb-switch', 'seq-pb', 95, 210),
+    make('relay-socket', 'seq-relay', 320, 210),
+    make('pilot-lamp', 'seq-lamp', 595, 210),
+    make('timer-at8n', 'seq-timer', 825, 210),
+  ];
+  saved.workspaces.digital.components = [
+    make('breadboard', 'dig-board', 0, 110),
+    make('power-supply', 'dig-power', 735, 80),
+    make('oscilloscope', 'dig-scope', 735, 335),
+    make('ic-dip14', 'dig-ic', 240, 295),
+    make('led-red', 'dig-led', 100, 270),
+    make('resistor-330', 'dig-resistor', 440, 310),
+  ];
+  await uploadCircuit(page, saved);
 }
 
 export const test = base.extend<{ runtimeErrors: string[] }>({
@@ -56,9 +75,7 @@ export interface SavedCircuit {
 
 export async function downloadCircuit(page: Page): Promise<SavedCircuit> {
   const pending = page.waitForEvent('download');
-  await page
-    .getByRole('button', { name: '회로 JSON 저장', exact: true })
-    .click();
+  await page.getByRole('button', { name: '회로 JSON 저장', exact: true }).click();
   const download = await pending;
   const stream = await download.createReadStream();
   const chunks: Buffer[] = [];
@@ -74,8 +91,11 @@ export async function uploadCircuit(page: Page, data: SavedCircuit) {
   });
 }
 type TestCircuitId = 'self-hold' | 'nand' | 'nor';
-const testCircuits = JSON.parse(readFileSync(new URL('./fixtures/circuits.json', import.meta.url), 'utf8')) as Record<
-  TestCircuitId, { mode: SavedCircuit['activeMode']; workspace: SavedCircuit['workspaces']['digital'] }
+const testCircuits = JSON.parse(
+  readFileSync(new URL('./fixtures/circuits.json', import.meta.url), 'utf8'),
+) as Record<
+  TestCircuitId,
+  { mode: SavedCircuit['activeMode']; workspace: SavedCircuit['workspaces']['digital'] }
 >;
 
 export async function loadTestCircuit(page: Page, id: TestCircuitId) {
@@ -84,7 +104,9 @@ export async function loadTestCircuit(page: Page, id: TestCircuitId) {
   saved.activeMode = mode;
   saved.workspaces[mode] = workspace;
   await uploadCircuit(page, saved);
-  await expect(page.locator('.photo-board-toolbar')).toContainText(`${workspace.wires.length} 배선`);
+  await expect(page.locator('.photo-board-toolbar')).toContainText(
+    `${workspace.wires.length} 배선`,
+  );
 }
 export const nandPreset = (page: Page) => loadTestCircuit(page, 'nand');
 export const selfHoldPreset = (page: Page) => loadTestCircuit(page, 'self-hold');

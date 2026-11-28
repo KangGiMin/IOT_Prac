@@ -1,4 +1,4 @@
-﻿import type { LogicMission } from '../../../types/circuit';
+import type { LogicMission } from '../../../types/circuit';
 export const logicMissions: readonly LogicMission[] = [
   {
     id: 'AND',

@@ -26,9 +26,7 @@ describe('SVG workspace state', () => {
     s.connect(from, to);
     s.connect(from, from);
     s.connect(from, { ...to, pinId: 'missing' });
-    expect(
-      useSvgCircuitStore.getState().workspaces.sequence.wires,
-    ).toHaveLength(1);
+    expect(useSvgCircuitStore.getState().workspaces.sequence.wires).toHaveLength(1);
   });
   it('preserves each mode including viewport and resets only the current mode', () => {
     const s = useSvgCircuitStore.getState();
@@ -39,13 +37,9 @@ describe('SVG workspace state', () => {
     s.addComponent('led-red');
     s.reset();
     expect(useSvgCircuitStore.getState().workspaces.sequence).toBe(sequence);
-    expect(
-      useSvgCircuitStore.getState().workspaces.digital.components,
-    ).toHaveLength(6);
+    expect(useSvgCircuitStore.getState().workspaces.digital.components).toHaveLength(6);
     s.setMode('sequence');
-    expect(
-      useSvgCircuitStore.getState().workspaces.sequence.viewport.zoom,
-    ).toBe(1.25);
+    expect(useSvgCircuitStore.getState().workspaces.sequence.viewport.zoom).toBe(1.25);
   });
   it('locks structural edits while powered and stops on power-off', () => {
     const s = useSvgCircuitStore.getState();
@@ -61,9 +55,9 @@ describe('SVG workspace state', () => {
     expect(useSvgCircuitStore.getState().workspaces.sequence).toBe(w);
     expect(w.simulation.energizedComponents).toEqual([]);
     s.togglePower();
-    expect(
-      useSvgCircuitStore.getState().workspaces.sequence.simulation.status,
-    ).toBe('not-connected');
+    expect(useSvgCircuitStore.getState().workspaces.sequence.simulation.status).toBe(
+      'not-connected',
+    );
   });
   it('blocks power on a short and clears the short after deleting the wire', () => {
     const s = useSvgCircuitStore.getState();
@@ -105,14 +99,10 @@ describe('SVG workspace state', () => {
     s.addComponent('pilot-lamp');
     const secondLamp = useSvgCircuitStore.getState().selectedId!;
     s.connect(from, to);
-    s.connect(
-      { ...from, pinId: 'minus' },
-      { componentId: secondLamp, pinId: 'minus' },
-    );
+    s.connect({ ...from, pinId: 'minus' }, { componentId: secondLamp, pinId: 'minus' });
     s.gradeMission();
-    expect(
-      useSvgCircuitStore.getState().workspaces.sequence.missionResult?.checks[1]
-        .passed,
-    ).toBe(false);
+    expect(useSvgCircuitStore.getState().workspaces.sequence.missionResult?.checks[1].passed).toBe(
+      false,
+    );
   });
 });

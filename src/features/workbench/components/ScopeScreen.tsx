@@ -15,10 +15,7 @@ export function appendScopeSample(history: ScopeSample[], next: ScopeSample) {
   )
     last.t = next.t;
   else history.push(next);
-  while (
-    history.length > 1200 ||
-    (history.length > 2 && history[1].t < next.t - 6000)
-  )
+  while (history.length > 1200 || (history.length > 2 && history[1].t < next.t - 6000))
     history.shift();
 }
 export function scopeLevel(voltage: number | null) {

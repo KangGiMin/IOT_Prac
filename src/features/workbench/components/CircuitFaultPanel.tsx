@@ -11,11 +11,7 @@ export function CircuitFaultPanel() {
       aria-label="회로 해석 및 오류 원인"
     >
       <div className="panel-heading">
-        {faults.length ? (
-          <AlertTriangle size={17} />
-        ) : (
-          <ShieldCheck size={17} />
-        )}
+        {faults.length ? <AlertTriangle size={17} /> : <ShieldCheck size={17} />}
         <h2>{faults.length ? '보호 정지 · 오류 원인' : '회로 해석 상태'}</h2>
       </div>
       {faults.length ? (
@@ -34,8 +30,8 @@ export function CircuitFaultPanel() {
             ))}
           </ol>
           <p className="fault-repair-note">
-            오류가 해소될 때까지 모든 출력을 차단합니다. 선택한 오류 배선은 전원
-            ON 중에도 삭제할 수 있습니다.
+            오류가 해소될 때까지 모든 출력을 차단합니다. 선택한 오류 배선은 전원 ON 중에도 삭제할 수
+            있습니다.
           </p>
         </>
       ) : (
@@ -46,8 +42,7 @@ export function CircuitFaultPanel() {
         </p>
       )}
       <p className="net-count">
-        {simulation.nets?.length ?? 0} Nets ·{' '}
-        {simulation.energizedComponents.length}개 부품 동작
+        {simulation.nets?.length ?? 0} Nets · {simulation.energizedComponents.length}개 부품 동작
       </p>
       {!!simulation.warnings?.length && (
         <ul className="solver-warnings">

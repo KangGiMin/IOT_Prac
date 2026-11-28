@@ -37,9 +37,9 @@ describe('editable circuit capacity', () => {
     }));
     const s = useCircuitStore.getState();
     s.addComponent('pilot-lamp');
-    expect(
-      useCircuitStore.getState().workspaces.sequence.components,
-    ).toHaveLength(MAX_CIRCUIT_COMPONENTS);
+    expect(useCircuitStore.getState().workspaces.sequence.components).toHaveLength(
+      MAX_CIRCUIT_COMPONENTS,
+    );
     const before = useCircuitStore.getState();
     s.addComponent('pilot-lamp');
     const after = useCircuitStore.getState();
@@ -47,13 +47,12 @@ describe('editable circuit capacity', () => {
     expect(after.histories).toBe(before.histories);
     expect(after.notice).toContain('100');
     expect(
-      importCircuitFile(exportCircuitFile(s.mode, after.workspaces)).workspaces
-        .sequence.components,
+      importCircuitFile(exportCircuitFile(s.mode, after.workspaces)).workspaces.sequence.components,
     ).toHaveLength(MAX_CIRCUIT_COMPONENTS);
     s.undo();
-    expect(
-      useCircuitStore.getState().workspaces.sequence.components,
-    ).toHaveLength(MAX_CIRCUIT_COMPONENTS - 1);
+    expect(useCircuitStore.getState().workspaces.sequence.components).toHaveLength(
+      MAX_CIRCUIT_COMPONENTS - 1,
+    );
   });
 
   it('allows the last wire and refuses the next without changing the circuit or undo history', () => {
@@ -65,17 +64,14 @@ describe('editable circuit capacity', () => {
     }));
     const s = useCircuitStore.getState();
     s.connect(last.from, last.to);
-    expect(useCircuitStore.getState().workspaces.sequence.wires).toHaveLength(
-      MAX_CIRCUIT_WIRES,
-    );
+    expect(useCircuitStore.getState().workspaces.sequence.wires).toHaveLength(MAX_CIRCUIT_WIRES);
     const before = useCircuitStore.getState();
     s.connect(overflow.from, overflow.to);
     expect(useCircuitStore.getState().workspaces).toBe(before.workspaces);
     expect(useCircuitStore.getState().histories).toBe(before.histories);
     expect(useCircuitStore.getState().notice).toContain('2000');
     expect(
-      importCircuitFile(exportCircuitFile('sequence', before.workspaces))
-        .workspaces.sequence.wires,
+      importCircuitFile(exportCircuitFile('sequence', before.workspaces)).workspaces.sequence.wires,
     ).toHaveLength(MAX_CIRCUIT_WIRES);
   });
 
@@ -105,9 +101,7 @@ describe('editable circuit capacity', () => {
     });
     const before = useCircuitStore.getState();
     const remaining = exportCircuitFile('digital', before.workspaces);
-    expect(importCircuitFile(remaining).workspaces.digital.wires).toHaveLength(
-      low,
-    );
+    expect(importCircuitFile(remaining).workspaces.digital.wires).toHaveLength(low);
     useCircuitStore.getState().connect(upcoming.from, upcoming.to);
     expect(useCircuitStore.getState().workspaces).toBe(before.workspaces);
     expect(useCircuitStore.getState().histories).toBe(before.histories);

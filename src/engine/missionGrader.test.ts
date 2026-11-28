@@ -3,11 +3,7 @@ import { gradeLogicMission } from './missionGrader';
 import { createPreset } from '../features/workbench/data/presets';
 import { makeComponent } from '../features/workbench/data/photoCircuits';
 import { logicMissions } from '../features/workbench/data/logicMissions';
-import type {
-  CircuitWorkspace,
-  LogicGate,
-  CircuitWire,
-} from '../types/circuit';
+import type { CircuitWorkspace, LogicGate, CircuitWire } from '../types/circuit';
 const bindings = { a: 'input-a', b: 'input-b', led: 'output-led' };
 const mission = (id: LogicGate) => logicMissions.find((m) => m.id === id)!;
 const wire = (a: string, ap: string, b: string, bp: string): CircuitWire => ({
@@ -25,12 +21,10 @@ function circuit(id: LogicGate): CircuitWorkspace {
   if (id === 'NOT') {
     ic.settings.icModel = '7406';
     w.wires = w.wires.filter(
-      (wire) =>
-        !(wire.from.componentId === 'input-b' && wire.from.pinId === 'com'),
+      (wire) => !(wire.from.componentId === 'input-b' && wire.from.pinId === 'com'),
     );
     w.wires.find(
-      (wire) =>
-        wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
+      (wire) => wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
     )!.from.pinId = '2';
   }
   if (id === 'OR' || id === 'XNOR') {
@@ -38,18 +32,15 @@ function circuit(id: LogicGate): CircuitWorkspace {
     inverter.settings.icModel = '7406';
     w.components.push(inverter);
     const output = w.wires.find(
-      (wire) =>
-        wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
+      (wire) => wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
     )!;
     if (id === 'OR') {
       ic.settings.icModel = '7402';
       w.wires.find(
-        (wire) =>
-          wire.from.componentId === 'input-a' && wire.to.componentId === 'ic',
+        (wire) => wire.from.componentId === 'input-a' && wire.to.componentId === 'ic',
       )!.to.pinId = '2';
       w.wires.find(
-        (wire) =>
-          wire.from.componentId === 'input-b' && wire.to.componentId === 'ic',
+        (wire) => wire.from.componentId === 'input-b' && wire.to.componentId === 'ic',
       )!.to.pinId = '3';
       output.from.pinId = '1';
     }
@@ -74,9 +65,7 @@ describe('functional logic missions', () => {
       expect(result.score).toBe(100);
       expect(result.passed).toBe(true);
       expect(result.rows).toHaveLength(id === 'NOT' ? 2 : 4);
-      expect(result.rows.every((row) => row.actual === row.expected)).toBe(
-        true,
-      );
+      expect(result.rows.every((row) => row.actual === row.expected)).toBe(true);
       expect(JSON.stringify(w)).toBe(before);
     },
   );
@@ -84,8 +73,7 @@ describe('functional logic missions', () => {
     const w = circuit('AND');
     w.components.find((c) => c.id === 'ic')!.settings.icModel = '7411';
     w.wires.find(
-      (wire) =>
-        wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
+      (wire) => wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
     )!.from.pinId = '12';
     w.wires.push(wire('power', 'plus', 'ic', '13'));
     expect(gradeLogicMission(w, mission('AND'), bindings).passed).toBe(true);
@@ -94,13 +82,12 @@ describe('functional logic missions', () => {
     const result = gradeLogicMission(circuit('NAND'), mission('NOR'), bindings);
     expect(result.passed).toBe(false);
     expect(result.score).toBe(50);
-    expect(result.rows.map(row => row.passed)).toEqual([true, false, false, true]);
+    expect(result.rows.map((row) => row.passed)).toEqual([true, false, false, true]);
   });
   it('accepts the three-NAND implementation of OR', () => {
     const w = circuit('NAND');
     w.wires = w.wires.filter(
-      (wire) =>
-        !(wire.from.componentId === 'input-b' && wire.to.componentId === 'ic'),
+      (wire) => !(wire.from.componentId === 'input-b' && wire.to.componentId === 'ic'),
     );
     w.wires.push(
       wire('input-a', 'com', 'ic', '2'),
@@ -110,8 +97,7 @@ describe('functional logic missions', () => {
       wire('ic', '6', 'ic', '10'),
     );
     w.wires.find(
-      (wire) =>
-        wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
+      (wire) => wire.from.componentId === 'ic' && wire.to.componentId === 'resistor',
     )!.from.pinId = '8';
     expect(gradeLogicMission(w, mission('OR'), bindings).passed).toBe(true);
   });
@@ -123,9 +109,7 @@ describe('functional logic missions', () => {
   it('never counts a disconnected LED as a valid LOW', () => {
     const w = circuit('AND');
     w.wires = w.wires.filter(
-      (wire) =>
-        wire.to.componentId !== 'output-led' &&
-        wire.from.componentId !== 'output-led',
+      (wire) => wire.to.componentId !== 'output-led' && wire.from.componentId !== 'output-led',
     );
     const result = gradeLogicMission(w, mission('AND'), bindings);
     expect(result.score).toBe(0);
@@ -134,8 +118,7 @@ describe('functional logic missions', () => {
   it('does not mistake passive LED leakage for a defined gate LOW', () => {
     const w = circuit('AND');
     w.wires = w.wires.filter(
-      (wire) =>
-        !(wire.from.componentId === 'input-b' && wire.from.pinId === 'com'),
+      (wire) => !(wire.from.componentId === 'input-b' && wire.from.pinId === 'com'),
     );
     const result = gradeLogicMission(w, mission('AND'), bindings);
     expect(result.rows[2].actual).toBeNull();
@@ -160,10 +143,8 @@ describe('functional logic missions', () => {
   });
   it('reports LED reverse polarity', () => {
     const w = circuit('NAND');
-    w.wires.find((wire) => wire.to.componentId === 'output-led')!.to.pinId =
-      'cathode';
-    w.wires.find((wire) => wire.from.componentId === 'output-led')!.from.pinId =
-      'anode';
+    w.wires.find((wire) => wire.to.componentId === 'output-led')!.to.pinId = 'cathode';
+    w.wires.find((wire) => wire.from.componentId === 'output-led')!.from.pinId = 'anode';
     const result = gradeLogicMission(w, mission('NAND'), bindings);
     expect(result.passed).toBe(false);
     expect(result.hints.join(' ')).toContain('역연결');
@@ -187,10 +168,7 @@ describe('functional logic missions', () => {
   it('detects swapped switch rail polarity even when XOR would be unchanged', () => {
     const w = circuit('XOR');
     for (const wire of w.wires)
-      if (
-        wire.from.componentId === 'input-a' ||
-        wire.from.componentId === 'input-b'
-      ) {
+      if (wire.from.componentId === 'input-a' || wire.from.componentId === 'input-b') {
         if (wire.from.pinId === '1') wire.from.pinId = '2';
         else if (wire.from.pinId === '2') wire.from.pinId = '1';
       }

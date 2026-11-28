@@ -33,10 +33,7 @@ describe('physical sequence modules', () => {
       mode: 'sequence',
       power: { on: true, voltage: 24 },
       components: [make('panel-board', 'board'), make('motor-unit', 'motor')],
-      wires: [
-        wire('board', 'plus', 'motor', 'plus'),
-        wire('board', 'minus', 'motor', 'minus'),
-      ],
+      wires: [wire('board', 'plus', 'motor', 'plus'), wire('board', 'minus', 'motor', 'minus')],
     };
     const forward = solveCircuit(request);
     expect(forward.isShorted).toBe(false);
@@ -57,22 +54,14 @@ describe('physical sequence modules', () => {
     const request: CircuitSolverInput = {
       mode: 'sequence',
       power: { on: true, voltage: 24 },
-      components: [
-        make('panel-board', 'board'),
-        make('relay-socket', 'socket'),
-      ],
-      wires: [
-        wire('board', 'plus', 'socket', '14'),
-        wire('board', 'minus', 'socket', '13'),
-      ],
+      components: [make('panel-board', 'board'), make('relay-socket', 'socket')],
+      wires: [wire('board', 'plus', 'socket', '14'), wire('board', 'minus', 'socket', '13')],
     };
     expect(solveCircuit(request).energizedComponents).not.toContain('socket');
     const body = { ...make('relay-body', 'body'), mountedSocketId: 'socket' };
     request.components.push(body);
     const mounted = solveCircuit(request);
-    expect(mounted.energizedComponents).toEqual(
-      expect.arrayContaining(['socket', 'body']),
-    );
+    expect(mounted.energizedComponents).toEqual(expect.arrayContaining(['socket', 'body']));
     body.mountedSocketId = 'not-a-socket';
     expect(solveCircuit(request).energizedComponents).not.toContain('socket');
   });
@@ -99,9 +88,10 @@ describe('physical sequence modules', () => {
     const verify = (run: ReturnType<typeof solveCircuit>, energized: boolean) => {
       expect(run.energizedComponents.includes('socket')).toBe(energized);
       expect(run.energizedComponents.includes('motor')).toBe(energized);
-      const net = (pin: string) => run.nets.find(({ pins }) =>
-        pins.some(({ componentId, pinId }) => componentId === 'socket' && pinId === pin),
-      )?.id;
+      const net = (pin: string) =>
+        run.nets.find(({ pins }) =>
+          pins.some(({ componentId, pinId }) => componentId === 'socket' && pinId === pin),
+        )?.id;
       for (let pole = 0; pole < 4; pole++) {
         const com = net(String(9 + pole));
         expect(com).toBe(net(String((energized ? 5 : 1) + pole)));
@@ -135,9 +125,7 @@ describe('physical sequence modules', () => {
     expect(after.timerStates?.timer.output).toBe(true);
     expect(after.energizedComponents).toContain('lamp');
     const net = (pin: string) =>
-      after.nets.find((n) =>
-        n.pins.some((p) => p.componentId === 'timer' && p.pinId === pin),
-      )?.id;
+      after.nets.find((n) => n.pins.some((p) => p.componentId === 'timer' && p.pinId === pin))?.id;
     expect(net('8')).toBe(net('6'));
     expect(net('8')).not.toBe(net('5'));
   });

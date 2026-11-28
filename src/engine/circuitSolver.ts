@@ -1,9 +1,4 @@
-import {
-  TTL_MODELS,
-  icModel,
-  isOpenCollector,
-  gateValue,
-} from '../config/ttlModels';
+import { TTL_MODELS, icModel, isOpenCollector, gateValue } from '../config/ttlModels';
 import { connectedBreadboardPins, insertedPins } from '../config/digitalPins';
 import { componentAssets } from '../config/assets';
 import { relay14 } from '../config/sequencePins';
@@ -42,8 +37,7 @@ export interface CircuitSolverResult extends SimulationState {
 }
 
 /** Keys are stable domain references, independent of SVG position or zoom. */
-export const pinKey = ({ componentId, pinId }: PinRef) =>
-  `${componentId}:${pinId}`;
+export const pinKey = ({ componentId, pinId }: PinRef) => `${componentId}:${pinId}`;
 const ref = (componentId: string, pinId: string): PinRef => ({
   componentId,
   pinId,
@@ -69,8 +63,7 @@ export class UnionFind {
   }
   find(id: string): string {
     const parent = this.parents.get(id);
-    if (parent === undefined)
-      throw new Error(`Unknown circuit terminal: ${id}`);
+    if (parent === undefined) throw new Error(`Unknown circuit terminal: ${id}`);
     if (parent === id) return id;
     const root = this.find(parent);
     this.parents.set(id, root);
@@ -82,8 +75,7 @@ export class UnionFind {
     if (ra === rb) return;
     if (this.ranks.get(ra)! < this.ranks.get(rb)!) [ra, rb] = [rb, ra];
     this.parents.set(rb, ra);
-    if (this.ranks.get(ra) === this.ranks.get(rb))
-      this.ranks.set(ra, this.ranks.get(ra)! + 1);
+    if (this.ranks.get(ra) === this.ranks.get(rb)) this.ranks.set(ra, this.ranks.get(ra)! + 1);
   }
 }
 
@@ -189,25 +181,17 @@ function buildTopology(
       }
     }
     if (c.assetId === 'pb-switch')
-      contact(
-        c,
-        c.settings.pressed ? 'no1' : 'nc1',
-        c.settings.pressed ? 'no2' : 'nc2',
-      );
-    if (c.assetId === 'switch-3pin')
-      contact(c, 'com', c.settings.switchOn ? '2' : '1');
+      contact(c, c.settings.pressed ? 'no1' : 'nc1', c.settings.pressed ? 'no2' : 'nc2');
+    if (c.assetId === 'switch-3pin') contact(c, 'com', c.settings.switchOn ? '2' : '1');
     if (c.assetId === 'timer-at8n') {
       contact(c, '1', timerOutputs.has(c.id) ? '3' : '4');
       contact(c, '8', timerOutputs.has(c.id) ? '6' : '5');
     }
     if (
       c.assetId === 'relay-socket' &&
-      input.components.some(
-        (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
-      )
+      input.components.some((b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id)
     ) {
-      for (const { com, no, nc } of relay14.poles)
-        contact(c, com, relays.has(c.id) ? no : nc);
+      for (const { com, no, nc } of relay14.poles) contact(c, com, relays.has(c.id) ? no : nc);
     }
   }
   const groups = new Map<string, PinRef[]>();
@@ -240,8 +224,7 @@ function linearSolve(matrix: number[][], rhs: number[]): number[] | null {
   for (let col = 0; col < n; col++) {
     let pivot = col;
     for (let row = col + 1; row < n; row++)
-      if (Math.abs(matrix[row][col]) > Math.abs(matrix[pivot][col]))
-        pivot = row;
+      if (Math.abs(matrix[row][col]) > Math.abs(matrix[pivot][col])) pivot = row;
     if (Math.abs(matrix[pivot][col]) < 1e-15) return null;
     [matrix[col], matrix[pivot]] = [matrix[pivot], matrix[col]];
     [rhs[col], rhs[pivot]] = [rhs[pivot], rhs[col]];
@@ -254,8 +237,7 @@ function linearSolve(matrix: number[][], rhs: number[]): number[] | null {
   const result = Array<number>(n).fill(0);
   for (let row = n - 1; row >= 0; row--) {
     let value = rhs[row];
-    for (let col = row + 1; col < n; col++)
-      value -= matrix[row][col] * result[col];
+    for (let col = row + 1; col < n; col++) value -= matrix[row][col] * result[col];
     result[row] = value / matrix[row][row];
   }
   return result.every(Number.isFinite) ? result : null;
@@ -280,9 +262,7 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
     }
   const unknown = [...connected].filter((id) => !fixed.has(id));
   const index = new Map(unknown.map((id, i) => [id, i]));
-  const active = branches.filter(
-    (b) => connected.has(b.a) && connected.has(b.b) && b.a !== b.b,
-  );
+  const active = branches.filter((b) => connected.has(b.a) && connected.has(b.b) && b.a !== b.b);
   let on = new Set<string>(),
     volts = new Map(fixed);
   for (let iteration = 0; iteration < 24; iteration++) {
@@ -312,25 +292,15 @@ function solveDc(fixed: Map<string, number>, branches: Branch[]): DcResult {
         currents: dictionary<number>(),
         converged: false,
       };
-    volts = new Map([
-      ...fixed,
-      ...unknown.map((id, i) => [id, solution[i]] as const),
-    ]);
+    volts = new Map([...fixed, ...unknown.map((id, i) => [id, solution[i]] as const)]);
     const next = new Set(
-      active
-        .filter((b) => b.diode && volts.get(b.a)! - volts.get(b.b)! > 2 + EPS)
-        .map((b) => b.id),
+      active.filter((b) => b.diode && volts.get(b.a)! - volts.get(b.b)! > 2 + EPS).map((b) => b.id),
     );
     if (next.size === on.size && [...next].every((id) => on.has(id))) {
       const currents = dictionary<number>();
       for (const b of branches) {
-        const delta =
-          volts.has(b.a) && volts.has(b.b)
-            ? volts.get(b.a)! - volts.get(b.b)!
-            : 0;
-        currents[b.id] = b.diode
-          ? Math.max(0, (delta - 2) / b.ohms)
-          : delta / b.ohms;
+        const delta = volts.has(b.a) && volts.has(b.b) ? volts.get(b.a)! - volts.get(b.b)! : 0;
+        currents[b.id] = b.diode ? Math.max(0, (delta - 2) / b.ohms) : delta / b.ohms;
       }
       return { volts, currents, converged: true };
     }
@@ -367,13 +337,18 @@ function solveRegulatedDc(
   for (let pass = 0; pass < 3 && dc.converged; pass++) {
     let changed = false;
     for (const regulator of regulators) {
-      const draw = (result: DcResult) => Math.max(0, ...regulator.sense.map((nets) =>
-        nets.reduce((sum, net) => sum + outgoingCurrent(net, branches, result.currents), 0),
-      ));
+      const draw = (result: DcResult) =>
+        Math.max(
+          0,
+          ...regulator.sense.map((nets) =>
+            nets.reduce((sum, net) => sum + outgoingCurrent(net, branches, result.currents), 0),
+          ),
+        );
       if (draw(dc) <= regulator.limit + 1e-7) continue;
       const [first] = regulator.rails;
       if (!first || !first[1]) continue;
-      let low = 0, high = sources.get(first[0])! / first[1];
+      let low = 0,
+        high = sources.get(first[0])! / first[1];
       for (let n = 0; n < 21; n++) {
         const scale = (low + high) / 2;
         for (const [net, voltage] of regulator.rails) sources.set(net, voltage * scale);
@@ -405,9 +380,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
   const outputPins = new Set(
     components
       .filter((c) => c.assetId === 'ic-dip14')
-      .flatMap((c) =>
-        TTL_MODELS[icModel(c)].gates.map((g) => pinKey(ref(c.id, g.output))),
-      ),
+      .flatMap((c) => TTL_MODELS[icModel(c)].gates.map((g) => pinKey(ref(c.id, g.output)))),
   );
   const pinsByComponent = topologyPins(input);
   let relays = new Set(
@@ -418,8 +391,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       : [],
   );
   const now = input.nowMs ?? Date.now();
-  const timerStates =
-    dictionary<NonNullable<SimulationState['timerStates']>[string]>();
+  const timerStates = dictionary<NonNullable<SimulationState['timerStates']>[string]>();
   let timerOutputs = new Set<string>(
     input.power.on
       ? Object.entries(input.previous?.timerStates ?? {})
@@ -441,10 +413,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     severity: 'short' | 'error' = 'short',
   ) => {
     if (faults.some((f) => f.code === code && f.message === message)) return;
-    const allPins = [
-      ...pins,
-      ...roots.flatMap((id) => topology.groups.get(id) ?? []),
-    ];
+    const allPins = [...pins, ...roots.flatMap((id) => topology.groups.get(id) ?? [])];
     const pinMap = new Map(allPins.map((p) => [pinKey(p), p]));
     faults.push({
       code,
@@ -470,8 +439,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     });
     const pinValues = dictionary<SimulationState['pinValues'][string]>();
     for (const net of nets)
-      for (const p of net.pins)
-        pinValues[pinKey(p)] = { voltage: net.voltage, logic: net.logic };
+      for (const p of net.pins) pinValues[pinKey(p)] = { voltage: net.voltage, logic: net.logic };
     const shortPins = new Map(
       faults
         .filter((f) => f.severity === 'short')
@@ -545,11 +513,15 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             }
           }
           const total = gateCurrent + outgoingCurrent(source, finalBranches, currents);
-          const seriesCurrent = supply.tracking === 'series' && pin === 'ch2-plus'
-            ? Math.max(0, total + (sourceCurrents[c.id + ':plus'] ?? 0)) : Math.max(0, total);
+          const seriesCurrent =
+            supply.tracking === 'series' && pin === 'ch2-plus'
+              ? Math.max(0, total + (sourceCurrents[c.id + ':plus'] ?? 0))
+              : Math.max(0, total);
           const combinedLimit = supply.ch1Limit + supply.ch2Limit;
-          const share = supply.tracking === 'parallel' && pin !== '5v-plus' && combinedLimit > 0
-            ? (pin === 'plus' ? supply.ch1Limit : supply.ch2Limit) / combinedLimit : 1;
+          const share =
+            supply.tracking === 'parallel' && pin !== '5v-plus' && combinedLimit > 0
+              ? (pin === 'plus' ? supply.ch1Limit : supply.ch2Limit) / combinedLimit
+              : 1;
           sourceCurrents[key] = seriesCurrent * share;
         }
       }
@@ -577,8 +549,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
 
   const outerLimit = Math.max(32, components.length * 4);
   for (let pass = 0; pass < outerLimit; pass++) {
-    if (pass > 0)
-      topology = buildTopology(input, relays, timerOutputs, pinsByComponent);
+    if (pass > 0) topology = buildTopology(input, relays, timerOutputs, pinsByComponent);
     if (topology.invalid.length) {
       for (const w of topology.invalid) {
         fault(
@@ -601,8 +572,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         !(c.assetId === 'panel-board' && input.mode === 'sequence')
       )
         continue;
-      if (c.assetId === 'power-supply' && c.settings.outputEnabled === false)
-        continue;
+      if (c.assetId === 'power-supply' && c.settings.outputEnabled === false) continue;
       const supply = getSupplySettings(c.settings.supply);
       const tracking = supply.tracking;
       const voltage = c.settings.voltage;
@@ -624,14 +594,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         if (a === b)
           fault(
             'POWER_SHORT',
-            c.label +
-              ' [' +
-              c.id +
-              '] ' +
-              pp +
-              '/' +
-              np +
-              ': 부하 없이 직접 단락되었습니다.',
+            c.label + ' [' + c.id + '] ' + pp + '/' + np + ': 부하 없이 직접 단락되었습니다.',
             [plus, minus],
             [a],
           );
@@ -651,14 +614,39 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
         }
       }
       if (c.assetId === 'power-supply') {
-        const main = root(ref(c.id, 'plus')), secondary = root(ref(c.id, 'ch2-plus'));
+        const main = root(ref(c.id, 'plus')),
+          secondary = root(ref(c.id, 'ch2-plus'));
         const auxiliary = root(ref(c.id, '5v-plus'));
-        const regulate = (rails: [string, number][], sense: string[][], limit: number, pins: string[]) => {
+        const regulate = (
+          rails: [string, number][],
+          sense: string[][],
+          limit: number,
+          pins: string[],
+        ) => {
           const driven = new Map(rails.filter(([, level]) => level > 0));
-          if (driven.size) regulators.push({ rails: driven, sense, limit, outputs: pins.map((pin) => c.id + ':' + pin) });
+          if (driven.size)
+            regulators.push({
+              rails: driven,
+              sense,
+              limit,
+              outputs: pins.map((pin) => c.id + ':' + pin),
+            });
         };
-        if (series) regulate([[main, voltage * 2], [secondary, ch2Voltage]], [[main], [main, secondary]], Math.min(supply.ch1Limit, supply.ch2Limit), ['plus', 'ch2-plus']);
-        else if (tracking === 'parallel') regulate([[main, voltage]], [[main]], supply.ch1Limit + supply.ch2Limit, ['plus', 'ch2-plus']);
+        if (series)
+          regulate(
+            [
+              [main, voltage * 2],
+              [secondary, ch2Voltage],
+            ],
+            [[main], [main, secondary]],
+            Math.min(supply.ch1Limit, supply.ch2Limit),
+            ['plus', 'ch2-plus'],
+          );
+        else if (tracking === 'parallel')
+          regulate([[main, voltage]], [[main]], supply.ch1Limit + supply.ch2Limit, [
+            'plus',
+            'ch2-plus',
+          ]);
         else {
           regulate([[main, voltage]], [[main]], supply.ch1Limit, ['plus']);
           regulate([[secondary, ch2Voltage]], [[secondary]], supply.ch2Limit, ['ch2-plus']);
@@ -670,9 +658,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       const outputs = pins.filter((p) => outputPins.has(pinKey(p)));
       if (
         outputs.length > 1 &&
-        !outputs.every((p) =>
-          isOpenCollector(componentsById.get(p.componentId)!),
-        )
+        !outputs.every((p) => isOpenCollector(componentsById.get(p.componentId)!))
       )
         fault(
           'OUTPUT_CONFLICT',
@@ -699,9 +685,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       if (c.assetId === 'motor-unit') add('plus', 'minus', 240);
       if (
         c.assetId === 'relay-socket' &&
-        components.some(
-          (b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id,
-        )
+        components.some((b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id)
       )
         add(relay14.coil.plus, relay14.coil.minus, 1200);
       if (c.assetId === 'timer-at8n') add('7', '2', 1200);
@@ -712,15 +696,13 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     const counts = new Map<string, number>();
     for (const regulator of regulators)
       for (const net of regulator.rails.keys()) counts.set(net, (counts.get(net) ?? 0) + 1);
-    const independentRegulators = regulators.filter((regulator) => [...regulator.rails.keys()].every((net) => counts.get(net) === 1));
+    const independentRegulators = regulators.filter((regulator) =>
+      [...regulator.rails.keys()].every((net) => counts.get(net) === 1),
+    );
     let drivers = new Map<string, number>(),
       settled = false,
       sourceLevels = fixed;
-    for (
-      let iteration = 0;
-      iteration < Math.max(32, components.length * 4);
-      iteration++
-    ) {
+    for (let iteration = 0; iteration < Math.max(32, components.length * 4); iteration++) {
       const regulated = solveRegulatedDc(fixed, drivers, branches, independentRegulators);
       const { dc } = regulated;
       limitedOutputs = regulated.limitedOutputs;
@@ -729,9 +711,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       currents = dc.currents;
       if (!dc.converged) break;
       const next = new Map<string, number>();
-      for (const c of components.filter(
-        (item) => item.assetId === 'ic-dip14',
-      )) {
+      for (const c of components.filter((item) => item.assetId === 'ic-dip14')) {
         const vcc = volts.get(root(ref(c.id, '14'))),
           gnd = volts.get(root(ref(c.id, '7')));
         if (
@@ -747,8 +727,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             return ttlLevel(value === undefined ? null : value - gnd);
           });
           const output: LogicLevel = gateValue(icModel(c), values);
-          if (output === 'unknown' || (isOpenCollector(c) && output === 1))
-            continue;
+          if (output === 'unknown' || (isOpenCollector(c) && output === 1)) continue;
           const pin = ref(c.id, gate.output),
             id = root(pin),
             value = output === 1 ? vcc : gnd;
@@ -765,10 +744,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       if (faults.length) return finish();
       if (
         next.size === drivers.size &&
-        [...next].every(
-          ([id, value]) =>
-            Math.abs((drivers.get(id) ?? Infinity) - value) < EPS,
-        )
+        [...next].every(([id, value]) => Math.abs((drivers.get(id) ?? Infinity) - value) < EPS)
       ) {
         settled = true;
         break;
@@ -812,8 +788,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
           );
         else if (input.power.on && delta < TTL.minSupply)
           warnings.push(`${c.id}: IC 전원 전압이 부족합니다.`);
-      } else if (input.power.on)
-        warnings.push(`${c.id}: 14번 VCC와 7번 GND의 전원을 연결하세요.`);
+      } else if (input.power.on) warnings.push(`${c.id}: 14번 VCC와 7번 GND의 전원을 연결하세요.`);
     }
     const allDriven = new Map([...fixed, ...drivers]);
     for (const c of components.filter((item) => item.assetId === 'led-red')) {
@@ -841,10 +816,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
             .filter(
               (c) =>
                 c.assetId === 'relay-socket' &&
-                components.some(
-                  (b) =>
-                    b.assetId === 'relay-body' && b.mountedSocketId === c.id,
-                ) &&
+                components.some((b) => b.assetId === 'relay-body' && b.mountedSocketId === c.id) &&
                 (currents[c.id] ?? 0) * 1200 >= 18,
             )
             .map((c) => c.id)
@@ -852,15 +824,11 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
     );
     const nextTimers = new Set<string>();
     for (const c of components.filter((c) => c.assetId === 'timer-at8n')) {
-      const delta =
-        (volts.get(root(ref(c.id, '7'))) ?? 0) -
-        (volts.get(root(ref(c.id, '2'))) ?? 0);
+      const delta = (volts.get(root(ref(c.id, '7'))) ?? 0) - (volts.get(root(ref(c.id, '2'))) ?? 0);
       if (input.power.on && delta >= 18) {
         const previousTimers = input.previous?.timerStates;
         const previousTimer =
-          previousTimers && Object.hasOwn(previousTimers, c.id)
-            ? previousTimers[c.id]
-            : undefined;
+          previousTimers && Object.hasOwn(previousTimers, c.id) ? previousTimers[c.id] : undefined;
         const since = previousTimer?.since ?? timerStates[c.id]?.since ?? now;
         const elapsed = Math.max(0, (now - since) / 1000);
         timerStates[c.id] = {
@@ -872,8 +840,7 @@ export function solveCircuit(input: CircuitSolverInput): CircuitSolverResult {
       } else delete timerStates[c.id];
     }
     const timersStable =
-      nextTimers.size === timerOutputs.size &&
-      [...nextTimers].every((id) => timerOutputs.has(id));
+      nextTimers.size === timerOutputs.size && [...nextTimers].every((id) => timerOutputs.has(id));
     timerOutputs = nextTimers;
     if (
       timersStable &&

@@ -3,8 +3,7 @@ import { isThemePreference, useTheme } from '../theme';
 
 export function ThemeControl() {
   const { preference, setPreference } = useTheme();
-  const Icon =
-    preference === 'system' ? Monitor : preference === 'dark' ? Moon : Sun;
+  const Icon = preference === 'system' ? Monitor : preference === 'dark' ? Moon : Sun;
   return (
     <label className="theme-control">
       <Icon size={17} aria-hidden="true" />
@@ -13,8 +12,7 @@ export function ThemeControl() {
         aria-label="화면 테마"
         value={preference}
         onChange={(event) => {
-          if (isThemePreference(event.target.value))
-            setPreference(event.target.value);
+          if (isThemePreference(event.target.value)) setPreference(event.target.value);
         }}
       >
         <option value="light">라이트 모드</option>

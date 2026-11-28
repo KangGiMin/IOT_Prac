@@ -21,11 +21,7 @@ export function AssetImage({
   if (failedSrc === asset.src)
     return (
       <div className={`photo-fallback ${thumbnail ? 'is-thumbnail' : ''}`}>
-        <ImageOff
-          size={thumbnail ? 20 : 26}
-          strokeWidth={1.3}
-          aria-hidden="true"
-        />
+        <ImageOff size={thumbnail ? 20 : 26} strokeWidth={1.3} aria-hidden="true" />
         {!thumbnail && (
           <>
             <strong>{asset.label}</strong>

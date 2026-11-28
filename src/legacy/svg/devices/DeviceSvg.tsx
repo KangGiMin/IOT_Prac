@@ -9,12 +9,7 @@ interface Props {
   preview?: boolean;
 }
 /** All equipment is vector geometry. No raster images, SVG images, or foreignObject. */
-export function DeviceSvg({
-  assetId,
-  settings,
-  energized = false,
-  preview = false,
-}: Props) {
+export function DeviceSvg({ assetId, settings, energized = false, preview = false }: Props) {
   const uid = useId().replace(/:/g, '');
   const definition = deviceDefinitions[assetId];
   const [, , width, height] = definition.viewBox;
@@ -27,14 +22,7 @@ export function DeviceSvg({
     color = '#263340',
     anchor: 'start' | 'middle' | 'end' = 'start',
   ) => (
-    <text
-      key={`${x}:${y}:${value}`}
-      x={x}
-      y={y}
-      fontSize={size}
-      fill={color}
-      textAnchor={anchor}
-    >
+    <text key={`${x}:${y}:${value}`} x={x} y={y} fontSize={size} fill={color} textAnchor={anchor}>
       {value}
     </text>
   );
@@ -50,12 +38,7 @@ export function DeviceSvg({
       <circle r={r} fill={fill('knob')} stroke="#e9ebe9" strokeWidth="2" />
       <path d={`M 0 ${-r + 3} v 6`} stroke="#65717b" strokeWidth="2" />
       {Array.from({ length: 16 }, (_, i) => (
-        <path
-          key={i}
-          d={`M 0 ${r - 2} v 2`}
-          stroke="#aab0b0"
-          transform={`rotate(${i * 22.5})`}
-        />
+        <path key={i} d={`M 0 ${r - 2} v 2`} stroke="#aab0b0" transform={`rotate(${i * 22.5})`} />
       ))}
     </g>
   );
@@ -104,33 +87,13 @@ export function DeviceSvg({
           />
           {Array.from({ length: 13 }, (_, i) => (
             <g key={i} transform={`translate(42 ${28 + i * 44})`}>
-              <rect
-                width="1016"
-                height="38"
-                rx="1"
-                fill={fill('rail')}
-                stroke="#9daab6"
-              />
+              <rect width="1016" height="38" rx="1" fill={fill('rail')} stroke="#9daab6" />
               <path d="M 0 2 H 1016" stroke="#f9fcff" strokeWidth="2" />
               <path d="M 0 37 H 1016" stroke="#6b7884" />
             </g>
           ))}
-          <rect
-            x="21"
-            y="21"
-            width="17"
-            height="578"
-            fill={fill('rail')}
-            stroke="#97a3ac"
-          />
-          <rect
-            x="1062"
-            y="21"
-            width="17"
-            height="578"
-            fill={fill('rail')}
-            stroke="#97a3ac"
-          />
+          <rect x="21" y="21" width="17" height="578" fill={fill('rail')} stroke="#97a3ac" />
+          <rect x="1062" y="21" width="17" height="578" fill={fill('rail')} stroke="#97a3ac" />
           {[0, 1067].map((x) => (
             <g key={x} transform={`translate(${x} 226)`}>
               <path
@@ -138,14 +101,7 @@ export function DeviceSvg({
                 fill="#252c33"
                 stroke="#111820"
               />
-              <rect
-                x="9"
-                y="12"
-                width="13"
-                height="106"
-                rx="4"
-                fill="#171e26"
-              />
+              <rect x="9" y="12" width="13" height="106" rx="4" fill="#171e26" />
               {screw(17, 0, 'a')}
               {screw(17, 130, 'b')}
             </g>
@@ -158,10 +114,7 @@ export function DeviceSvg({
       const lamp = assetId === 'pilot-lamp';
       body = (
         <>
-          {panel(
-            lamp ? 'N-2260-06' : 'N-2260-03',
-            lamp ? 'PILOT LAMP UNIT' : 'PUSH BUTTON UNIT',
-          )}
+          {panel(lamp ? 'N-2260-06' : 'N-2260-03', lamp ? 'PILOT LAMP UNIT' : 'PUSH BUTTON UNIT')}
           <rect
             x={lamp ? 43 : 21}
             y="30"
@@ -185,30 +138,10 @@ export function DeviceSvg({
               {text(112, 68, 'NC', 9, '#2e3a45', 'middle')}
             </>
           )}
-          <circle
-            cx="80"
-            cy="118"
-            r="41"
-            fill={fill('metal')}
-            stroke="#8a949e"
-          />
-          <circle
-            cx="80"
-            cy="118"
-            r="34"
-            fill="#303946"
-            stroke="#f0f4f7"
-            strokeWidth="2"
-          />
+          <circle cx="80" cy="118" r="41" fill={fill('metal')} stroke="#8a949e" />
+          <circle cx="80" cy="118" r="34" fill="#303946" stroke="#f0f4f7" strokeWidth="2" />
           {energized && lamp && (
-            <circle
-              cx="80"
-              cy="118"
-              r="36"
-              fill="#ffd42a"
-              filter={fill('glow')}
-              opacity=".8"
-            />
+            <circle cx="80" cy="118" r="36" fill="#ffd42a" filter={fill('glow')} opacity=".8" />
           )}
           <circle
             cx="80"
@@ -218,24 +151,10 @@ export function DeviceSvg({
             stroke={lamp ? '#9c7c08' : '#1749a2'}
             strokeWidth="2"
           />
-          <ellipse
-            cx="73"
-            cy="106"
-            rx="17"
-            ry="9"
-            fill="white"
-            opacity={lamp ? '.25' : '.2'}
-          />
+          <ellipse cx="73" cy="106" rx="17" ry="9" fill="white" opacity={lamp ? '.25' : '.2'} />
           {lamp && (
             <>
-              <circle
-                cx="80"
-                cy="118"
-                r="21"
-                fill="none"
-                stroke="#fff1a9"
-                opacity=".5"
-              />
+              <circle cx="80" cy="118" r="21" fill="none" stroke="#fff1a9" opacity=".5" />
               <circle cx="80" cy="118" r="8" fill="#dab121" opacity=".6" />
             </>
           )}
@@ -255,15 +174,7 @@ export function DeviceSvg({
       body = (
         <>
           {panel('N-2260-11', 'RELAY UNIT · 14P')}
-          <rect
-            x="109"
-            y="24"
-            width="94"
-            height="152"
-            rx="3"
-            fill="#252b30"
-            stroke="#14191f"
-          />
+          <rect x="109" y="24" width="94" height="152" rx="3" fill="#252b30" stroke="#14191f" />
           {Array.from({ length: 20 }, (_, i) => (
             <rect
               key={i}
@@ -302,12 +213,7 @@ export function DeviceSvg({
         <>
           <rect x="7" y="125" width="86" height="10" rx="2" fill="#343c43" />
           {[20, 39, 61, 80].map((x) => (
-            <path
-              key={x}
-              d={`M ${x} 130 v 9`}
-              stroke={fill('metal')}
-              strokeWidth="5"
-            />
+            <path key={x} d={`M ${x} 130 v 9`} stroke={fill('metal')} strokeWidth="5" />
           ))}
           <rect
             x="6"
@@ -319,14 +225,7 @@ export function DeviceSvg({
             stroke="#8598a9"
             strokeWidth="2"
           />
-          <rect
-            x="15"
-            y="15"
-            width="70"
-            height="102"
-            fill="#273746"
-            opacity=".3"
-          />
+          <rect x="15" y="15" width="70" height="102" fill="#273746" opacity=".3" />
           <path
             d="M 20 20 L 28 62 M 80 20 L 71 63 M 38 20 L 35 70 M 63 20 L 65 70"
             stroke="#d2d8db"
@@ -370,34 +269,13 @@ export function DeviceSvg({
             stroke="#9ca9b3"
             strokeWidth="2"
           />
-          <rect
-            x="7"
-            y="7"
-            width="166"
-            height="185"
-            rx="2"
-            fill="#f2f1e9"
-            stroke="#c5c6bf"
-          />
+          <rect x="7" y="7" width="166" height="185" rx="2" fill="#f2f1e9" stroke="#c5c6bf" />
           {text(15, 22, 'POWER', 8)}
           {text(143, 22, 'OUT', 8)}
           <circle cx="25" cy="33" r="4" fill="#46534e" />
           <circle cx="152" cy="33" r="4" fill="#46534e" />
-          <circle
-            cx="90"
-            cy="107"
-            r="71"
-            fill={fill('metal')}
-            stroke="#7d8995"
-          />
-          <circle
-            cx="90"
-            cy="107"
-            r="64"
-            fill="#242c34"
-            stroke="#e5e7e5"
-            strokeWidth="2"
-          />
+          <circle cx="90" cy="107" r="71" fill={fill('metal')} stroke="#7d8995" />
+          <circle cx="90" cy="107" r="64" fill="#242c34" stroke="#e5e7e5" strokeWidth="2" />
           {Array.from({ length: 51 }, (_, i) => (
             <path
               key={i}
@@ -418,14 +296,7 @@ export function DeviceSvg({
               'middle',
             );
           })}
-          <circle
-            cx="90"
-            cy="107"
-            r="31"
-            fill={fill('metal')}
-            stroke="#e7eaed"
-            strokeWidth="3"
-          />
+          <circle cx="90" cy="107" r="31" fill={fill('metal')} stroke="#e7eaed" strokeWidth="3" />
           <circle cx="90" cy="107" r="23" fill="none" stroke="#76818b" />
           <path
             d="M 90 107 V 52"
@@ -463,22 +334,8 @@ export function DeviceSvg({
             fill={fill('plastic')}
             stroke="#bfc6cc"
           />
-          <rect
-            x="30"
-            y="65"
-            width="500"
-            height="61"
-            fill="#edf0ed"
-            stroke="#d2d7d4"
-          />
-          <rect
-            x="30"
-            y="153"
-            width="500"
-            height="61"
-            fill="#edf0ed"
-            stroke="#d2d7d4"
-          />
+          <rect x="30" y="65" width="500" height="61" fill="#edf0ed" stroke="#d2d7d4" />
+          <rect x="30" y="153" width="500" height="61" fill="#edf0ed" stroke="#d2d7d4" />
           <rect x="32" y="133" width="496" height="10" rx="2" fill="#c7ccca" />
           <path d="M 32 133 H 528" stroke="#a3aba9" />
           {[22, 246].map((y) => (
@@ -490,26 +347,13 @@ export function DeviceSvg({
             </g>
           ))}
           {Array.from({ length: 10 }, (_, i) =>
-            text(
-              32,
-              78 + i * 12 + (i >= 5 ? 28 : 0),
-              'abcdefghij'[i],
-              6,
-              '#63716e',
-              'middle',
-            ),
+            text(32, 78 + i * 12 + (i >= 5 ? 28 : 0), 'abcdefghij'[i], 6, '#63716e', 'middle'),
           )}
           {Array.from({ length: 30 }, (_, i) =>
             text(47 + i * 16, 61, String(i + 1), 5, '#5e6b68', 'middle'),
           )}
           <rect x="7" y="223" width="11" height="62" fill="#f0c928" rx="1" />
-          <text
-            x="15"
-            y="278"
-            fontSize="7"
-            fill="#222e36"
-            transform="rotate(-90 15 278)"
-          >
+          <text x="15" y="278" fontSize="7" fill="#222e36" transform="rotate(-90 15 278)">
             E·CALL EIC-108
           </text>
         </>
@@ -528,24 +372,8 @@ export function DeviceSvg({
             stroke="#929fa8"
             strokeWidth="2"
           />
-          <rect
-            x="8"
-            y="8"
-            width="294"
-            height="177"
-            rx="8"
-            fill="#e8ebe7"
-            stroke="#c2c9c5"
-          />
-          <rect
-            x="65"
-            y="11"
-            width="181"
-            height="18"
-            rx="2"
-            fill="#f5f7f1"
-            stroke="#b7c2b9"
-          />
+          <rect x="8" y="8" width="294" height="177" rx="8" fill="#e8ebe7" stroke="#c2c9c5" />
+          <rect x="65" y="11" width="181" height="18" rx="2" fill="#f5f7f1" stroke="#b7c2b9" />
           {text(72, 23, 'EZ DIGITAL', 9)}
           {text(166, 23, 'GP-4303TP', 9)}
           <rect
@@ -558,21 +386,8 @@ export function DeviceSvg({
             stroke="#adb5b3"
             strokeWidth="3"
           />
-          {text(
-            155,
-            48,
-            'MULTIPLE OUTPUT POWER SUPPLY',
-            5,
-            '#a1bcb2',
-            'middle',
-          )}
-          {text(
-            89,
-            73,
-            settings?.voltage.toFixed(1).padStart(4, '0') ?? '05.0',
-            24,
-            '#83bf9f',
-          )}
+          {text(155, 48, 'MULTIPLE OUTPUT POWER SUPPLY', 5, '#a1bcb2', 'middle')}
+          {text(89, 73, settings?.voltage.toFixed(1).padStart(4, '0') ?? '05.0', 24, '#83bf9f')}
           {text(213, 73, 'V', 10, '#d4e6d7')}
           {text(89, 99, '—.—', 21, '#5c7469')}
           {text(213, 99, 'A', 10, '#a8c2b0')}
@@ -583,39 +398,15 @@ export function DeviceSvg({
           {text(38, 80, 'SLAVE', 7, '#3d4b46', 'middle')}
           {text(273, 80, 'MASTER', 7, '#3d4b46', 'middle')}
           <path d="M 12 127 H 298" stroke="#b4bdb8" />
-          <rect
-            x="126"
-            y="116"
-            width="15"
-            height="7"
-            rx="1"
-            fill="#d8ddd6"
-            stroke="#7f8983"
-          />
+          <rect x="126" y="116" width="15" height="7" rx="1" fill="#d8ddd6" stroke="#7f8983" />
           <circle cx="155" cy="119" r="3" fill="#934b45" />
-          <rect
-            x="171"
-            y="116"
-            width="15"
-            height="7"
-            rx="1"
-            fill="#d8ddd6"
-            stroke="#7f8983"
-          />
+          <rect x="171" y="116" width="15" height="7" rx="1" fill="#d8ddd6" stroke="#7f8983" />
           {knob(33, 157, 11)}
           {text(33, 178, 'POWER', 6, '#3d4b46', 'middle')}
           {text(127, 138, '−', 10, '#263b34', 'middle')}
           {text(168, 138, 'GND', 7, '#263b34', 'middle')}
           {text(209, 138, '+', 10, '#263b34', 'middle')}
-          <rect
-            x="270"
-            y="148"
-            width="11"
-            height="22"
-            rx="2"
-            fill="#4b5553"
-            stroke="#a1aaa1"
-          />
+          <rect x="270" y="148" width="11" height="22" rx="2" fill="#4b5553" stroke="#a1aaa1" />
           {text(275, 142, 'USB', 6, '#3d4b46', 'middle')}
         </>
       );
@@ -633,15 +424,7 @@ export function DeviceSvg({
             stroke="#a0a7aa"
             strokeWidth="2"
           />
-          <rect
-            x="9"
-            y="9"
-            width="302"
-            height="165"
-            rx="6"
-            fill="#edece4"
-            stroke="#c7c5bc"
-          />
+          <rect x="9" y="9" width="302" height="165" rx="6" fill="#edece4" stroke="#c7c5bc" />
           <rect x="17" y="15" width="34" height="13" fill="#f2d231" />
           {text(20, 25, 'RIGOL', 9)}
           {text(57, 25, 'DS5152C', 11)}
@@ -657,12 +440,7 @@ export function DeviceSvg({
             />
           ))}
           {Array.from({ length: 7 }, (_, i) => (
-            <path
-              key={'h' + i}
-              d={`M 33 ${56 + i * 13} H 171`}
-              stroke="#23405e"
-              strokeWidth=".5"
-            />
+            <path key={'h' + i} d={`M 33 ${56 + i * 13} H 171`} stroke="#23405e" strokeWidth=".5" />
           ))}
           {text(32, 52, 'CH1   -- V', 6, '#d5bd4d')}
           {text(32, 144, 'NO SIGNAL · ENGINE PENDING', 5, '#91b2d0')}
@@ -688,15 +466,7 @@ export function DeviceSvg({
           <rect x="191" y="80" width="14" height="9" rx="2" fill="#46aed6" />
           {text(211, 144, 'CH1', 7, '#2f3d46', 'middle')}
           {text(252, 144, 'CH2', 7, '#2f3d46', 'middle')}
-          <rect
-            x="18"
-            y="163"
-            width="16"
-            height="8"
-            rx="2"
-            fill={fill('knob')}
-            stroke="#a4aba4"
-          />
+          <rect x="18" y="163" width="16" height="8" rx="2" fill={fill('knob')} stroke="#a4aba4" />
         </>
       );
       break;
@@ -733,15 +503,7 @@ export function DeviceSvg({
             strokeWidth="2"
             opacity=".7"
           />
-          <rect
-            x="14"
-            y="44"
-            width="37"
-            height="6"
-            rx="2"
-            fill="#dd3447"
-            stroke="#a42135"
-          />
+          <rect x="14" y="44" width="37" height="6" rx="2" fill="#dd3447" stroke="#a42135" />
           <ellipse cx="26" cy="22" rx="4" ry="8" fill="#ffccc2" opacity=".6" />
           {text(17, 108, 'A', 7)}
           {text(44, 108, 'K', 7)}
@@ -757,30 +519,10 @@ export function DeviceSvg({
             stroke={fill('metal')}
             strokeWidth="3"
           />
-          <rect
-            x="43"
-            y="12"
-            width="59"
-            height="21"
-            rx="8"
-            fill="#d4bf8c"
-            stroke="#a18e5b"
-          />
-          <path
-            d="M 48 14 H 96"
-            stroke="#f4e4b8"
-            strokeWidth="3"
-            opacity=".7"
-          />
+          <rect x="43" y="12" width="59" height="21" rx="8" fill="#d4bf8c" stroke="#a18e5b" />
+          <path d="M 48 14 H 96" stroke="#f4e4b8" strokeWidth="3" opacity=".7" />
           {['#d87024', '#d87024', '#734123', '#b29439'].map((color, i) => (
-            <rect
-              key={i}
-              x={54 + i * 12}
-              y="12"
-              width="5"
-              height="21"
-              fill={color}
-            />
+            <rect key={i} x={54 + i * 12} y="12" width="5" height="21" fill={color} />
           ))}
           {text(72, 61, '330 Ω', 8, '#53616c', 'middle')}
         </>
@@ -830,11 +572,7 @@ export function DeviceSvg({
     case 'switch-3pin':
       body = (
         <>
-          <path
-            d="M 25 58 V 85 M 45 58 V 85 M 65 58 V 85"
-            stroke={fill('metal')}
-            strokeWidth="4"
-          />
+          <path d="M 25 58 V 85 M 45 58 V 85 M 65 58 V 85" stroke={fill('metal')} strokeWidth="4" />
           <rect
             x="10"
             y="35"
@@ -875,22 +613,9 @@ export function DeviceSvg({
             fill={fill('glass')}
             stroke="#a7b6bf"
           />
-          <rect
-            x="12"
-            y="140"
-            width="26"
-            height="56"
-            rx="7"
-            fill={fill('red')}
-            stroke="#9a2432"
-          />
+          <rect x="12" y="140" width="26" height="56" rx="7" fill={fill('red')} stroke="#9a2432" />
           {[18, 25, 32].map((x) => (
-            <path
-              key={x}
-              d={`M ${x} 151 V 184`}
-              stroke="#fa7c7d"
-              opacity=".5"
-            />
+            <path key={x} d={`M ${x} 151 V 184`} stroke="#fa7c7d" opacity=".5" />
           ))}
         </>
       );
@@ -976,35 +701,12 @@ function Terminal({ pin, metal }: { pin: LocalPin; metal: string }) {
   if (pin.style === 'hole')
     return (
       <g transform={`translate(${x} ${y})`}>
-        <rect
-          x="-2.9"
-          y="-2.6"
-          width="5.8"
-          height="5.2"
-          rx=".8"
-          fill="#b2bcb6"
-        />
-        <rect
-          x="-1.7"
-          y="-1.6"
-          width="3.4"
-          height="3.2"
-          rx=".6"
-          fill="#34403c"
-        />
+        <rect x="-2.9" y="-2.6" width="5.8" height="5.2" rx=".8" fill="#b2bcb6" />
+        <rect x="-1.7" y="-1.6" width="3.4" height="3.2" rx=".6" fill="#34403c" />
       </g>
     );
   if (pin.style === 'lead')
-    return (
-      <circle
-        cx={x}
-        cy={y}
-        r="2.6"
-        fill={metal}
-        stroke="#65747d"
-        strokeWidth=".7"
-      />
-    );
+    return <circle cx={x} cy={y} r="2.6" fill={metal} stroke="#65747d" strokeWidth=".7" />;
   if (pin.style === 'socket')
     return (
       <g transform={`translate(${x} ${y})`}>
@@ -1027,15 +729,7 @@ function Terminal({ pin, metal }: { pin: LocalPin; metal: string }) {
     );
   return (
     <g transform={`translate(${x} ${y})`}>
-      <rect
-        x="-9"
-        y="-9"
-        width="18"
-        height="18"
-        rx="2"
-        fill="#292f33"
-        stroke="#10191e"
-      />
+      <rect x="-9" y="-9" width="18" height="18" rx="2" fill="#292f33" stroke="#10191e" />
       <circle r="6.8" fill={metal} stroke="#747d80" />
       <circle r="4.5" fill="none" stroke="#e9e4d7" strokeWidth=".9" />
       <path d="M -3.4 2 L 3.4 -2" stroke="#414b52" strokeWidth="1.7" />

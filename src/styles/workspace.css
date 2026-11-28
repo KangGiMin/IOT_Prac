@@ -1761,16 +1761,20 @@ p {
 }
 .motor-blades {
   transform-box: view-box;
-  animation: motor-turn .8s linear infinite;
+  animation: motor-turn 0.8s linear infinite;
 }
 .motor-rotor[data-reverse='true'] .motor-blades {
   animation-direction: reverse;
 }
 @keyframes motor-turn {
-  to { transform: rotate(1turn); }
+  to {
+    transform: rotate(1turn);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .motor-rotor { display: none; }
+  .motor-rotor {
+    display: none;
+  }
 }
 .photo-node[data-asset='timer-at8n'] .photo-pin {
   width: 12px;

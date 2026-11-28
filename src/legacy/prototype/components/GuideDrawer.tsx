@@ -40,8 +40,7 @@ const guides = {
 };
 
 export function GuideDrawer() {
-  const { guideOpen, guideTab, setGuideTab, setGuideOpen, activeLab } =
-    usePrototypeLabStore();
+  const { guideOpen, guideTab, setGuideTab, setGuideOpen, activeLab } = usePrototypeLabStore();
   const dialog = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const element = dialog.current;
@@ -128,16 +127,14 @@ export function GuideDrawer() {
               <div className="guide-callout">
                 <BookOpen size={18} />
                 <p>
-                  회로별 계측 결과를 표시할 수 있도록 이 영역에 시뮬레이션
-                  엔진의 신호 데이터를 연결하세요.
+                  회로별 계측 결과를 표시할 수 있도록 이 영역에 시뮬레이션 엔진의 신호 데이터를
+                  연결하세요.
                 </p>
               </div>
             </>
           )}
         </div>
-        <div className="drawer-footer">
-          작은 연결 하나가, 이해의 시작이 됩니다.
-        </div>
+        <div className="drawer-footer">작은 연결 하나가, 이해의 시작이 됩니다.</div>
       </div>
     </dialog>
   );

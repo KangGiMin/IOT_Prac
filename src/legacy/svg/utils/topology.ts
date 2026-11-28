@@ -51,9 +51,7 @@ export function buildTopology(
     voltage: null,
     logic: 'unknown',
   }));
-  for (const source of components.filter(
-    (item) => item.assetId === 'power-supply',
-  )) {
+  for (const source of components.filter((item) => item.assetId === 'power-supply')) {
     const plus = key({ componentId: source.id, pinId: 'plus' });
     const minus = key({ componentId: source.id, pinId: 'minus' });
     if (find(plus) === find(minus))

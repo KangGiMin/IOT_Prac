@@ -86,13 +86,7 @@ select:focus-visible {
   scrollbar-color: #516d68 var(--theme-surface);
 }
 :root[data-theme='dark']
-  :is(
-    .workspace-header,
-    .photo-palette,
-    .photo-inspector,
-    .circuit-footer,
-    .photo-board-shell
-  ) {
+  :is(.workspace-header, .photo-palette, .photo-inspector, .circuit-footer, .photo-board-shell) {
   background: var(--theme-surface);
 }
 :root[data-theme='dark']
@@ -114,8 +108,7 @@ select:focus-visible {
   ) {
   border-color: var(--theme-border);
 }
-:root[data-theme='dark']
-  :is(.photo-canvas, .learning-toolbar, .calibration-result) {
+:root[data-theme='dark'] :is(.photo-canvas, .learning-toolbar, .calibration-result) {
   background: var(--theme-bg);
 }
 :root[data-theme='dark']
@@ -233,8 +226,7 @@ select:focus-visible {
   border-color: var(--theme-border);
   color: var(--theme-muted);
 }
-:root[data-theme='dark']
-  :is(.tool-separator, .photo-board-toolbar i, .circuit-footer i) {
+:root[data-theme='dark'] :is(.tool-separator, .photo-board-toolbar i, .circuit-footer i) {
   background: var(--theme-border);
 }
 :root[data-theme='dark']
@@ -268,8 +260,7 @@ select:focus-visible {
   border-color: #438e77;
   background: #1b3a32;
 }
-:root[data-theme='dark']
-  :is(.gate-picker button[aria-pressed='true'], .component-control.active) {
+:root[data-theme='dark'] :is(.gate-picker button[aria-pressed='true'], .component-control.active) {
   color: #fff;
   background: #147c68;
   border-color: #3bb092;
@@ -294,8 +285,7 @@ select:focus-visible {
   background: #20332e;
   border-color: var(--theme-border);
 }
-:root[data-theme='dark']
-  :is(.canvas-stamp > span:last-child, .coordinate-waiting, .mission-hint) {
+:root[data-theme='dark'] :is(.canvas-stamp > span:last-child, .coordinate-waiting, .mission-hint) {
   border-color: var(--theme-border);
 }
 :root[data-theme='dark'] .calibration-banner {
@@ -323,8 +313,7 @@ select:focus-visible {
 :root[data-theme='dark'] .react-flow__attribution a {
   color: var(--theme-muted);
 }
-:root[data-theme='dark']
-  :is(.circuit-fault-banner, .circuit-fault-panel.has-faults) {
+:root[data-theme='dark'] :is(.circuit-fault-banner, .circuit-fault-panel.has-faults) {
   background: #3b2426;
   border-color: #9b5554;
   color: #ffb8ac;
@@ -338,8 +327,7 @@ select:focus-visible {
   ) {
   color: #ffb8ac;
 }
-:root[data-theme='dark']
-  :is(.circuit-fault-banner button, .circuit-fault-list button) {
+:root[data-theme='dark'] :is(.circuit-fault-banner button, .circuit-fault-list button) {
   background: #4b2b2d;
   color: #ffd3cb;
   border-color: #a36b65;

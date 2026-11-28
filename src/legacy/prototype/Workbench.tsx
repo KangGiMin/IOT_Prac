@@ -7,13 +7,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from '@xyflow/react';
-import {
-  Cable,
-  CircleHelp,
-  LockKeyhole,
-  MousePointer2,
-  Scan,
-} from 'lucide-react';
+import { Cable, CircleHelp, LockKeyhole, MousePointer2, Scan } from 'lucide-react';
 import { ComponentLibrary } from './components/ComponentLibrary';
 import { ComponentNode } from './components/ComponentNode';
 import { usePrototypeLabStore } from './store/usePrototypeLabStore';
@@ -28,16 +22,11 @@ function Canvas({ lab }: { lab: CircuitLabId }) {
   const { fitView } = useReactFlow();
   // Newly added parts are placed below existing rows; keep them visible.
   useEffect(() => {
-    const timer = window.setTimeout(
-      () => void fitView({ padding: 0.2, duration: 250 }),
-      50,
-    );
+    const timer = window.setTimeout(() => void fitView({ padding: 0.2, duration: 250 }), 50);
     return () => window.clearTimeout(timer);
   }, [circuit.nodes.length, fitView]);
   return (
-    <div
-      className={`canvas-container ${lab === 'breadboard' ? 'breadboard-canvas' : ''}`}
-    >
+    <div className={`canvas-container ${lab === 'breadboard' ? 'breadboard-canvas' : ''}`}>
       <div className="canvas-top-label">
         <span className="board-label">
           {lab === 'sequence' ? 'SEQUENCE CONTROL BOARD' : 'DIGITAL BREADBOARD'}
@@ -46,12 +35,8 @@ function Canvas({ lab }: { lab: CircuitLabId }) {
       </div>
       {lab === 'breadboard' && (
         <div className="breadboard-rails" aria-hidden="true">
-          <span>
-            + &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; +
-          </span>
-          <span>
-            − &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; −
-          </span>
+          <span>+ &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; + &nbsp; +</span>
+          <span>− &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; − &nbsp; −</span>
         </div>
       )}
       <ReactFlow
@@ -73,17 +58,10 @@ function Canvas({ lab }: { lab: CircuitLabId }) {
         connectionLineStyle={{ stroke: '#138573', strokeWidth: 2 }}
         proOptions={{ hideAttribution: false }}
         aria-label={
-          lab === 'sequence'
-            ? '시퀀스 제어 배선 작업 영역'
-            : '디지털 브레드보드 배선 작업 영역'
+          lab === 'sequence' ? '시퀀스 제어 배선 작업 영역' : '디지털 브레드보드 배선 작업 영역'
         }
       >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1.2}
-          color="#c3ccc9"
-        />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1.2} color="#c3ccc9" />
         <Controls showInteractive={false} />
       </ReactFlow>
       <div className="canvas-bottom-label">
@@ -109,11 +87,7 @@ export function Workbench({ lab }: { lab: CircuitLabId }) {
         <div className="workbench-heading">
           <div>
             <div className="eyebrow">YOUR WORKSPACE</div>
-            <h1>
-              {lab === 'sequence'
-                ? '시퀀스 제어 실습'
-                : '디지털 브레드보드 실습'}
-            </h1>
+            <h1>{lab === 'sequence' ? '시퀀스 제어 실습' : '디지털 브레드보드 실습'}</h1>
             <p>
               {lab === 'sequence'
                 ? '부품을 배치하고 배선하며 제어 회로의 기초를 익혀 보세요.'
@@ -127,13 +101,10 @@ export function Workbench({ lab }: { lab: CircuitLabId }) {
             <div>
               <span className="small-square" />
               {lab === 'sequence' ? '제어 판넬' : '브레드보드'}
-              <span className="version-tag">
-                {lab === 'sequence' ? '배치 예제' : '배치 모드'}
-              </span>
+              <span className="version-tag">{lab === 'sequence' ? '배치 예제' : '배치 모드'}</span>
             </div>
             <span>
-              <b>{circuit.nodes.length}</b> 부품 <i />{' '}
-              <b>{circuit.edges.length}</b> 배선
+              <b>{circuit.nodes.length}</b> 부품 <i /> <b>{circuit.edges.length}</b> 배선
             </span>
           </div>
           <ReactFlowProvider>
@@ -141,17 +112,15 @@ export function Workbench({ lab }: { lab: CircuitLabId }) {
           </ReactFlowProvider>
           <div className="board-footer">
             <Cable size={15} />
-            <span>
-              단자에서 다른 단자로 드래그하여 배선 · 선택 후 Delete로 삭제
-            </span>
+            <span>단자에서 다른 단자로 드래그하여 배선 · 선택 후 Delete로 삭제</span>
             <span className="grid-note">GRID 10</span>
           </div>
         </div>
         <div className="practice-note">
           <CircleHelp size={18} />
           <p>
-            <strong>차근차근, 회로의 원리부터.</strong> 학습 가이드에서 부품의
-            역할과 실습 순서를 확인하세요.
+            <strong>차근차근, 회로의 원리부터.</strong> 학습 가이드에서 부품의 역할과 실습 순서를
+            확인하세요.
           </p>
           <span>UI 프로토타입 · 전기 시뮬레이션 미연결</span>
         </div>

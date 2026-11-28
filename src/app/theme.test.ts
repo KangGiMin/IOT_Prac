@@ -20,9 +20,7 @@ function systemTheme(dark: boolean) {
   const listeners = new Set<() => void>();
   const media = {
     matches: dark,
-    addEventListener: vi.fn((_event: string, listener: () => void) =>
-      listeners.add(listener),
-    ),
+    addEventListener: vi.fn((_event: string, listener: () => void) => listeners.add(listener)),
     removeEventListener: vi.fn((_event: string, listener: () => void) =>
       listeners.delete(listener),
     ),
@@ -54,10 +52,7 @@ describe('screen theme preference', () => {
     const browser = browserWith(null);
     for (const preference of ['light', 'dark', 'system'] as const) {
       saveThemePreference(preference, browser);
-      expect(browser.localStorage.setItem).toHaveBeenLastCalledWith(
-        THEME_STORAGE_KEY,
-        preference,
-      );
+      expect(browser.localStorage.setItem).toHaveBeenLastCalledWith(THEME_STORAGE_KEY, preference);
     }
     const blocked = Object.defineProperty({}, 'localStorage', {
       get() {
@@ -109,10 +104,7 @@ describe('screen theme preference', () => {
   });
 
   it('resolves saved appearance before first paint with the same rules as React', () => {
-    const html = readFileSync(
-      new URL('../../app.html', import.meta.url),
-      'utf8',
-    );
+    const html = readFileSync(new URL('../../app.html', import.meta.url), 'utf8');
     const bootstrap = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
     expect(bootstrap).toBeTruthy();
     for (const saved of [null, 'light', 'dark', 'system', 'invalid']) {
@@ -129,9 +121,7 @@ describe('screen theme preference', () => {
             },
           },
         });
-        expect(root.dataset.theme).toBe(
-          resolveTheme(readThemePreference(browser), dark),
-        );
+        expect(root.dataset.theme).toBe(resolveTheme(readThemePreference(browser), dark));
       }
     }
   });

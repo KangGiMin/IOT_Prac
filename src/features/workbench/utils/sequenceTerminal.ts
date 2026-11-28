@@ -4,7 +4,11 @@ import type { CircuitComponent } from '../../../types/circuit';
 import { containBounds } from './geometry';
 
 /** Radius in workbench coordinates, independent of canvas zoom or hit area. */
-export function sequenceScrewRadii(component: CircuitComponent, pinId: string | null | undefined, handleWidth: number) {
+export function sequenceScrewRadii(
+  component: CircuitComponent,
+  pinId: string | null | undefined,
+  handleWidth: number,
+) {
   const id = component.assetId;
   if (id === 'pb-switch' || id === 'pilot-lamp' || id === 'relay-socket' || id === 'motor-unit') {
     const photo = sequenceScrewGeometry[id];
@@ -15,7 +19,7 @@ export function sequenceScrewRadii(component: CircuitComponent, pinId: string | 
     if (rim) return { x: rim.rx * scale, y: rim.ry * scale };
   }
   // The virtual terminal housing has a 1px border on each side.
-  const radius = Math.max(0, handleWidth - 2) * sequenceScrewGeometry.virtualHeadRatio / 2;
+  const radius = (Math.max(0, handleWidth - 2) * sequenceScrewGeometry.virtualHeadRatio) / 2;
   return { x: radius, y: radius };
 }
 
@@ -23,5 +27,6 @@ export function sequenceScrewRadii(component: CircuitComponent, pinId: string | 
 export function sequenceWireExit(component: CircuitComponent, pinId: string | null | undefined) {
   return component.assetId === 'timer-at8n' ||
     (component.assetId === 'relay-socket' && Number(pinId) >= 9)
-    ? 'bottom' : 'top';
+    ? 'bottom'
+    : 'top';
 }

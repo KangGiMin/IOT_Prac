@@ -30,10 +30,8 @@ export function Header() {
             onClick={() => setActiveLab(id)}
             onKeyDown={(event) => {
               let target = index;
-              if (event.key === 'ArrowRight')
-                target = (index + 1) % labs.length;
-              else if (event.key === 'ArrowLeft')
-                target = (index + labs.length - 1) % labs.length;
+              if (event.key === 'ArrowRight') target = (index + 1) % labs.length;
+              else if (event.key === 'ArrowLeft') target = (index + labs.length - 1) % labs.length;
               else if (event.key === 'Home') target = 0;
               else if (event.key === 'End') target = labs.length - 1;
               else return;

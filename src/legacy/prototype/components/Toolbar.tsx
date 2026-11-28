@@ -2,14 +2,8 @@ import { BookOpen, ChevronRight, Power, RotateCcw } from 'lucide-react';
 import { usePrototypeLabStore } from '../store/usePrototypeLabStore';
 
 export function Toolbar() {
-  const {
-    activeLab,
-    powerOn,
-    togglePower,
-    guideOpen,
-    setGuideOpen,
-    resetWiring,
-  } = usePrototypeLabStore();
+  const { activeLab, powerOn, togglePower, guideOpen, setGuideOpen, resetWiring } =
+    usePrototypeLabStore();
   const theory = activeLab === 'theory';
   return (
     <div className="app-toolbar">
@@ -20,11 +14,7 @@ export function Toolbar() {
           aria-checked={powerOn}
           disabled={theory}
           onClick={togglePower}
-          title={
-            theory
-              ? '회로 실습실에서 전원을 전환할 수 있습니다'
-              : 'UI 전원 상태 전환'
-          }
+          title={theory ? '회로 실습실에서 전원을 전환할 수 있습니다' : 'UI 전원 상태 전환'}
         >
           <Power size={16} />
           POWER {powerOn ? 'ON' : 'OFF'}
@@ -38,9 +28,7 @@ export function Toolbar() {
           onClick={resetWiring}
           disabled={powerOn || theory}
           title={
-            powerOn
-              ? '전원을 끄면 배선을 초기화할 수 있습니다'
-              : '현재 실습실의 배선만 초기화'
+            powerOn ? '전원을 끄면 배선을 초기화할 수 있습니다' : '현재 실습실의 배선만 초기화'
           }
         >
           <RotateCcw size={16} />
