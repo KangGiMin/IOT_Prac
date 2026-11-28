@@ -9,6 +9,8 @@ public/assets/
   pb-switch.png
   relay-socket.png
   relay-body.png
+  RelayTimer.png
+  Motor.png
   timer-at8n.png
   screwdriver.png
   breadboard.png
@@ -18,11 +20,12 @@ public/assets/
   resistor-330.png
   ic-14pin.png
   switch-3pin.png
+  jumper-cable.png
 ```
 
 `sequence/`, `digital/` 하위 폴더는 사용하지 않습니다. 이미지 파일이 없거나 로드되지 않으면 플레이스홀더가 표시되며 부품 배치·배선·좌표 측정은 계속 가능합니다.
 
-1. PNG를 넣고 새로고침합니다. Live Server라면 `npm.cmd run build` 후 새로고침합니다.
+1. 위 파일명으로 PNG를 넣거나 교체한 뒤 새로고침합니다. Live Server라면 `npm.cmd run build` 후 새로고침합니다.
 2. 메인 전원을 끄고 헤더의 **핀 좌표 디버그 모드**를 켭니다.
 3. 이미지의 단자 또는 조작 위치를 클릭해 `x%, y%`를 확인합니다.
 4. 우측 패널에서 `{ x: 35.25, y: 18.6 }`를 복사합니다. 자동 복사가 제한되면 좌표 입력란을 선택해 직접 복사합니다.
